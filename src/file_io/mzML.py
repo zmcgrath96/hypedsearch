@@ -1,17 +1,15 @@
 from pyopenms import MSExperiment, MzMLFile
 from utils.utils import file_exists
 
-'''read
-
-DESC:
-    read an .mzML file into memory
-Inputs:
-    file: str path to the file to import
-Outputs:
-    NONE if file is not found
-
-'''
 def read(file):
+    '''
+    read an .mzML file into memory
+
+    Inputs:
+        file: str path to the file to import
+    Outputs:
+        NONE if file is not found
+    '''
     if not file_exists(file):
         print('File {} not found. Please make sure that this file exists'.format(file))
         return

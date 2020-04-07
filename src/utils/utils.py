@@ -1,21 +1,5 @@
 import os, gzip, shutil, copy
 
-def get_related_files(files: list, sub: str, not_sub=None) -> list:
-    '''
-    Find the subset of files passed in with the substring without the exclusive substring
-
-    Inputs:
-        files:      list of file names (strings)
-        sub:        string substring to search for in each file name
-    kwargs:
-        not_sub:    string substring to make sure is not in each file name
-    Outputs:
-        list        list of strings. Subset of files that have sub and don't have not_sub
-    '''
-    if not_sub is not None and not_sub != '':
-        return [x for x in files if sub in x and not_sub not in x]
-    return [x for x in files if sub in x]
-
 def make_valid_dir_string(dir_path: str) -> str:
     '''
     Add / character to end of directory string to make valid directory path
@@ -188,3 +172,24 @@ def is_fasta(file: str) -> bool:
     '''
     return True if '.fasta' in file else False
 
+def is_dir(dir_path: str) -> bool:
+    '''
+    Determine if a path is a valid path to a directory
+
+    Inputs:
+        dir_path:   string full path to directory
+    Outputs:
+        bool        True if directory exists False otherwise
+    '''
+    return os.path.isdir(dir_path)
+
+def is_file(file: str) -> bool:
+    '''
+    Determine if a file exists
+
+    Inputs:
+        file:   string full path to the file
+    Outputs:   
+        bool    True if file exists False otherwise
+    '''
+    return os.path.isfile(file)

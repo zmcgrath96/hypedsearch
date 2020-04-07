@@ -1,6 +1,26 @@
 from file_io import fasta, csv
 from scoring.comparisons import compare_sequence_spectra, compare_spectra_sequence_ion_type
 
+def ion_matches(spectrum: list, database: list, n=3, ion='b') -> dict:
+    '''
+    Find the top n matches for each ion type
+
+    Inputs:
+        spectrum:   list of floats the mass spectrum
+        database:   list of dictionaries from a fasta file of the form
+                    {
+                        'name': str, 'sequence': str, 'identifier': str
+                    }
+    Outputs:
+        dictionary of the form:
+            {
+                0: {protein_name: str, peptide_sequence: str, score: float, starting_position: int, ending_position: int}, 
+                ...
+                n-1: {...}
+            }
+    '''
+    top_n_matches = []
+
 
 def search_proteins(spectrum: dict, database: list) -> (dict, dict):
     '''
@@ -12,11 +32,7 @@ def search_proteins(spectrum: dict, database: list) -> (dict, dict):
         spectrum:   dictionary of the form {'level': , 'scan_no': , 'spectrum': }
         database:   list of dictionaries read from a fasta file of form
                     {
-                        'identifier': any,
-                        'sequence': str, 
-                        'name': str,
-                        'scan_no': int,
-                        'level': int
+                        'name': str, 'sequence': str, 'identifier': str
                     }
     Outputs:
         (b_match, y_match)
@@ -67,27 +83,3 @@ def search_proteins(spectrum: dict, database: list) -> (dict, dict):
         'score_y': best_match_y['score']
     }
     return best_matches
-
-def search_database(spectra: list, database: list, output_name: str) -> (str, str):
-    '''
-    Find the hightest scoring subsequence for each spectra
-    
-    Inputs:
-        spec_file:      list of dictionaries of the form {'level': , 'scan_no': , 'spectrum': } from a .mzML file
-        database:       list of dictionaries read from a fasta file of form
-                    {
-                        'identifier': any,
-                        'sequence': str, 
-                        'name': str,
-                        'scan_no': int,
-                        'level': int
-                    }
-        output_name:    string name of file to save with path 
-    Outputs: 
-        string path to the saved file containing scores
-    '''
-    results = []
-    for spec in spectra:
-        results.append(search_proteins(spec, database))
-
-    return csv.write_iter_of_dicts(results, output_name)
