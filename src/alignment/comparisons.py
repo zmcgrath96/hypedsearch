@@ -87,7 +87,7 @@ def compare_masses(spectrum: list, reference: list) -> float:
         score:      float score 
     '''
     if len(spectrum) == 0 or len(reference) == 0:
-        return
+        return 0.0
     streak = 0
     last = False
     score = 0
@@ -108,39 +108,6 @@ def compare_masses(spectrum: list, reference: list) -> float:
     score += max_streak
     score /= (len(reference) / 2)
     return score 
-
-
-'''compare_sequence_spectra
-
-DESC:
-    compare a string and a spectra together
-    uses simple additive scoring
-    uses both single and doubly charged ions for mass calculations
-PARAMS:
-    seq: string sequence of amino acids to convert to mass spectra
-    ref_spec: list of floats mass spectra
-RETURNS:
-    float score from comparison
-'''
-def compare_sequence_spectra(seq, ref_spec):
-    spec = calc_masses(seq)
-    return compare_masses(spec, ref_spec)
-
-'''compare_sequence_sequence
-
-DESC:
-    compare the two spectras from two strings
-    uses simple additive scoring
-PARAMS:
-    seq: string sequence of amino acids
-    ref_seq: string sequence of amino acids
-RETURNS:
-    float score from comparison
-'''
-def compare_sequence_sequence(seq, ref_seq):
-    spec1, _ = calc_masses(seq)
-    spec2, _ = calc_masses(ref_seq)
-    return compare_masses(spec1, spec2)
 
 def compare_spectra_sequence_ion_type(spectra: list, reference: str, ion: str) -> float:
     '''
