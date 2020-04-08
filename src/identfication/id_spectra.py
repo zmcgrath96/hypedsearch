@@ -7,6 +7,11 @@ Date: 6 April 2020
 Find protein and subsequence for every spectra passed in
 '''
 from file_io import fasta, mzML
+from alignment import search
+
+############## Constants ##############
+TOP_N = 3
+#######################################
 
 def id_spectrum(spectrum: dict, database: list) -> dict:
     '''
@@ -25,6 +30,8 @@ def id_spectrum(spectrum: dict, database: list) -> dict:
             'alignments': list of dicts,
         }
     '''
+    top_b, top_y = search.search_proteins(spectrum, database, TOP_N)
+    # TODO: from these top b and y ions, perform some sort of alignment on these
     pass
 
 def id_spectra(spectra_files: list, database_file: str) -> dict:
