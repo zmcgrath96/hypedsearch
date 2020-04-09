@@ -22,7 +22,6 @@ class filtering_test(unittest.TestCase):
         self.assertEqual(sdevs2, [self.scores[-1]], '2 standard deviations should give the score with value 2')
         self.assertEqual(sdevs1, self.scores[-2:], '1 standard deviation should give back scores with value 1 and 2')
 
-    # don't test the other functions as they use compare masses or spectra generation
 
 if __name__ == '__main__':
     unittest.main()
