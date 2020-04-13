@@ -17,5 +17,9 @@ $> cd hypedsearch
 $/hypedsearch> pip3 install -r requirements.txt
 ```
 ### Run tests
+### Testing
+To run all unit tests run the following:
 ```bash
+$> cd hypedsearch
+$hypedsearch> python3 -m unittest -v
 ```

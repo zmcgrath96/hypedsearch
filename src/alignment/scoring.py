@@ -1,5 +1,5 @@
-from alignment import comparisons
-from spectra import gen_spectra
+from src.alignment import comparisons
+from src.spectra import gen_spectra
 
 def __new_entry(old_entry: dict, prot: str, spectrum: list, ion='b') -> dict:
     '''

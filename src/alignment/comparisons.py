@@ -1,4 +1,4 @@
-from spectra.gen_spectra import calc_masses
+from src.spectra.gen_spectra import calc_masses
 
 '''cmp_spectra_spectra
 
