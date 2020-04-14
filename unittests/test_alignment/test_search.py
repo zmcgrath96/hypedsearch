@@ -1,6 +1,6 @@
 import unittest
 
-class search_test(unittest.TestCase):
+class test_search(unittest.TestCase):
     def setUp(self):
         pass
 

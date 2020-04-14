@@ -1,6 +1,6 @@
 import unittest
 from src.alignment import comparisons
-class comapisons_test(unittest.TestCase):
+class test_comapisons(unittest.TestCase):
     def setUp(self):
         self.spectrum = [1, 2, 3, 4, 7]
         self.reference = [1, 2, 3, 4, 5]
@@ -8,6 +8,8 @@ class comapisons_test(unittest.TestCase):
     def test_compare_masses(self):
         '''
         equation is (# found in spec + streak #)/(len(reference)/2)
+        ref ref = (5 + 5)/(2.5) 
+        spec ref = (4 + 4)/2.5
         '''
         spec_ref = comparisons.compare_masses(self.spectrum, self.reference)
         ref_ref = comparisons.compare_masses(self.reference, self.reference)

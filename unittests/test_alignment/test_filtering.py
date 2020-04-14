@@ -1,6 +1,6 @@
 import unittest
 from src.alignment import filtering
-class filtering_test(unittest.TestCase):
+class test_filtering(unittest.TestCase):
     def setUp(self):
         self.score_key = 'score'
         self.scores = [

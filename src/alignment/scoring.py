@@ -1,7 +1,7 @@
 from src.alignment import comparisons
 from src.spectra import gen_spectra
 
-def __new_entry(old_entry: dict, prot: str, spectrum: list, ion='b') -> dict:
+def new_entry(old_entry: dict, prot: str, spectrum: list, ion='b') -> dict:
     '''
     Generate a new entry from the old entry
     
@@ -14,10 +14,16 @@ def __new_entry(old_entry: dict, prot: str, spectrum: list, ion='b') -> dict:
     Ouptut:
         new_entry:   dict entry with the new k, new sequence, new b and y scores, new start and end positions
     '''
+    # check that we are operating on a valid entry
+    keys = ['k', 'starting_position', 'ending_position', 'b_score', 'y_score']
+    if any([old_entry[k] is None for k in keys]) or prot is None or spectrum is None:
+        return old_entry
+
     starting_pos = old_entry['starting_position'] if ion == 'b' else old_entry['starting_position'] - 1
     ending_pos = old_entry['ending_position'] + 1 if ion == 'b' else old_entry['ending_position']
     if starting_pos < 0 or ending_pos > len(prot) - 1:
         return old_entry
+
     mer_seq = prot[starting_pos:ending_pos+1]
     mer_spec_b = gen_spectra.gen_spectrum(mer_seq, ion='b')['spectrum']
     mer_spec_y = gen_spectra.gen_spectrum(mer_seq, ion='y')['spectrum']
@@ -56,8 +62,8 @@ def kmer_extend(spectrum: list, sequence: str, b_kmers: list, y_kmers: list, sta
     # keep track of the ones that we want to increment. Prepend it to the front and take the top
     b_list = []
     y_list = []
-    b_stall_counter = {b['starting_position']: [stall_length, b] for b in b_kmers}
-    y_stall_counter = {y['ending_position']: [stall_length, y] for y in y_kmers}
+    b_stall_counter = {b['starting_position']: [stall_length, b, b['b_score']] for b in b_kmers}
+    y_stall_counter = {y['ending_position']: [stall_length, y, y['y_score']] for y in y_kmers}
 
     # go through the kmers and extend them for as long as possible
     while(len(b_kmers)):
@@ -65,11 +71,12 @@ def kmer_extend(spectrum: list, sequence: str, b_kmers: list, y_kmers: list, sta
         # rounds of incrementing
         for i in range(len(b_kmers)):
             # try extending the current entry
-            updated = __new_entry(b_kmers[i], sequence, spectrum, ion='b')
-            # if the score increased, keep it
-            if updated['b_score'] > b_kmers[i]['b_score']:
+            updated = new_entry(b_kmers[i], sequence, spectrum, ion='b')
+            # if the score increased from or kept the same as the max score, the kmer increased, and the score is nonzero, update
+            if updated['b_score'] >= max(b_kmers[i]['b_score'], b_stall_counter[b_kmers[i]['starting_position']][2]) and updated['b_score'] > 0 and updated['k'] != b_kmers[i]['k']:
                 b_tmp.append(updated)
                 b_stall_counter[b_kmers[i]['starting_position']][1] = updated
+                b_stall_counter[b_kmers[i]['starting_position']][2] = updated['b_score']
             # if the score didnt increase and the counter is non zero, decrement the counter
             elif b_stall_counter[b_kmers[i]['starting_position']][0] > 0:
                 b_tmp.append(updated)
@@ -85,11 +92,12 @@ def kmer_extend(spectrum: list, sequence: str, b_kmers: list, y_kmers: list, sta
         # rounds of incrementing
         for i in range(len(y_kmers)):
             # try extending the current entry
-            updated = __new_entry(y_kmers[i], sequence, spectrum, ion='y')
-            # if the score increased, keep it
-            if updated['y_score'] > y_kmers[i]['y_score']:
+            updated = new_entry(y_kmers[i], sequence, spectrum, ion='y')
+            # if the score increased from or kept the same as the max score, the kmer increased, and the score is nonzero, update
+            if updated['y_score'] >= max(y_kmers[i]['y_score'], y_stall_counter[y_kmers[i]['ending_position']][2]) and updated['y_score'] > 0 and updated['k'] != y_kmers[i]['k']:
                 y_tmp.append(updated)
                 y_stall_counter[y_kmers[i]['ending_position']][1] = updated
+                y_stall_counter[y_kmers[i]['ending_position']][2] = updated['y_score']
             # if the score didnt increase and the counter is non zero, decrement the counter
             elif y_stall_counter[y_kmers[i]['ending_position']][0] > 0:
                 y_tmp.append(updated)
@@ -99,7 +107,12 @@ def kmer_extend(spectrum: list, sequence: str, b_kmers: list, y_kmers: list, sta
                 y_list.insert(0, y_kmers[i])
         y_kmers = y_tmp
         
-    return (b_list, y_list)
+    # get the desired scores from the stall counters
+    best_matches_b = [b_stall_counter[b['starting_position']][1] for b in b_list]
+    best_matches_y = [y_stall_counter[y['ending_position']][1] for y in y_list]
+    best_matches_b.sort(key=lambda x: x['b_score'], reverse=True)
+    best_matches_y.sort(key=lambda x: x['y_score'], reverse=True)
+    return (best_matches_b, best_matches_y)
 
 def score_subsequence(pepspec: list, subseq: str) -> (float, float):
     '''

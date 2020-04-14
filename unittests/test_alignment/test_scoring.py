@@ -1,7 +1,7 @@
 import unittest
 from src.alignment import scoring, comparisons
 from src.spectra import gen_spectra
-class scoring_test(unittest.TestCase):
+class test_scoring(unittest.TestCase):
     def setUp(self):
         self.pepsequence = 'MALWARM'
         self.protsequence = 'TWSKMALWARMQVCE'
@@ -41,21 +41,20 @@ class scoring_test(unittest.TestCase):
             'y_score': None
         }
 
-        new_b_entry = scoring.__new_entry(old_entry_valid_b, self.protsequence, self.pepspectra)
-        new_y_entry = scoring.__new_entry(old_entry_valid_y, self.protsequence, self.pepspectra, 'y')
+        new_b_entry = scoring.new_entry(old_entry_valid_b, self.protsequence, self.pepspectra)
+        new_y_entry = scoring.new_entry(old_entry_valid_y, self.protsequence, self.pepspectra, 'y')
 
         self.assertEqual(4, new_b_entry['k'], 'Valid old b entry should be extended to k=4')
         self.assertEqual('MALW', new_b_entry['sequence'], 'Valid old b entry should extend sequnce to MALW')
-        self.assertEqual(old_entry_invalid_b, scoring.__new_entry(old_entry_invalid_b, self.protsequence, self.pepsequence), 'Invalid old b entry should return the same entry')
+        self.assertEqual(old_entry_invalid_b, scoring.new_entry(old_entry_invalid_b, self.protsequence, self.pepsequence), 'Invalid old b entry should return the same entry')
 
         self.assertEqual(4, new_y_entry['k'], 'Valid old y entry should be extended to k=4')
         self.assertEqual('WARM', new_y_entry['sequence'], 'Valid old y entry should be extended to WARM')
-        self.assertEqual(old_entry_invalid_y, scoring.__new_entry(old_entry_invalid_y, self.protsequence, self.pepspectra, 'y'), 'Invalid old y entry should return same entry')
+        self.assertEqual(old_entry_invalid_y, scoring.new_entry(old_entry_invalid_y, self.protsequence, self.pepspectra, 'y'), 'Invalid old y entry should return same entry')
 
     def test_kmer_extend(self): 
-        score_b = lambda seq, spec: comparisons.compare_masses(spec, gen_spectra.gen_spectrum(seq, ion='b'))
-        score_y = lambda seq, spec: comparisons.compare_masses(spec, gen_spectra.gen_spectrum(seq, ion='y'))
-
+        score_b = lambda seq, spec: comparisons.compare_masses(spec, gen_spectra.gen_spectrum(seq, ion='b')['spectrum'])
+        score_y = lambda seq, spec: comparisons.compare_masses(spec, gen_spectra.gen_spectrum(seq, ion='y')['spectrum'])
         kmers = [
             {
                 'k': 3, 
@@ -68,7 +67,6 @@ class scoring_test(unittest.TestCase):
         ]
 
         b_list, y_list = scoring.kmer_extend(self.pepspectra, self.protsequence, kmers, kmers)
-
         self.assertEqual('MALWARM', b_list[0]['sequence'], 'For ideal spectra, the best result should be the full peptide sequence')
         self.assertEqual('MALWARM', y_list[0]['sequence'], 'For ideal spectra, the best result shoudl be the full peptide sequence')
 

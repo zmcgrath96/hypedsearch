@@ -31,7 +31,7 @@ DOUBLY_CHARGED_Y_BASE = 4 * 1.007825035 + 15.99491463 - 2 * 0.0005486 #another p
 SINGLY_CHARGED_B_BASE = 1.007825035 - 0.0005486 #for the H to turn the residue NH on the N-terminus into NH2
 DOUBLY_CHARGED_B_BASE = 2 * 1.007825035 - 2 * 0.0005486 #adding one more proton this time to make it doubly charged
 
-def __b_ions(sequence: str, charge=None): 
+def b_ions(sequence: str, charge=None): 
     '''
     Calculate the masses for b_ions
     
@@ -62,7 +62,7 @@ def __b_ions(sequence: str, charge=None):
             
     return masses
 
-def __y_ions(sequence: str, charge=None): 
+def y_ions(sequence: str, charge=None): 
     '''
     Calculate the masses for y_ions
     
@@ -117,10 +117,10 @@ def calc_masses(sequence: str, charge=None, ion=None) -> (list, float):
     pre_mz = (total+pre_mz_charge*1.0072764)/pre_mz_charge   
     
     if ion is None or ion == 'b': 
-        masses += __b_ions(sequence, charge=charge)
+        masses += b_ions(sequence, charge=charge)
         
     if ion is None or ion == 'y': 
-        masses += __y_ions(sequence, charge=charge)
+        masses += y_ions(sequence, charge=charge)
         
     return masses, pre_mz
 

@@ -89,15 +89,15 @@ def compare_masses(spectrum: list, reference: list) -> float:
     if len(spectrum) == 0 or len(reference) == 0:
         return 0.0
     streak = 0
-    last = False
+    last = True
     score = 0
     max_streak = 0
     for refmass in reference:
-        if last == True:
-            streak += 1
-            max_streak = max([streak, max_streak])
-
+    
         if refmass in spectrum:
+            if last == True:
+                streak += 1
+                max_streak = max([streak, max_streak])
             score += 1
             last = True 
 
@@ -106,7 +106,7 @@ def compare_masses(spectrum: list, reference: list) -> float:
             last = False
     
     score += max_streak
-    score /= (len(reference) / 2)
+    score /= (float(len(reference)) / 2)
     return score 
 
 def compare_spectra_sequence_ion_type(spectra: list, reference: str, ion: str) -> float:
