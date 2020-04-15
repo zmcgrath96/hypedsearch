@@ -1,5 +1,4 @@
-from file_io import fasta, csv
-from alignment import scoring, filtering
+from src.alignment import scoring, filtering
 
 ################### Constants ###################
 BASE_K = 3
@@ -27,7 +26,6 @@ def merge_and_sort(old_b: dict, old_y: dict, new_b: dict, new_y: dict, n=3) -> (
     '''
     to_sort_b = [entry for _, entry in old_b.items()] + [entry for _, entry in new_b.items()]
     to_sort_y = [entry for _, entry in old_y.items()] + [entry for _, entry in new_y.items()]
-
     # comparing functions for each ion type
     b_cmp = lambda a: a['b_score']
     y_cmp = lambda a: a['y_score']
@@ -35,7 +33,8 @@ def merge_and_sort(old_b: dict, old_y: dict, new_b: dict, new_y: dict, n=3) -> (
     sorted_y = sorted(to_sort_y, key=y_cmp, reverse=True)[:n]
 
     updated_b, updated_y = {}, {}
-    for i in range(n):
+    min_len = min(n, len(sorted_b), len(sorted_y))
+    for i in range(min_len):
         updated_b[i] = sorted_b[i]
         updated_y[i] = sorted_y[i]
 
@@ -68,6 +67,7 @@ def search_protein(spectrum: dict, protein_entry: dict, n=3) -> (dict, dict):
              ...
              n-1: {...}
          }
+        If there are not n scores that pass the filter, then all results are returned
     '''
     # get any significant kmers from the scoring
     base_scores = scoring.score_sequence(spectrum['spectrum'], protein_entry['sequence'], BASE_K)
@@ -77,7 +77,9 @@ def search_protein(spectrum: dict, protein_entry: dict, n=3) -> (dict, dict):
     (extended_bs, extended_ys) = scoring.kmer_extend(spectrum['spectrum'], protein_entry['sequence'], b_anchors, y_anchors, STALL_LENGTH)
     # take the top n best kmers
     b_res, y_res = {}, {}
-    for i in range(n):
+    # dont get out or range in iterating
+    result_number = min(n, len(extended_bs), len(extended_ys))
+    for i in range(result_number):
         b_res[i] = extended_bs[i]
         b_res[i]['protein_name'] = protein_entry['name']
         b_res[i]['protein_id'] = protein_entry['id']
