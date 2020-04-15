@@ -6,8 +6,8 @@ Date: 6 April 2020
 
 Find protein and subsequence for every spectra passed in
 '''
-from file_io import fasta, mzML
-from alignment import search
+from src.file_io import fasta, mzML
+from src.alignment import search
 
 ############## Constants ##############
 TOP_N = 3

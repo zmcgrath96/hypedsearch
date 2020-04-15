@@ -1,5 +1,5 @@
 from pyopenms import MSExperiment, MzMLFile
-from utils.utils import file_exists
+from src.utils.utils import file_exists
 
 def read(file):
     '''

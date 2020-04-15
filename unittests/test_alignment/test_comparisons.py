@@ -1,5 +1,5 @@
 import unittest
-from src.alignment import comparisons
+from src.alignment import mass_comparisons
 class test_comapisons(unittest.TestCase):
     def setUp(self):
         self.spectrum = [1, 2, 3, 4, 7]
@@ -11,9 +11,9 @@ class test_comapisons(unittest.TestCase):
         ref ref = (5 + 5)/(2.5) 
         spec ref = (4 + 4)/2.5
         '''
-        spec_ref = comparisons.compare_masses(self.spectrum, self.reference)
-        ref_ref = comparisons.compare_masses(self.reference, self.reference)
-        empty_ref = comparisons.compare_masses([], self.reference)
+        spec_ref = mass_comparisons.compare_masses(self.spectrum, self.reference)
+        ref_ref = mass_comparisons.compare_masses(self.reference, self.reference)
+        empty_ref = mass_comparisons.compare_masses([], self.reference)
 
         self.assertEqual(spec_ref, 16/5, 'comparison between spectrum and reference should be 16/5')
         self.assertEqual(ref_ref, 4, 'comparison of reference to reference should give 4')

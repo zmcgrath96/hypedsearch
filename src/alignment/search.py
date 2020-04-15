@@ -1,4 +1,4 @@
-from src.alignment import scoring, filtering
+from src.alignment import scoring, filtering, kmer_extension
 
 ################### Constants ###################
 BASE_K = 3
@@ -74,7 +74,7 @@ def search_protein(spectrum: dict, protein_entry: dict, n=3) -> (dict, dict):
     b_anchors = filtering.stddev_filter(base_scores, 'b_score', SDEVS)
     y_anchors = filtering.stddev_filter(base_scores, 'y_score', SDEVS)
     # extend these interesting kmers as much as possible
-    (extended_bs, extended_ys) = scoring.kmer_extend(spectrum['spectrum'], protein_entry['sequence'], b_anchors, y_anchors, STALL_LENGTH)
+    (extended_bs, extended_ys) = kmer_extension.kmer_extend(spectrum['spectrum'], protein_entry['sequence'], b_anchors, y_anchors, STALL_LENGTH)
     # take the top n best kmers
     b_res, y_res = {}, {}
     # dont get out or range in iterating
@@ -107,7 +107,7 @@ def search_proteins(spectrum: dict, database: list, n=3) -> (dict, dict):
                 id: str
             }
     kwargs:
-        n:      int top number of results to return for both b and y ion scores
+        n:      int top number of results to return for both b and y ion scores. Default=3
     Outptus:
         (b_dict, y_dict)
         Both of these ion dictionaries have the top n entries keyed by their rank (0 to n-1, 0 being the best)
