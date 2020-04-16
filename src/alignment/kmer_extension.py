@@ -1,4 +1,4 @@
-from src.alignment import mass_comparisons
+from src.scoring import mass_comparisons
 from src.spectra import gen_spectra
 
 def new_entry(old_entry: dict, prot: str, spectrum: list, ion='b') -> dict:

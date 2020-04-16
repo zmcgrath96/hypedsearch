@@ -1,4 +1,5 @@
-from src.alignment import scoring, filtering, kmer_extension
+from src.alignment import filtering, kmer_extension
+from src.scoring import scoring
 
 ################### Constants ###################
 BASE_K = 3

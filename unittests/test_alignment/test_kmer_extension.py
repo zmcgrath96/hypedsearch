@@ -1,5 +1,6 @@
 import unittest
-from src.alignment import mass_comparisons, kmer_extension
+from src.scoring import mass_comparisons
+from src.alignment import kmer_extension
 from src.spectra import gen_spectra
 class test_kmer_extension(unittest.TestCase):
     def setUp(self):

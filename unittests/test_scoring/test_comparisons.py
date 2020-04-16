@@ -1,5 +1,5 @@
 import unittest
-from src.alignment import mass_comparisons
+from src.scoring import mass_comparisons
 class test_comapisons(unittest.TestCase):
     def setUp(self):
         self.spectrum = [1, 2, 3, 4, 7]

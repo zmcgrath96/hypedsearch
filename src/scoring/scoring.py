@@ -1,4 +1,4 @@
-from src.alignment import mass_comparisons
+from src.scoring import mass_comparisons
 from src.spectra import gen_spectra
 
 def confidence(b_entry: dict, y_entry: dict) -> float:

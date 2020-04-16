@@ -8,6 +8,7 @@ Executor for the program
 In charge of the flow of the program
 '''
 from os import walk
+from src.identfication import id_spectra
 
 def execute(args: dict) -> None:
     '''
@@ -28,5 +29,6 @@ def execute(args: dict) -> None:
             spectra_files.append(args['spectra_folder'] + fname)
         break
 
+    matched_spectra = id_spectra.id_spectra(spectra_files, args['database_file'])
     
     

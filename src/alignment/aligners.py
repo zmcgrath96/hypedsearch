@@ -1,4 +1,4 @@
-from src.alignment import scoring
+from src.scoring import scoring
 
 def find_protein_pairings(b_scores: dict, y_scores: dict) -> dict:
     '''

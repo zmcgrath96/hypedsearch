@@ -1,5 +1,5 @@
 import unittest
-from src.alignment import scoring
+from src.scoring import scoring
 
 class test_scoring(unittest.TestCase):
     def setUp(self):
