@@ -83,14 +83,14 @@ def search_protein(spectrum: dict, protein_entry: dict, n=3) -> (dict, dict):
     for i in range(result_number):
         b_res[i] = extended_bs[i]
         b_res[i]['protein_name'] = protein_entry['name']
-        b_res[i]['protein_id'] = protein_entry['id']
+        b_res[i]['protein_id'] = protein_entry['identifier']
         y_res[i] = extended_ys[i]
         y_res[i]['protein_name'] = protein_entry['name']
-        y_res[i]['protein_id'] = protein_entry['id']
+        y_res[i]['protein_id'] = protein_entry['identifier']
 
     return b_res, y_res
 
-def search_proteins(spectrum: dict, database: list, n=3) -> (dict, dict):
+def search_proteins(spectrum: dict, database: dict, n=3) -> (dict, dict):
     '''
     Search through the proteins to find the top n sequences that describe the spectrum
 
@@ -101,7 +101,7 @@ def search_proteins(spectrum: dict, database: list, n=3) -> (dict, dict):
                 spectrum:   list of floats
                 level:      int ms level
             }
-        database:   list of dicts from a .fasta file with the form
+        database:   dict of dicts from a .fasta file with the form
             {
                 sequence: str,
                 name: str, 
@@ -120,7 +120,7 @@ def search_proteins(spectrum: dict, database: list, n=3) -> (dict, dict):
     '''
     b_results, y_results = {}, {}
     # go through every protein in the database
-    for protein_entry in database:
+    for _, protein_entry in database.items():
         top_prot_b, top_prot_y = search_protein(spectrum, protein_entry, n)
         # if b_results and y_results are empty, just set them to the results we have for the first protein
         if top_prot_b is None or len(b_results.keys()) == 0:

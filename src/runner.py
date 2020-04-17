@@ -9,8 +9,9 @@ In charge of the flow of the program
 '''
 from os import walk
 from src.identfication import id_spectra
+from src.summary import summary
 
-def execute(args: dict) -> None:
+def run(args: dict) -> None:
     '''
     Executing function for the program
 
@@ -26,9 +27,12 @@ def execute(args: dict) -> None:
     spectra_files = []
     for (_, _, filenames) in walk(args['spectra_folder']):
         for fname in filenames:
+            if '.mzml' not in fname.lower():
+                continue
             spectra_files.append(args['spectra_folder'] + fname)
         break
 
     matched_spectra = id_spectra.id_spectra(spectra_files, args['database_file'])
+    summary.generate(matched_spectra, args['output_dir'])
     
     

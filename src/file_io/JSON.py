@@ -1,5 +1,5 @@
 import json
-from utils.utils import make_valid_json_file
+from src.utils.utils import make_valid_json_file
 
 def save_dict(file: str, d: dict) -> None:
     '''

@@ -8,9 +8,9 @@ Description:
 Main file for hypedsearch. Handles input parameters and flow of the program
 '''
 import argparse
-from utils import utils
+from src.utils import utils
 import sys
-import exec
+from src import runner
 
 ##############################################################
 
@@ -31,7 +31,7 @@ def main(args: object) -> None:
         'database_file': args.database_file,
         'output_dir': output_dir
     }
-    exec.execute(arguments)
+    runner.run(arguments)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Entry file for the database experiments')
