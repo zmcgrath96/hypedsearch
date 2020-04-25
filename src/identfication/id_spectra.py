@@ -11,7 +11,7 @@ from src.alignment import search, aligners
 from math import ceil
 
 ############## Constants ##############
-TOP_N = 3
+TOP_N = 5
 #######################################
 
 def index_database(database: list) -> dict:

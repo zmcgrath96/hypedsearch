@@ -19,7 +19,10 @@ AMINO_ACIDS={
     "U": 150.95363,
     "W": 186.079313,
     "Y": 163.06332,
-    "V": 99.068414
+    "V": 99.068414,
+    "X": 0, # added to ignore. TODO: figure out what to do with it
+    "B": 0, # added to ignore. TODO: figure out what to do with it
+    "Z": 0, # added to ignore. TODO: figure out what to do with it
 }
 
 #This is the mass of water. Adding the mass of water to the sum of all the residue masses gives the mass of the peptide.

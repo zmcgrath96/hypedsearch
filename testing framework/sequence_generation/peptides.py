@@ -68,7 +68,7 @@ def __make_hybrid_pep(hybrid_prot: dict, min_length=4, max_length=20, dist='beta
         'left_parent_starting_position': hybrid_prot['protein'].index(pep),
         'left_parent_ending_position': j_site,
         'right_parent_starting_position': hybrid_prot['right_parent_start_position'],
-        'right_parent_ending_position': hybrid_prot['right_parent_start_position'] + right_contr,
+        'right_parent_ending_position': hybrid_prot['right_parent_start_position'] + right_contr - 1,
         'left_parent_name': hybrid_prot['left_parent_name'],
         'right_parent_name': hybrid_prot['right_parent_name']
     }
@@ -112,7 +112,7 @@ def __make_hybrid_peps_brute_force(hybrid_prot: dict, max_contribution=10, min_c
                 'left_parent_starting_position': hybrid_prot['protein'].index(pep),
                 'left_parent_ending_position': j_site,
                 'right_parent_starting_position': hybrid_prot['right_parent_start_position'],
-                'right_parent_ending_position': hybrid_prot['right_parent_start_position'] + j,
+                'right_parent_ending_position': hybrid_prot['right_parent_start_position'] + j - 1,
                 'left_parent_name': hybrid_prot['left_parent_name'],
                 'right_parent_name': hybrid_prot['right_parent_name']
             })
@@ -182,7 +182,7 @@ def __generate_hybrids(hybrid_prots: list, num_gen=10, peptide_name_prefix='HYBR
     print('\nFinished generating hybrid peptides')
     return hybrid_peps
 
-def __generate_hybrids_brute_force(hybrid_prots: list, peptide_name_prefix='HYBRID_PEPTIDE', min_length=2, max_contribution=10) -> list:
+def __generate_hybrids_brute_force(hybrid_prots: list, peptide_name_prefix='HYBRID_PEPTIDE', min_length=2, max_contribution=10, min_contribution=3) -> list:
     '''
     Generate all possible hybrid peptides from a window of a hybrid 
 
@@ -220,7 +220,7 @@ def __generate_hybrids_brute_force(hybrid_prots: list, peptide_name_prefix='HYBR
     name_c = 0
 
     for prot in hybrid_prots:
-        hybrid_peps += __make_hybrid_peps_brute_force(prot, max_contribution=max_contribution, min_length=min_length)
+        hybrid_peps += __make_hybrid_peps_brute_force(prot, min_contribution=min_contribution, max_contribution=max_contribution, min_length=min_length)
     fill_zeros = len(str(len(hybrid_peps)))
     for pep in hybrid_peps:
         pep['peptide_name'] = peptide_name_prefix + str(name_c).zfill(fill_zeros)
@@ -232,7 +232,7 @@ def __generate_hybrids_brute_force(hybrid_prots: list, peptide_name_prefix='HYBR
 #          END PRIVATE FUNCTIONS
 ############################################################################################################
 
-def gen_peptides(proteins: list, n: int, min_length=3, max_length=20, digest='random', hybrid_list=False, dist='beta') -> list:
+def gen_peptides(proteins: list, n: int, min_length=3, max_length=20, digest='random', min_contribution=3, hybrid_list=False, dist='beta') -> list:
     '''
     Generates peptides from proteins given
     
@@ -277,7 +277,7 @@ def gen_peptides(proteins: list, n: int, min_length=3, max_length=20, digest='ra
 
     else:
         # return __generate_hybrids(proteins, num_gen=n, min_length=min_length, max_length=max_length)
-        return __generate_hybrids_brute_force(proteins, min_length=min_length)
+        return __generate_hybrids_brute_force(proteins, min_length=min_length, min_contribution=min_contribution)
 
 
     
