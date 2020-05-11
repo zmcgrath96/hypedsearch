@@ -6,26 +6,16 @@ Date: 6 April 2020
 
 Find protein and subsequence for every spectra passed in
 '''
-from src.file_io import fasta, mzML
+from src.file_io import mzML
 from src.alignment import search, aligners
+from src.database.database import Database
 from math import ceil
 
 ############## Constants ##############
 TOP_N = 5
 #######################################
 
-def index_database(database: list) -> dict:
-    '''
-    Turn a database list into a dictionary keyed by names
-
-    Inputs:
-        database:   list of dictionaries from a .fasta file
-    Outputs:
-        dict with entry hashed by name
-    '''
-    return {x['name']: x for x in database}
-
-def id_spectrum(spectrum: dict, database: dict, n=TOP_N) -> dict:
+def id_spectrum(spectrum: dict, database: Database, n=TOP_N, min_peptide_len=5, max_peptide_len=20) -> dict:
     '''
     Run a scoring and alignment on a specific spectrum 
 
@@ -34,9 +24,11 @@ def id_spectrum(spectrum: dict, database: dict, n=TOP_N) -> dict:
             scan_no:    int scan number
             spectrum:   list of floats
             level:      int ms level
-        database:   dict of indexed proteins loaded from a .fasta file
+        database:   Database class instance
     kwargs:
         n:          number of alignments to return for each spectrum. Default=3
+        min_peptide_len: minimum peptide length to consider. Default=5
+        max_peptide_len: maximum peptide length to consider. Default=20
     Outputs:
         dict of the following form
         {
@@ -46,7 +38,7 @@ def id_spectrum(spectrum: dict, database: dict, n=TOP_N) -> dict:
         }
     '''
     # get the top b and top y scores from the database
-    top_b, top_y = search.search_proteins(spectrum, database, TOP_N)
+    top_b, top_y = search.search_database(spectrum, database, TOP_N)
     # try and find some alignment from these scores
     alignments = aligners.align_spectrum_by_protein_ions(spectrum['spectrum'], top_b, top_y)
 
@@ -62,18 +54,30 @@ def id_spectrum(spectrum: dict, database: dict, n=TOP_N) -> dict:
         alignments += b_side + y_side
 
     for a in alignments:
-        a['sequence'] = database[a['protein_name']]['sequence'][a['starting_position']: a['ending_position'] + 1]
+        protein_sequence = database.get_entry_by_name(a['protein_name']).sequence
+        a['sequence'] = protein_sequence[a['starting_position']: a['ending_position'] + 1]
         # NOTE: THESE ARE TEMPORARY FIXES UNTIL A HYBRID ALIGNMENT ALGORITHM IS PUT IN PLACE
         if 'confidence' not in a:
             a['confidence'] = 50
         if 'length' not in a:
             a['length'] = a['k']
+
+    filtered = []
+    for a in alignments:
+        if a['length'] < min_peptide_len:
+            continue
+        if a['length'] > max_peptide_len:
+            continue
+        filtered.append(a)
+
+    if len(filtered) <= 0:
+        filtered = alignments
         
         
-    return {'spectrum': spectrum['spectrum'], 'scan_no': spectrum['scan_no'], 'alignments': alignments}
+    return {'spectrum': spectrum['spectrum'], 'scan_no': spectrum['scan_no'], 'alignments': filtered}
 
 
-def id_spectra(spectra_files: list, database_file: str, verbose=True) -> dict:
+def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptide_len=5, max_peptide_len=20) -> dict:
     '''
     Run a scoring and alignment on each spectra passed in
 
@@ -85,15 +89,21 @@ def id_spectra(spectra_files: list, database_file: str, verbose=True) -> dict:
     Outputs:
         dict containing the results. All information is keyed by the spectrum file name with scan number appended
     '''
-    database = fasta.read(database_file, True)
-    database = index_database(database)
+    verbose and print('Loading database...')
+    database = Database(database_file, is_uniprot=True, kmer_size=min_peptide_len)
+    verbose and print('Done. Indexing database...')
+    database.index()
+    verbose and print('Done.')
+    verbose and print('Number of {}-mers found in the database: {}'.format(min_peptide_len, len(database.metadata.keys())))
     results = {}
+    # go through all of the mzml files
     for i, spectrum_file in enumerate(spectra_files):
-        print('Analyzing spectra file {}/{}[{}%]\r'.format(i, len(spectra_files), int(float(i)/float(len(spectra_files)) * 100)), end='')
+        print('Analyzing spectra file {}/{}[{}%]\n'.format(i, len(spectra_files), int(float(i)/float(len(spectra_files)) * 100)))
         spectra = mzML.read(spectrum_file)
+        # go through each spectrum in the mzml file
         for j, spectrum in enumerate(spectra):
             print('Analyzing spectrum {}/{}[{}%]\r'.format(j, len(spectra), int(float(j)/float(len(spectra)) * 100)), end='')
-            entry = id_spectrum(spectrum, database)
+            entry = id_spectrum(spectrum, database, min_peptide_len=min_peptide_len, max_peptide_len=max_peptide_len)
             entry_name = '{}_{}'.format(spectrum_file, spectrum['scan_no'])
             results[entry_name] = entry
 

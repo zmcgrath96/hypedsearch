@@ -1,96 +1,99 @@
 from src.alignment import filtering, kmer_extension
 from src.scoring import scoring
+from src.database.database import Database
+from typing import Iterable
 
 ################### Constants ###################
 BASE_K = 3
-SDEVS = 2
+SDEVS = 4
 STALL_LENGTH = 3
 #################################################
 
-def merge_and_sort(old_b: dict, old_y: dict, new_b: dict, new_y: dict, n=3) -> (dict, dict):
+def find_interesting_kmers(pepspec: list, mers: list) -> (list, list):
     '''
-    Find the best results for each ion type
+    Go through a list of mers and find the ones that are considered interesting
 
     Inputs:
-        (old_b, old_y, new_b, new_y):   dict where the key indicates the ranking (0 the best) of each subset dictionary.
-                                        each dict should have (at least) the entries
-                                        {
-
-                                            b_score: float, 
-                                            y_score: float, 
-                                            sequence: str
-                                        }
-    kwargs:
-        n:  top n number of entries to keep. Default=3
+        pepspec:    list of floats the mass spectrum being searched
+        mers:       list of strings containing kmers
     Outputs:
-        (updated_b, updated_y):         (dict, dict) of the same form as the input, but entries sorted
+        (b_anchors, y_anchors): list of dicts of the form {b_score: float, y_score: float, mer: str}
     '''
-    to_sort_b = [entry for _, entry in old_b.items()] + [entry for _, entry in new_b.items()]
-    to_sort_y = [entry for _, entry in old_y.items()] + [entry for _, entry in new_y.items()]
-    # comparing functions for each ion type
-    b_cmp = lambda a: a['b_score']
-    y_cmp = lambda a: a['y_score']
-    sorted_b = sorted(to_sort_b, key=b_cmp, reverse=True)[:n]
-    sorted_y = sorted(to_sort_y, key=y_cmp, reverse=True)[:n]
+    # for ever mer, score the subsequence
+    mer_scores = []
+    for mer in mers:
+        b_score, y_score = scoring.score_subsequence(pepspec, mer)
+        mer_scores.append({
+            'b_score': b_score,
+            'y_score': y_score, 
+            'mer': mer,
+        })
+    b_anchors = filtering.stddev_filter(mer_scores, 'b_score', SDEVS)
+    y_anchors = filtering.stddev_filter(mer_scores, 'y_score', SDEVS)
+    return b_anchors, y_anchors
 
-    updated_b, updated_y = {}, {}
-    min_len = min(n, len(sorted_b), len(sorted_y))
-    for i in range(min_len):
-        updated_b[i] = sorted_b[i]
-        updated_y[i] = sorted_y[i]
-
-    return (updated_b, updated_y)
-
-def search_protein(spectrum: dict, protein_entry: dict, n=3) -> (dict, dict):
+def get_interesting_protein_positions(database: Database, mers: Iterable) -> list:
     '''
-    Search through the protein to find the top n sequences that describe the spectrum
+    Get the interesting protein entries and positions from a list of mers
 
     Inputs:
-        spectrum:   dict of the following form:
-            {
-                scan_no:    int scan number
-                spectrum:   list of floats
-                level:      int ms level
-            }
-        database:   dict from a .fasta file with the form
-            {
-                sequence: str,
-                name: str, 
-                id: str
-            }
+        database:   instance of class Database
+        mers:       iterable that returns kmers
+    Outputs:
+        list of tuples with entries (protein name: str, starting_position: int, ending_position: int)
+    '''
+    interesting_spots = []
+    for mer in mers:
+        mdom = database.get_metadata_of_mer(mer)
+        [interesting_spots.append(x) for x in mdom]
+    return interesting_spots
+
+def get_best_spots_of_interest(spectrum: list, database: Database, spots_of_interest: list, ion_type: str, n=3) -> list:
+    '''
+    Look through the spots of interest and extend them/score them as much as possible
+
+    Inputs:
+        spectrum:           list of floats. The mass spectrum being analyzed
+        database:           instance of the Database class
+        spots_of_interest:  list of tuples of the form (protein_name: str, starting_position, ending_position)
+        ion_type:           str the ion type we are scoring. Should be either 'b' or 'y'
     kwargs:
-        n:      int top number of results to return for both b and y ion scores
-    Outptus:
-        (b_dict, y_dict)
-        Both of these ion dictionaries have the top n entries keyed by their rank (0 to n-1, 0 being the best)
-         {
-             0: {starting_position: int, ending_position: int, k: int, b_score: float, y_score: float, sequence: str, protein_name: str, protein_id: str}
+        n:                  int the top number of results to return. Default=3 
+    Outputs:
+        dict with entries 
+        {
+             0: {starting_position: int, ending_position: int, k: int, b_score: float, y_score: float, sequence: str, protein_name: str}
              ...
              n-1: {...}
          }
-        If there are not n scores that pass the filter, then all results are returned
     '''
-    # get any significant kmers from the scoring
-    base_scores = scoring.score_sequence(spectrum['spectrum'], protein_entry['sequence'], BASE_K)
-    b_anchors = filtering.stddev_filter(base_scores, 'b_score', SDEVS)
-    y_anchors = filtering.stddev_filter(base_scores, 'y_score', SDEVS)
-    # extend these interesting kmers as much as possible
-    (extended_bs, extended_ys) = kmer_extension.kmer_extend(spectrum['spectrum'], protein_entry['sequence'], b_anchors, y_anchors, STALL_LENGTH)
-    # take the top n best kmers
-    b_res, y_res = {}, {}
-    # dont get out or range in iterating
-    result_number = min(n, len(extended_bs), len(extended_ys))
-    for i in range(result_number):
-        b_res[i] = extended_bs[i]
-        b_res[i]['protein_name'] = protein_entry['name']
-        b_res[i]['protein_id'] = protein_entry['identifier']
-        y_res[i] = extended_ys[i]
-        y_res[i]['protein_name'] = protein_entry['name']
-        y_res[i]['protein_id'] = protein_entry['identifier']
+    if ion_type.lower() not in ['b', 'y']:
+        return {}
+    sort_by_key = 'b_score' if ion_type.lower() == 'b' else 'y_score'
+    extended = []
+    local_entries = {}
+    for i, soi in enumerate(spots_of_interest):
+        # get the entry from the database
+        if soi[0] not in local_entries:
+            local_entries[soi[0]] = database.get_entry_by_name(soi[0])
+        sequence = local_entries[soi[0]].sequence
+        # extend the soi from either starting or ending depending on the ion
+        b_score, y_score = scoring.score_subsequence(spectrum, sequence[soi[1]: soi[2]+1])
+        kmer = {
+            'b_score': b_score,
+            'y_score': y_score,
+            'k': soi[2] - soi[1] + 1,
+            'starting_position': soi[1],
+            'ending_position': soi[2]
+        }
+        extended_kmer = kmer_extension.extend_kmer(spectrum, sequence, kmer, ion_type, STALL_LENGTH)
+        extended_kmer['protein_name'] = soi[0]
+        extended.append(extended_kmer)
+    extended.sort(key=lambda x: x[sort_by_key], reverse=True)
+    return extended[:n]
 
-    return b_res, y_res
 
-def search_proteins(spectrum: dict, database: dict, n=3) -> (dict, dict):
+def search_database(spectrum: dict, database: Database, n=3) -> (dict, dict):
     '''
     Search through the proteins to find the top n sequences that describe the spectrum
 
@@ -101,12 +104,7 @@ def search_proteins(spectrum: dict, database: dict, n=3) -> (dict, dict):
                 spectrum:   list of floats
                 level:      int ms level
             }
-        database:   dict of dicts from a .fasta file with the form
-            {
-                sequence: str,
-                name: str, 
-                id: str
-            }
+        database:   Database class instance
     kwargs:
         n:      int top number of results to return for both b and y ion scores. Default=3
     Outptus:
@@ -118,16 +116,30 @@ def search_proteins(spectrum: dict, database: dict, n=3) -> (dict, dict):
              n-1: {...}
          }
     '''
-    b_results, y_results = {}, {}
-    # go through every protein in the database
-    for _, protein_entry in database.items():
-        top_prot_b, top_prot_y = search_protein(spectrum, protein_entry, n)
-        # if b_results and y_results are empty, just set them to the results we have for the first protein
-        if top_prot_b is None or len(b_results.keys()) == 0:
-            b_results = top_prot_b
-        if top_prot_y is None or len(y_results.keys()) == 0:
-            y_results = top_prot_y
+    # go through the metadata in the database to find the interesting kmers
+    metadata = database.metadata
+    # the metadata keys are the kmers
+    mers = metadata.keys()
+    # go through all of the mers and find only the interesting ones
+    b_anchors, y_anchors = find_interesting_kmers(spectrum['spectrum'], mers)
+    # sort them so that we only take the most interesting ones
+    b_anchors.sort(key=lambda x: x['b_score'], reverse=True)
+    y_anchors.sort(key=lambda x: x['y_score'], reverse=True)
+    # take the kmers from them
+    b_anchor_mers = [x['mer'] for x in b_anchors]
+    y_anchor_mers = [x['mer'] for x in y_anchors]
+    # we have the interesting b anchors and y anchors
+    # we want to go through ONLY the proteins that have these subsequences in them
+    b_spots_of_interest = get_interesting_protein_positions(database, b_anchor_mers)
+    y_spots_of_interest = get_interesting_protein_positions(database, y_anchor_mers)
+    # we have the interesting proteins and associated starting/ending positions
+    # try and extend these as much as possible
+    best_b = get_best_spots_of_interest(spectrum['spectrum'] ,database, b_spots_of_interest, 'b', n)
+    best_y = get_best_spots_of_interest(spectrum['spectrum'], database, y_spots_of_interest, 'y', n)
+    
+    # dont go out of range
+    iter_range = min(n, len(best_b), len(best_y))
 
-        b_results, y_results = merge_and_sort(b_results, y_results, top_prot_b, top_prot_y, n)
-
-    return (b_results, y_results)
+    indexed_b = {i: best_b[i] for i in range(iter_range)}
+    indexed_y = {i: best_y[i] for i in range(iter_range)}
+    return indexed_b, indexed_y

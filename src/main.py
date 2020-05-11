@@ -29,7 +29,9 @@ def main(args: object) -> None:
     arguments = {
         'spectra_folder': args.spectra_folder,
         'database_file': args.database_file,
-        'output_dir': output_dir
+        'output_dir': output_dir,
+        'min_peptide_len': args.min_peptide_len,
+        'max_peptide_len': args.max_peptide_len,
     }
     runner.run(arguments)
 
@@ -39,5 +41,7 @@ if __name__ == '__main__':
     parser.add_argument('spectra_folder', type=str, metavar='SF', help='Path to folder containing spectra files.')
     parser.add_argument('database_file', type=str, metavar='DB', help='Path to .fasta file containing proteins')
     parser.add_argument('--output-dir', dest='save_dir', type=str, default='~/', help='Directory to save all figures. Default=~/')
+    parser.add_argument('--min-peptide-len', dest='min_peptide_len', type=int, default=5, help='Minimum peptide length to consider. Default=5')
+    parser.add_argument('--max-peptide-len', dest='max_peptide_len', type=int, default=20, help='Maximum peptide length to consider. Default=20')
     args = parser.parse_args()
     main(args)

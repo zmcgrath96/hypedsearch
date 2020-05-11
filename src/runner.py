@@ -20,6 +20,8 @@ def run(args: dict) -> None:
             'spectra_folder':   string full path the the directory containing all spectra files
             'database_file':    string full path to the .fasta database file
             'output_dir':       string full path the the directory to save output to
+            'min_peptide_len':  int minimum peptide length to consider
+            'max_peptide_len':  int maximum peptide length to consider
     Outputs:
         None
     '''
@@ -32,7 +34,7 @@ def run(args: dict) -> None:
             spectra_files.append(args['spectra_folder'] + fname)
         break
 
-    matched_spectra = id_spectra.id_spectra(spectra_files, args['database_file'])
+    matched_spectra = id_spectra.id_spectra(spectra_files, args['database_file'], min_peptide_len=args['min_peptide_len'], max_peptide_len=args['max_peptide_len'])
     summary.generate(matched_spectra, args['output_dir'])
     
     

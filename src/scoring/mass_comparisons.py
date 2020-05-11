@@ -1,17 +1,16 @@
 from src.spectra.gen_spectra import calc_masses
 
-'''cmp_spectra_spectra
-
-DESC: 
-    score two spectra against eachother
-    simple additive scoring algorithm with a length divider
-PARAMS:
-    spec: list of floats mass spectra of first sequence
-    reference: list of floats mass spectra of second sequence
-RETURNS:
-    float score from comparison
-'''
-def cmp_spectra_spectra__JAN_2020(spec, reference):
+def cmp_spectra_spectra__JAN_2020(spec: list, reference: list) -> float:
+    '''
+    Score two spectra against eachother
+    Simple additive scoring algorithm with a length divider of the smaller sequence
+    
+    Inputs:
+        spec: list of floats mass spectra of first sequence
+        reference: list of floats mass spectra of second sequence
+    Outputs:
+        float score from comparison
+    '''
     if len(spec) == 0 or len(reference) == 0:
         return
     streak = 0
@@ -71,7 +70,7 @@ def compare_masses__FEB_2020(spectrum: list, reference: list) -> float:
     score /= (len(reference) / 2)
     return score 
 
-def compare_masses(spectrum: list, reference: list) -> float:
+def compare_masses__APRIL_2020(spectrum: list, reference: list) -> float:
     '''
     CREATED APRIL 6 2020
     Score two spectra against eachother. Simple additive scoring with bonuses for streaks
@@ -107,6 +106,45 @@ def compare_masses(spectrum: list, reference: list) -> float:
     
     score += max_streak
     score /= (float(len(reference)) / 2)
+    return score 
+
+def compare_masses(spectrum: list, reference: list) -> float:
+    '''
+    CREATED APRIL 27 2020
+    Score two spectra against eachother. Simple additive scoring with bonuses for streaks
+    Divides by the length of the reference to make it length biased for the reference
+
+    Note:   the difference between this one and the other April one is this one divides 
+            by the length of the spectrum. This is because all extended kmers will 
+            be getting longer, so we want the score to increase with the length, not stay the same
+
+    Inputs:
+        spectrum:   list of floats (from mass spectra)
+        reference:  list of floats (calculated from protein sequence)
+    Outputs:
+        score:      float score 
+    '''
+    if len(spectrum) == 0 or len(reference) == 0:
+        return 0.0
+    streak = 0
+    last = True
+    score = 0
+    max_streak = 0
+    for refmass in reference:
+    
+        if refmass in spectrum:
+            if last == True:
+                streak += 1
+                max_streak = max([streak, max_streak])
+            score += 1
+            last = True 
+
+        else:
+            streak = 0
+            last = False
+    
+    score += max_streak
+    score /= float(len(spectrum))
     return score 
 
 def compare_spectra_sequence_ion_type(spectra: list, reference: str, ion: str) -> float:

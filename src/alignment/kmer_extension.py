@@ -24,6 +24,10 @@ def new_entry(old_entry: dict, prot: str, spectrum: list, ion='b') -> dict:
     if starting_pos < 0 or ending_pos > len(prot) - 1:
         return old_entry
 
+    # check for negative lengths
+    if starting_pos > ending_pos or ending_pos < starting_pos:
+        return old_entry
+
     mer_seq = prot[starting_pos:ending_pos+1]
     mer_spec_b = gen_spectra.gen_spectrum(mer_seq, ion='b')['spectrum']
     mer_spec_y = gen_spectra.gen_spectrum(mer_seq, ion='y')['spectrum']
@@ -36,80 +40,46 @@ def new_entry(old_entry: dict, prot: str, spectrum: list, ion='b') -> dict:
         'y_score': mass_comparisons.compare_masses(spectrum, mer_spec_y)
     }
 
-def kmer_extend(spectrum: list, sequence: str, b_kmers: list, y_kmers: list, stall_length=3) -> (list, list):
+def extend_kmer(spectrum: list, sequence: str, kmer: dict, ion: str, stall_length=3) -> dict:
     '''
-    Extend kmers until the score does not increase any more. Stall length is used to determine
-    the number of iterations the score can go without increasing without finishing the kmer growth
-
+    Extend a kmer until the score tells us that the adding amino acids doens't make it a better alignment
+    
     Inputs:
-        spectrum:           list of floats the mass spectrum being checked
-        sequence:           str the sequence to add amino acids from
-        (b_kmers, y_kmers): list of dictionaries with (at least) the following indices
+        spectrum:       list of floats. The mass spectrum in question
+        sequence:       str The full protein sequence we are pulling amino acids from 
+        kmer:           dict of the form
                         {
-                            b_score: float,
-                            y_score: float
-                            k: int,
+                            b_score: float, 
+                            y_score: float,
+                            k: int, 
                             starting_position: int,
-                            ending_position: int
+                            ending_position: int,
                         }
+        ion:            str the ion type we are looking at. Should be 'b' or 'y'
     kwargs:
         stall_length:   int the number of iterations a subsequence is allowed to go witth 
-                        no increase in score before finishing kmer growth on a certain kmer
-    Outputs:
-        (b_list, y_list)
-        list of reversed order rankings of best matches for each ion type. Index 0 is the best match and index (len-1) is the worst
+                        no increase in score before finishing kmer growth on a certain kmer. Default=3
+    Outputs
+        dict with updated values of the form
+            {
+                b_score: float,
+                y_score: float, 
+                k: int, 
+                starting_position: int,
+                ending_positoin: int,
+            }
     '''
-    # keep track of the ones that we want to increment. Prepend it to the front and take the top
-    b_list = []
-    y_list = []
-    b_stall_counter = {b['starting_position']: [stall_length, b, b['b_score']] for b in b_kmers}
-    y_stall_counter = {y['ending_position']: [stall_length, y, y['y_score']] for y in y_kmers}
-
-    # go through the kmers and extend them for as long as possible
-    while(len(b_kmers)):
-        b_tmp = []
-        # rounds of incrementing
-        for i in range(len(b_kmers)):
-            # try extending the current entry
-            updated = new_entry(b_kmers[i], sequence, spectrum, ion='b')
-            # if the score increased from or kept the same as the max score, the kmer increased, and the score is nonzero, update
-            if updated['b_score'] >= max(b_kmers[i]['b_score'], b_stall_counter[b_kmers[i]['starting_position']][2]) and updated['b_score'] > 0 and updated['k'] != b_kmers[i]['k']:
-                b_tmp.append(updated)
-                b_stall_counter[b_kmers[i]['starting_position']][1] = updated
-                b_stall_counter[b_kmers[i]['starting_position']][2] = updated['b_score']
-            # if the score didnt increase and the counter is non zero, decrement the counter
-            elif b_stall_counter[b_kmers[i]['starting_position']][0] > 0:
-                b_tmp.append(updated)
-                b_stall_counter[b_kmers[i]['starting_position']][0] -= 1
-            # the entry has run out of chances
-            else:
-                b_list.insert(0, b_kmers[i])
-        b_kmers = b_tmp
-
-    # go through the kmers and extend them for as long as possible  
-    while(len(y_kmers)):
-        y_tmp = []
-        # rounds of incrementing
-        for i in range(len(y_kmers)):
-            # try extending the current entry
-            updated = new_entry(y_kmers[i], sequence, spectrum, ion='y')
-            # if the score increased from or kept the same as the max score, the kmer increased, and the score is nonzero, update
-            if updated['y_score'] >= max(y_kmers[i]['y_score'], y_stall_counter[y_kmers[i]['ending_position']][2]) and updated['y_score'] > 0 and updated['k'] != y_kmers[i]['k']:
-                y_tmp.append(updated)
-                y_stall_counter[y_kmers[i]['ending_position']][1] = updated
-                y_stall_counter[y_kmers[i]['ending_position']][2] = updated['y_score']
-            # if the score didnt increase and the counter is non zero, decrement the counter
-            elif y_stall_counter[y_kmers[i]['ending_position']][0] > 0:
-                y_tmp.append(updated)
-                y_stall_counter[y_kmers[i]['ending_position']][0] -= 1
-            # the entry has run out of chances
-            else: 
-                y_list.insert(0, y_kmers[i])
-        y_kmers = y_tmp
-        
-    # get the desired scores from the stall counters
-    best_matches_b = [b_stall_counter[b['starting_position']][1] for b in b_list]
-    best_matches_y = [y_stall_counter[y['ending_position']][1] for y in y_list]
-    best_matches_b.sort(key=lambda x: x['b_score'], reverse=True)
-    best_matches_y.sort(key=lambda x: x['y_score'], reverse=True)
-    return (best_matches_b, best_matches_y)
+    if ion.lower() not in ['b', 'y']:
+        return kmer
+    score_key = 'b_score' if ion.lower() == 'b' else 'y_score'
+    # keep track of the last time a score increased
+    last_maintenance = kmer
+    # keep going until we run out of extension
+    while stall_length > 0:
+        updated = new_entry(kmer, sequence, spectrum, ion=ion)
+        if updated[score_key] > kmer[score_key] and updated[score_key] > 0 and updated['k'] != kmer['k']:
+            last_maintenance = updated
+        else: 
+            stall_length -= 1
+        kmer = updated
+    return last_maintenance

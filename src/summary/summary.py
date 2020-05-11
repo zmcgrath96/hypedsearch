@@ -67,5 +67,5 @@ def generate(alignments: dict, output_dir='./') -> None:
     output_dir = make_valid_dir_string(output_dir)
     make_dir(output_dir)
 
-    text_file(alignments, output_dir)
+    # text_file(alignments, output_dir)
     json_file(alignments, output_dir)
