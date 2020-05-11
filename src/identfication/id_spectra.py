@@ -1,29 +1,20 @@
-'''
-id_spectra.py
-
-Author: Zachary McGrath
-Date: 6 April 2020
-
-Find protein and subsequence for every spectra passed in
-'''
 from src.file_io import mzML
 from src.alignment import search, aligners
 from src.database.database import Database
+from src.modules.spectrum import Spectrum
+from src.modules.alignment import Aligner
 from math import ceil
 
 ############## Constants ##############
 TOP_N = 5
 #######################################
 
-def id_spectrum(spectrum: dict, database: Database, n=TOP_N, min_peptide_len=5, max_peptide_len=20) -> dict:
+def id_spectrum(spectrum: Spectrum, database: Database, n=TOP_N, min_peptide_len=5, max_peptide_len=20) -> dict:
     '''
     Run a scoring and alignment on a specific spectrum 
 
     Inputs:
-        spectrum:   dictionary with the following attributes
-            scan_no:    int scan number
-            spectrum:   list of floats
-            level:      int ms level
+        spectrum:   Spectrum object
         database:   Database class instance
     kwargs:
         n:          number of alignments to return for each spectrum. Default=3
@@ -39,42 +30,14 @@ def id_spectrum(spectrum: dict, database: Database, n=TOP_N, min_peptide_len=5, 
     '''
     # get the top b and top y scores from the database
     top_b, top_y = search.search_database(spectrum, database, TOP_N)
+    # top b and y are dictionaries with rank as key and values are Scores objects
     # try and find some alignment from these scores
-    alignments = aligners.align_spectrum_by_protein_ions(spectrum['spectrum'], top_b, top_y)
-
-    # make a sequence from this
-    # TODO: if alignments don't return anything promising, attempt some sort of hybrid alignment
-    # for now, just take the top by and the top y and return them as alignment 1 and 2
-    alignments = [x for _, x in alignments.items()]
-    if len(alignments) < n:
+    aligner = Aligner(spectrum)
+    aligner.add_scores([x for _, x in top_b.items()], 'b')
+    aligner.add_scores([x for _, x in top_y.items()], 'y')
+    aligner.make_alignment()
         
-        num_ions = ceil((n-len(alignments))/2)
-        b_side = [x for _, x in top_b.items()][:num_ions]
-        y_side = [x for _, x in top_y.items()][:num_ions]
-        alignments += b_side + y_side
-
-    for a in alignments:
-        protein_sequence = database.get_entry_by_name(a['protein_name']).sequence
-        a['sequence'] = protein_sequence[a['starting_position']: a['ending_position'] + 1]
-        # NOTE: THESE ARE TEMPORARY FIXES UNTIL A HYBRID ALIGNMENT ALGORITHM IS PUT IN PLACE
-        if 'confidence' not in a:
-            a['confidence'] = 50
-        if 'length' not in a:
-            a['length'] = a['k']
-
-    filtered = []
-    for a in alignments:
-        if a['length'] < min_peptide_len:
-            continue
-        if a['length'] > max_peptide_len:
-            continue
-        filtered.append(a)
-
-    if len(filtered) <= 0:
-        filtered = alignments
-        
-        
-    return {'spectrum': spectrum['spectrum'], 'scan_no': spectrum['scan_no'], 'alignments': filtered}
+    return aligner
 
 
 def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptide_len=5, max_peptide_len=20) -> dict:
@@ -87,7 +50,7 @@ def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptid
     kwargs: 
         verbose:        bool whether or not to print messages. Default=True
     Outputs:
-        dict containing the results. All information is keyed by the spectrum file name with scan number appended
+        dict containing the results. All information is keyed by the spectrum file name with scan number appended and the values are Aligner objects
     '''
     verbose and print('Loading database...')
     database = Database(database_file, is_uniprot=True, kmer_size=min_peptide_len)
@@ -99,12 +62,15 @@ def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptid
     # go through all of the mzml files
     for i, spectrum_file in enumerate(spectra_files):
         print('Analyzing spectra file {}/{}[{}%]\n'.format(i, len(spectra_files), int(float(i)/float(len(spectra_files)) * 100)))
+
         spectra = mzML.read(spectrum_file)
         # go through each spectrum in the mzml file
-        for j, spectrum in enumerate(spectra):
+        for j, spec in enumerate(spectra):
             print('Analyzing spectrum {}/{}[{}%]\r'.format(j, len(spectra), int(float(j)/float(len(spectra)) * 100)), end='')
+            # make a spectrum object 
+            spectrum = Spectrum(spec['spectrum'], spec['scan_no'], spec['level'], spec['precursor'], spec['abundance'])
             entry = id_spectrum(spectrum, database, min_peptide_len=min_peptide_len, max_peptide_len=max_peptide_len)
-            entry_name = '{}_{}'.format(spectrum_file, spectrum['scan_no'])
+            entry_name = '{}_{}'.format(spectrum_file, spectrum.scan_number)
             results[entry_name] = entry
 
     return results

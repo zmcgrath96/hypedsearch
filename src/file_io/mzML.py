@@ -30,7 +30,8 @@ def read(file: str) -> list:
                 'level': int(s.getMSLevel()),
                 'spectrum': [float(x) for x in list(s.get_peaks())[0]], 
                 'abundance': [float(x) for x in list(s.get_peaks())[1]], 
-                'scan_no': int(str(s.getNativeID()).split('=')[-1].replace("'", ''))
+                'scan_no': int(str(s.getNativeID()).split('=')[-1].replace("'", '')), 
+                'precursor': s.getPrecursor()
             })
 
         return spectra
