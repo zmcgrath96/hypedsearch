@@ -1,61 +1,46 @@
 from src.scoring import mass_comparisons
 from src.spectra import gen_spectra
+from src.types.objects import ScoredKmer, Spectrum, Kmer
+from src.types.database import Entry
 
-def new_entry(old_entry: dict, prot: str, spectrum: list, ion='b') -> dict:
+def new_entry(old_entry: ScoredKmer, protein: Entry, spectrum: Spectrum, ion='b') -> ScoredKmer:
     '''
     Generate a new entry from the old entry
     
     Input:
         old_entry:   dict entry with k, sequence, b and y scores, start and end positions
-        prot:        str sequence of the protein
+        prot:        Entry class instance 
         spectrum:    list spectrum to score against
     kwargs:
         ion:         str ion type to determine which. Options are 'b', 'y'. Default='b' 
     Ouptut:
         new_entry:   dict entry with the new k, new sequence, new b and y scores, new start and end positions
     '''
-    # check that we are operating on a valid entry
-    keys = ['k', 'starting_position', 'ending_position', 'b_score', 'y_score']
-    if any([old_entry[k] is None for k in keys]) or prot is None or spectrum is None:
-        return old_entry
-
-    starting_pos = old_entry['starting_position'] if ion == 'b' else old_entry['starting_position'] - 1
-    ending_pos = old_entry['ending_position'] + 1 if ion == 'b' else old_entry['ending_position']
-    if starting_pos < 0 or ending_pos > len(prot) - 1:
+    starting_pos = old_entry.kmer.start_position if ion == 'b' else old_entry.kmer.start_position - 1
+    ending_pos = old_entry.kmer.end_position + 1 if ion == 'b' else old_entry.kmer.end_position
+    if starting_pos < 0 or ending_pos > len(protein.sequence) - 1:
         return old_entry
 
     # check for negative lengths
     if starting_pos > ending_pos or ending_pos < starting_pos:
         return old_entry
 
-    mer_seq = prot[starting_pos:ending_pos+1]
+    mer_seq = protein.sequence[starting_pos:ending_pos+1]
     mer_spec_b = gen_spectra.gen_spectrum(mer_seq, ion='b')['spectrum']
     mer_spec_y = gen_spectra.gen_spectrum(mer_seq, ion='y')['spectrum']
-    return {
-        'k': old_entry['k'] + 1,
-        'sequence': mer_seq,
-        'starting_position': starting_pos,
-        'ending_position': ending_pos,
-        'b_score': mass_comparisons.compare_masses(spectrum, mer_spec_b),
-        'y_score': mass_comparisons.compare_masses(spectrum, mer_spec_y)
-    }
+    longer_kmer = Kmer(old_entry.kmer.k + 1, mer_seq, protein.name, starting_pos, ending_pos)
+    new_sk = ScoredKmer( mass_comparisons.compare_masses(spectrum, mer_spec_b), mass_comparisons.compare_masses(spectrum, mer_spec_y), longer_kmer)
+    return new_sk
 
-def extend_kmer(spectrum: list, sequence: str, kmer: dict, ion: str, stall_length=3) -> dict:
+def extend_kmer(spectrum: Spectrum, protein: Entry, kmer: ScoredKmer, ion: str, stall_length=3) -> dict:
     '''
     Extend a kmer until the score tells us that the adding amino acids doens't make it a better alignment
     
     Inputs:
-        spectrum:       list of floats. The mass spectrum in question
-        sequence:       str The full protein sequence we are pulling amino acids from 
-        kmer:           dict of the form
-                        {
-                            b_score: float, 
-                            y_score: float,
-                            k: int, 
-                            starting_position: int,
-                            ending_position: int,
-                        }
-        ion:            str the ion type we are looking at. Should be 'b' or 'y'
+        spectrum:           Spectrum namedtuple instance
+        protein_sequence:   Entry class instance
+        kmer:               ScoredKmer namedtuple instance
+        ion:                str the ion type we are looking at. Should be 'b' or 'y'
     kwargs:
         stall_length:   int the number of iterations a subsequence is allowed to go witth 
                         no increase in score before finishing kmer growth on a certain kmer. Default=3
@@ -76,8 +61,8 @@ def extend_kmer(spectrum: list, sequence: str, kmer: dict, ion: str, stall_lengt
     last_maintenance = kmer
     # keep going until we run out of extension
     while stall_length > 0:
-        updated = new_entry(kmer, sequence, spectrum, ion=ion)
-        if updated[score_key] > kmer[score_key] and updated[score_key] > 0 and updated['k'] != kmer['k']:
+        updated = new_entry(kmer, protein, spectrum, ion=ion)
+        if getattr(updated, score_key) > getattr(kmer, score_key) and getattr(updated, score_key) > 0 and updated.kmer.k != kmer.kmer.k:
             last_maintenance = updated
         else: 
             stall_length -= 1

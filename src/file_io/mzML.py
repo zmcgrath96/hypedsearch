@@ -26,11 +26,17 @@ def read(file: str) -> list:
 
         for s in exp.getSpectra():
             # get_peaks returns two lists. 0 is the mz and the second is the abundance
+            spec = [float(x) for x in list(s.get_peaks())[0]]
+            abundance = [float(x) for x in list(s.get_peaks())[1]]
+            if not len(spec) > 0:
+                continue
+            precursor = max(spec)
             spectra.append({
                 'level': int(s.getMSLevel()),
-                'spectrum': [float(x) for x in list(s.get_peaks())[0]], 
-                'abundance': [float(x) for x in list(s.get_peaks())[1]], 
-                'scan_no': int(str(s.getNativeID()).split('=')[-1].replace("'", ''))
+                'spectrum': spec, 
+                'abundance': abundance, 
+                'scan_no': int(str(s.getNativeID()).split('=')[-1].replace("'", '')),
+                'precursor_mass': precursor
             })
 
         return spectra

@@ -9,7 +9,7 @@ In charge of the flow of the program
 '''
 from os import walk
 from src.identfication import id_spectra
-from src.summary import summary
+from src import summary
 
 def run(args: dict) -> None:
     '''

@@ -18,7 +18,10 @@ def json_file(alignments: dict, output_dir='./') -> None:
         None
     '''
     json_file_name = output_dir + SUMMARY_NAME 
-    JSON.save_dict(json_file_name, alignments)
+    dictified = {}
+    for name, alignment in alignments.items():
+        dictified[name] = alignment.to_json()
+    JSON.save_dict(json_file_name, dictified)
 
 def text_file(alignments: dict, output_dir='./') -> None:
     '''
