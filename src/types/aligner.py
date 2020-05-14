@@ -122,14 +122,14 @@ class Aligner(object):
         if b_entry.kmer.protein == y_entry.kmer.protein:
             # check to see if y is left of b
             if y_entry.kmer.start_position < b_entry.kmer.start_position and y_entry.kmer.end_position < b_entry.kmer.end_position:
-                spliced_name = '{}-{}-hybrid'.format(b_entry.kmer.protein, y_entry.kmer.protein)
+                spliced_name = '{}~{}~hybrid'.format(b_entry.kmer.protein, y_entry.kmer.protein)
             elif (y_entry.kmer.start_position - b_entry.kmer.end_position) > missing_overlap:
-                spliced_name = '{}-{}-hybrid'.format(b_entry.kmer.protein, y_entry.kmer.protein)
+                spliced_name = '{}~{}~hybrid'.format(b_entry.kmer.protein, y_entry.kmer.protein)
             else:
                 spliced_name = b_entry.kmer.protein
         # either the proteins aren't the same or they're too far away
         else:
-            spliced_name = '{}-{}-hybrid'.format(b_entry.kmer.protein, y_entry.kmer.protein)
+            spliced_name = '{}~{}~hybrid'.format(b_entry.kmer.protein, y_entry.kmer.protein)
         if 'hybrid' not in spliced_name:
             # find the overlap
             spliced_seq = self.__align_overlap(b_entry, y_entry)

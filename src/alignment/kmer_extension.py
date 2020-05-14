@@ -29,7 +29,7 @@ def new_entry(old_entry: ScoredKmer, protein: Entry, spectrum: Spectrum, ion='b'
     mer_spec_b = gen_spectra.gen_spectrum(mer_seq, ion='b')['spectrum']
     mer_spec_y = gen_spectra.gen_spectrum(mer_seq, ion='y')['spectrum']
     longer_kmer = Kmer(old_entry.kmer.k + 1, mer_seq, protein.name, starting_pos, ending_pos)
-    new_sk = ScoredKmer( mass_comparisons.compare_masses(spectrum, mer_spec_b), mass_comparisons.compare_masses(spectrum, mer_spec_y), longer_kmer)
+    new_sk = ScoredKmer( mass_comparisons.compare_masses(spectrum.spectrum, mer_spec_b), mass_comparisons.compare_masses(spectrum.spectrum, mer_spec_y), longer_kmer)
     return new_sk
 
 def extend_kmer(spectrum: Spectrum, protein: Entry, kmer: ScoredKmer, ion: str, stall_length=3) -> dict:

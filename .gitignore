@@ -5,3 +5,4 @@
 *.fasta
 /testing framework/data*
 /testing framework/data/testing_output/*
+*.vscode
