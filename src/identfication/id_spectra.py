@@ -1,32 +1,26 @@
 from src.file_io import mzML
-from src.alignment import search, aligners
-from src.database.database import Database
-from src.modules.spectrum import Spectrum
-from src.modules.alignment import Aligner
-from math import ceil
+from src.identfication import search
+from src.types.database import Database
+from src.types.aligner import Aligner
+from src.types.objects import Spectrum
 
 ############## Constants ##############
 TOP_N = 5
 #######################################
 
-def id_spectrum(spectrum: Spectrum, database: Database, n=TOP_N, min_peptide_len=5, max_peptide_len=20) -> dict:
+def id_spectrum(spectrum: Spectrum, database: Database, n=TOP_N, min_peptide_len=5, max_peptide_len=20) -> Aligner:
     '''
     Run a scoring and alignment on a specific spectrum 
 
     Inputs:
-        spectrum:   Spectrum object
+        spectrum:   Spectrum namedtuple instance
         database:   Database class instance
     kwargs:
-        n:          number of alignments to return for each spectrum. Default=3
-        min_peptide_len: minimum peptide length to consider. Default=5
-        max_peptide_len: maximum peptide length to consider. Default=20
+        n:                  number of alignments to return for each spectrum. Default=3
+        min_peptide_len:     minimum peptide length to consider. Default=5
+        max_peptide_len:    maximum peptide length to consider. Default=20
     Outputs:
-        dict of the following form
-        {
-            'spectrum': list,
-            'alignments': list of dicts,
-            'scan_no': int
-        }
+        Aligner
     '''
     # get the top b and top y scores from the database
     top_b, top_y = search.search_database(spectrum, database, TOP_N)
@@ -35,7 +29,7 @@ def id_spectrum(spectrum: Spectrum, database: Database, n=TOP_N, min_peptide_len
     aligner = Aligner(spectrum)
     aligner.add_scores([x for _, x in top_b.items()], 'b')
     aligner.add_scores([x for _, x in top_y.items()], 'y')
-    aligner.make_alignment()
+    aligner.make_alignments()
         
     return aligner
 
@@ -67,8 +61,8 @@ def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptid
         # go through each spectrum in the mzml file
         for j, spec in enumerate(spectra):
             print('Analyzing spectrum {}/{}[{}%]\r'.format(j, len(spectra), int(float(j)/float(len(spectra)) * 100)), end='')
-            # make a spectrum object 
-            spectrum = Spectrum(spec['spectrum'], spec['scan_no'], spec['level'], spec['precursor'], spec['abundance'])
+            # make a Spectrum namedtuple object
+            spectrum = Spectrum(spec['spectrum'], spec['abundance'], spec['level'], spec['scan_no'], spec['precursor_mass'], spectrum_file)
             entry = id_spectrum(spectrum, database, min_peptide_len=min_peptide_len, max_peptide_len=max_peptide_len)
             entry_name = '{}_{}'.format(spectrum_file, spectrum.scan_number)
             results[entry_name] = entry
