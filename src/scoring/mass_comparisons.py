@@ -1,4 +1,5 @@
 from src.spectra.gen_spectra import calc_masses
+from bisect import bisect
 
 def cmp_spectra_spectra__JAN_2020(spec: list, reference: list) -> float:
     '''
@@ -179,3 +180,64 @@ def compare_sequence_sequence_ion_type(spectra: str, reference: str, ion: str) -
     spectra_ions, _ = calc_masses(spectra, ion=ion)
     reference_ions , _= calc_masses(reference, ion=ion)
     return compare_masses(spectra_ions, reference_ions)
+
+
+def ppm_opt(reference: float, ppm_tolerance: float) -> float:
+    '''
+    Calculate the ppm difference between the observed and actual
+    '''
+    return abs((ppm_tolerance / 1000000)*reference)
+
+def optimized_compare_masses(observed: list, reference: list, ppm_tolerance=20) -> float:
+    '''
+    CREATED MAY 19 2020
+    Score two spectra against eachother. Simple additive scoring with bonuses for streaks
+    Divides by the length of the reference to make it length biased for the reference
+
+    Note:   the difference between this one and the April 27 one is this one attempts
+            to be more optimized in terms of search complexity
+
+    Inputs:
+        observed:       list of floats (from mass spectra)
+        reference:      list of floats (calculated from protein sequence)
+        ppm_tolerance:  float of the mass error tolerance allowed
+    Outputs:
+        score:      float score 
+    '''
+    if len(observed) == 0 or len(reference) == 0:
+        return 0.0
+    observed.sort()
+    def boundaries(mass):
+        tol = ppm_opt(mass, ppm_tolerance)
+        return [mass - tol, mass + tol]
+                
+    # calculate the boundaries for each of the reference masses for binary search
+    observed_boundaries = []
+    for obs in observed:
+        observed_boundaries += boundaries(obs)
+        
+    # local variables for score
+    streak = 0
+    last = True
+    score = 0
+    max_streak = 0
+    
+    for ref in reference:
+        # see if an observed is in the spectrum +/- the ppm by binary searchy
+        found = bisect(observed_boundaries, ref) % 2
+    
+        # increment score if found
+        if found:
+            if last == True:
+                streak += 1
+                max_streak = max([streak, max_streak])
+            score += 1
+            last = True 
+
+        else:
+            streak = 0
+            last = False
+    
+    score += max_streak
+    score /= float(len(observed))
+    return score 

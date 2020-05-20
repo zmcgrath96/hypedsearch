@@ -58,6 +58,6 @@ def score_subsequence(pepspec: list, subseq: str) -> (float, float):
     '''
     kmerspec_b = gen_spectra.gen_spectrum(subseq, ion='b')['spectrum']
     kmerspec_y = gen_spectra.gen_spectrum(subseq, ion='y')['spectrum']
-    b_score = mass_comparisons.compare_masses(pepspec, kmerspec_b)
-    y_score = mass_comparisons.compare_masses(pepspec, kmerspec_y)
+    b_score = mass_comparisons.optimized_compare_masses(pepspec, kmerspec_b)
+    y_score = mass_comparisons.optimized_compare_masses(pepspec, kmerspec_y)
     return (b_score, y_score)

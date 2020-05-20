@@ -110,7 +110,7 @@ def calc_masses(sequence: str, charge=None, ion=None) -> (list, float):
         precursor_mass: float precursor mass of the entire amino acid sequence
     '''
     masses = []
-
+    sequence = sequence[:-1]
     length = len(sequence)
     total = WATER_MASS
     for i in range(length):
