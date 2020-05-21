@@ -271,7 +271,6 @@ def gen_peptides(proteins: list, n: int, min_length=3, max_length=20, digest='ra
         }
     '''
     digest = 'random' if digest.lower() not in digest_functions.keys() else digest.lower()
-    
     if not hybrid_list:
         return digest_functions[digest](proteins, n, min_length=min_length, max_length=max_length, dist=dist)
 

@@ -218,10 +218,15 @@ def random_digest(proteins, n, peptide_prefix='peptide_', min_length=3, max_leng
 
     for i in range(min(n, len(to_digest))):
         seq = to_digest[i]['sequence']
-        endrange = max(len(seq), len(seq) - max_length)
+        if max_length > len(seq):
+            endrange = 1
+        else:
+            endrange = len(seq) - max_length
         start = randint(0, endrange)
         r = int(min(lengths[i], (len(seq) - start)))
         pep = seq[start : start + r]
+        if pep == '':
+            print('start: {} \t range: {}'.format(start, r))
         pep_name = peptide_prefix + str(i).zfill(fill_zeros)
 
         d = {
