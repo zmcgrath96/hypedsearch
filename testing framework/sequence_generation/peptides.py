@@ -109,6 +109,7 @@ def __make_hybrid_peps_brute_force(hybrid_prot: dict, max_contribution=10, min_c
                 continue
             hyb_peps.append({
                 'sequence': pep,
+                'hybrid_sequence': pep[:i] + '-' + pep[i:],
                 'left_parent_starting_position': hybrid_prot['protein'].index(pep),
                 'left_parent_ending_position': j_site,
                 'right_parent_starting_position': hybrid_prot['right_parent_start_position'],
