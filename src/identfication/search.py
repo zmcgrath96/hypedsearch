@@ -1,4 +1,4 @@
-from src.alignment import filtering, kmer_extension
+from src.identfication import filtering, kmer_extension
 from src.scoring import scoring
 from src.types.database import Database
 from src.types.objects import Spectrum, BasicScoredKmer, Kmer, ScoredKmer
