@@ -116,6 +116,17 @@ class Database(object):
         return prots
 
     ##################### Public Methods #####################
+    def set_kmer_size(self, k: int) -> None:
+        '''
+        Change the k-mer size of the database for indexing
+
+        Inputs:
+            k:      (int) new kmer size 
+        Outputs:
+            None
+        '''
+        self.kmer_size = k
+
     def index(self):
         '''
         Create an indexing of a database by the kmer size. The indexing information 

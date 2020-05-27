@@ -55,12 +55,12 @@ def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptid
     results = {}
     # go through all of the mzml files
     for i, spectrum_file in enumerate(spectra_files):
-        print('Analyzing spectra file {}/{}[{}%]\n'.format(i, len(spectra_files), int(float(i)/float(len(spectra_files)) * 100)))
+        print('Analyzing spectra file {}/{}[{}%]\n'.format(i + 1, len(spectra_files), int(float(i)/float(len(spectra_files)) * 100)))
 
         spectra = mzML.read(spectrum_file)
         # go through each spectrum in the mzml file
         for j, spec in enumerate(spectra):
-            print('Analyzing spectrum {}/{}[{}%]\r'.format(j, len(spectra), int(float(j)/float(len(spectra)) * 100)), end='')
+            print('Analyzing spectrum {}/{}[{}%]\r'.format(j + 1, len(spectra), int(float(j)/float(len(spectra)) * 100)), end='')
             # make a Spectrum namedtuple object
             spectrum = Spectrum(spec['spectrum'], spec['abundance'], spec['level'], spec['scan_no'], spec['precursor_mass'], spectrum_file)
             entry = id_spectrum(spectrum, database, min_peptide_len=min_peptide_len, max_peptide_len=max_peptide_len)

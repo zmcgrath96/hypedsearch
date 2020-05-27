@@ -35,6 +35,7 @@ def run(args: dict) -> None:
         break
 
     matched_spectra = id_spectra.id_spectra(spectra_files, args['database_file'], min_peptide_len=args['min_peptide_len'], max_peptide_len=args['max_peptide_len'])
+    print('\nFinished search. Writting results to {}...'.format(args['output_dir']))
     summary.generate(matched_spectra, args['output_dir'])
     
     
