@@ -1,33 +1,15 @@
 from src.identfication import filtering, kmer_extension
 from src.scoring import scoring
 from src.types.database import Database
-from src.types.objects import Spectrum, BasicScoredKmer, Kmer, ScoredKmer
+from src.types.objects import Spectrum, Kmer, ScoredKmer, MassSequence
+from src.spectra.gen_spectra import gen_spectrum
 
 ################### Constants ###################
 BASE_K = 3
 SDEVS = 4
 STALL_LENGTH = 3
 #################################################
-
-def find_interesting_kmers(spectrum: Spectrum, mers: list) -> (list, list):
-    '''
-    Go through a list of mers and find the ones that are considered interesting
-
-    Inputs:
-        spectrum:   Spectrum namedtuple instance
-        mers:       list of strings containing kmers
-    Outputs:
-        (b_anchors, y_anchors): list of BasicScoredKmer namedtuple instances
-    '''
-    # for ever mer, score the subsequence
-    mer_scores = []
-    for mer in mers:
-        b_score, y_score = scoring.score_subsequence(spectrum.spectrum, mer)
-        bsk = BasicScoredKmer(b_score, y_score, mer)
-        mer_scores.append(bsk)
-    b_anchors = filtering.score_filter(mer_scores, 'b_score')
-    y_anchors = filtering.score_filter(mer_scores, 'y_score')
-    return b_anchors, y_anchors
+    
 
 def get_interesting_protein_positions(database: Database, mers: list) -> list:
     '''
@@ -35,13 +17,13 @@ def get_interesting_protein_positions(database: Database, mers: list) -> list:
 
     Inputs:
         database:   instance of class Database
-        mers:       list of BasicScoredKmer namedtuple instances 
+        mers:       list of strings kmers found
     Outputs:
         list of Kmer namedtuple instances
     '''
     interesting_spots = []
     for mer in mers:
-        mdom = database.get_metadata_of_mer(mer.kmer)
+        mdom = database.get_metadata_of_mer(mer)
         [interesting_spots.append(x) for x in mdom]
     return interesting_spots
 
@@ -77,30 +59,25 @@ def extend_spots_of_interest(spectrum: Spectrum, database: Database, spots_of_in
     return extended[:n]
 
 
-def search_database(spectrum: Spectrum, database: Database, n=3) -> (dict, dict):
+def search_database(spectrum: Spectrum, database: Database, base_k_mers: list,  n=3, ppm_tolerance=20) -> (dict, dict):
     '''
     Search through the proteins to find the top n sequences that describe the spectrum
 
     Inputs:
-        spectrum:   Spectrum namedtuple instance
-        database:   Database class instance
+        spectrum:       (Spectrum) namedtuple instance
+        database:       (Database) class instance
+        base_k_mers:    (list) list of the top scoring kmers to extend
     kwargs:
-        n:      int top number of results to return for both b and y ion scores. Default=3
+        n:              (int) top number of results to return for both b and y ion scores. Default=3
+        ppm_tolerance:  (int) mass tolerance to look out for. Default=20
     Outptus:
         (b_dict, y_dict)
         Both of these ion dictionaries have the top n entries keyed by their rank (0 to n-1, 0 being the best)
         with values being ScoredKmer namedtuple instances
-    '''
-    # go through the metadata in the database to find the interesting kmers
-    metadata = database.metadata
-    # the metadata keys are the kmers
-    mers = list(metadata.keys())
-    # go through all of the mers and find only the interesting ones
-    b_anchors, y_anchors = find_interesting_kmers(spectrum, mers)
-    # we have the interesting b anchors and y anchors
+    '''   
     # we want to go through ONLY the proteins that have these subsequences in them
-    b_spots_of_interest = get_interesting_protein_positions(database, b_anchors)
-    y_spots_of_interest = get_interesting_protein_positions(database, y_anchors)
+    b_spots_of_interest = get_interesting_protein_positions(database, base_k_mers)
+    y_spots_of_interest = get_interesting_protein_positions(database, base_k_mers)
     # we have the interesting proteins and associated starting/ending positions
     # try and extend these as much as possible
     best_b = extend_spots_of_interest(spectrum, database, b_spots_of_interest, 'b', n)

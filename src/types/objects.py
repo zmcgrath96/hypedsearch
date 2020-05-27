@@ -40,19 +40,15 @@ Kmer = namedtuple(
 )
 
 '''
-BasicScoredKmer:
-    holds basic scoring info of 2 scores and a string
+MassSequence:
+    Basic container for holding some mass associated with a sequence
 
-    Properties:
-        b_score:    (float) the b-ion score of the kmer 
-        y_score:    (float) the y-ion score of the kmer
-        kmer:       (str) the kmer sequence
+    Properties: 
+        mass:       (float) some mass associated with a sequence
+        sequence:   (str) the sequence associated with the mass
 '''
-BasicScoredKmer = namedtuple(
-    'BasicScoredKmer', 
-    ['b_score', 'y_score', 'kmer'],
-    defaults=[0, 0, '']
-)
+MassSequence = namedtuple('MassSequence', ['mass', 'sequence'])
+
 
 '''
 ScoredKmer:

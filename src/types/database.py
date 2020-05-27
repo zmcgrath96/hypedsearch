@@ -23,7 +23,6 @@ class Entry(object):
         self.kmers = None
         self.kmer_size = None
 
-
     ##################### Setters #####################
     def set_kmer_size(self, k: int):
         self.kmer_size = k
@@ -49,7 +48,7 @@ class Database(object):
 
     Container for multiple database operations. Packages 
     '''
-    def __init__(self, fasta_file_name='', is_uniprot=False, kmer_size=3) -> None:
+    def __init__(self, fasta_file_name='', is_uniprot=False, kmer_size=3, verbose=False) -> None:
         '''
         Init the database with a fasta file name
 
@@ -58,6 +57,8 @@ class Database(object):
             fasta_file_name:    str name of fasta file to read
             is_uniprot:         bool Set to True if the database is from UnitPort. If True, extra informtion is kept
             kmer_size:          int size of kmer to use for indexing the database
+            verbose:        (bool) extra printing. Default=False
+
         Outputs: 
             None
         '''
@@ -65,6 +66,7 @@ class Database(object):
         self.proteins = self.__read_fasta(fasta_file_name) if '.fasta' in fasta_file_name else {}
         self.kmer_size = kmer_size
         self.metadata = None
+        self.verbose = verbose
     
     ##################### Private Methods #####################
     def __read_fasta(self, fasta_file: str, is_uniprot=False) -> dict:
@@ -151,7 +153,7 @@ class Database(object):
 
                 kmers[mer].append(pairing)
         # set my metadata and entries
-        print('{} unique kmers'.format(len(kmers.keys())))
+        self.verbose and print('{} unique kmers'.format(len(kmers.keys())))
         self.metadata = kmers
         
     def get_entry_by_name(self, name: str) -> Entry:
