@@ -21,7 +21,7 @@ AMINO_ACIDS={
     "Y": 163.06332,
     "V": 99.068414,
     "X": 0, # added to ignore. TODO: figure out what to do with it
-    "B": 0, # added to ignore. TODO: figure out what to do with it
+    "B": 113.084064, # added to ignore. TODO: figure out what to do with it
     "Z": 0, # added to ignore. TODO: figure out what to do with it
 }
 
@@ -146,7 +146,6 @@ def gen_spectrum(sequence: str, charge=None, ion=None) -> list:
     
     this_entry = {}
     masses, pre_mz = calc_masses(sequence, charge=charge, ion=ion)
-    masses.sort()
     this_entry['spectrum'] = masses
     this_entry['precursor_mass'] = pre_mz
     return this_entry

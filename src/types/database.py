@@ -1,4 +1,5 @@
 from src.types.objects import Kmer
+from suffix_tree import Tree
 
 class Entry(object):
     '''
@@ -16,12 +17,12 @@ class Entry(object):
             id:             id of the protein from the source
             kmer_size:      int the size of kmer to use for indexing
         '''
-        self.name = name
-        self.sequence = sequence
-        self.readable_name = readable_name
-        self.id = id
-        self.kmers = None
-        self.kmer_size = None
+        self.name: str = name
+        self.sequence: str = sequence
+        self.readable_name: str = readable_name
+        self.id: str = id
+        self.kmers: list = None
+        self.kmer_size: int = None
 
     ##################### Setters #####################
     def set_kmer_size(self, k: int):
@@ -62,13 +63,35 @@ class Database(object):
         Outputs: 
             None
         '''
-        self.fasta_file = fasta_file_name
-        self.proteins = self.__read_fasta(fasta_file_name) if '.fasta' in fasta_file_name else {}
-        self.kmer_size = kmer_size
-        self.metadata = None
-        self.verbose = verbose
+        self.fasta_file: str = fasta_file_name
+        self.proteins: dict = self.__read_fasta(fasta_file_name) if '.fasta' in fasta_file_name else {}
+        self.kmer_size: int = kmer_size
+        self.metadata: dict = None
+        self.verbose: bool = verbose
+        self.tree: Tree = self.__build_tree()
     
     ##################### Private Methods #####################
+    def __build_tree(self) -> Tree:
+        '''
+        Add a suffix tree to the database
+        '''
+        t = Tree()
+        plen = len(self.proteins)
+        printskiplen = plen // 100
+        printskipc = 0
+        i = 0
+        for key, value in self.proteins.items():
+            if printskipc == printskiplen:
+                printskipc = 0
+                print(f'Adding protein {i + 1}/{plen} to tree\r', end='')
+            
+            i += 1
+            printskipc += 1
+
+            t.add(key, value.sequence)
+        return t
+
+
     def __read_fasta(self, fasta_file: str, is_uniprot=False) -> dict:
         '''
         Read proteins into memory from fasta file

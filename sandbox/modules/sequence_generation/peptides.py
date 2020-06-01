@@ -105,10 +105,12 @@ def __make_hybrid_peps_brute_force(hybrid_prot: dict, max_contribution=10, min_c
     for i in range(min_contribution, max_contribution):
         for j in range(min_contribution, max_contribution):
             pep = hybrid_prot['protein'][j_site - i + 1:j_site + j + 1]
+            hybseq = hybrid_prot['protein'][j_site -i + 1:j_site+1] + '-' + hybrid_prot['protein'][j_site+1: j_site + j + 1]
             if len(pep) < min_length:
                 continue
             hyb_peps.append({
                 'sequence': pep,
+                'hybrid_sequence': hybseq,
                 'left_parent_starting_position': hybrid_prot['protein'].index(pep),
                 'left_parent_ending_position': j_site,
                 'right_parent_starting_position': hybrid_prot['right_parent_start_position'],
