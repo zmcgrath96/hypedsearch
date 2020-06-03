@@ -28,8 +28,11 @@ def write_mzml(file_name, spectra, title_prefix='Spectrum ', output_dir='./'):
         name = str.encode(title_prefix + str(sp_count))
         spec.setName(name)
         sp_count += 1
-        
-        i = [500 for _ in spectrum['spectrum']]
+        if 'abundance' not in spectrum:
+            print('oops')
+            i = [500 for _ in spectrum['spectrum']]
+        else:
+            i = spectrum['abundance']
         spec.set_peaks([spectrum['spectrum'], i])
         spec.setMSLevel(2)
         prec = Precursor()
