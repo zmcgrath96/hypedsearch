@@ -1,5 +1,5 @@
-from src.types.objects import Kmer
 from suffix_tree import Tree
+from src.types.objects import KmerMetaData
 
 class Entry(object):
     '''
@@ -152,7 +152,7 @@ class Database(object):
         '''
         self.kmer_size = k
 
-    def index(self):
+    def index(self) -> None:
         '''
         Create an indexing of a database by the kmer size. The indexing information 
         is saved in the self.metadata attribute as Kmer namedtuple instances
@@ -172,8 +172,7 @@ class Database(object):
                 mer, start_pos, end_pos = mers[i]
                 if mer not in kmers:
                     kmers[mer] = []
-                pairing = Kmer(self.kmer_size, mer, name, start_pos, end_pos)
-
+                pairing = KmerMetaData(name, start_pos, end_pos)
                 kmers[mer].append(pairing)
         # set my metadata and entries
         self.verbose and print('{} unique kmers'.format(len(kmers.keys())))
@@ -191,20 +190,6 @@ class Database(object):
         if name in self.proteins: 
             return self.proteins[name]
         return Entry('', '')
-
-    def get_metadata_of_mer(self, mer: str) -> Kmer:
-        '''
-        Get the metadata associated with a mer. This data will be a list of tuples of the form
-            (protein name: str, starting_position: int, ending_position: int)
-
-        Inputs: 
-            mer:    str the subsequence 
-        Outputs:
-            list of Kmer namedtuple instances
-        '''
-        if mer not in self.metadata:
-            return []
-        return self.metadata[mer]
 
     def add_entry(self, protein_name: str, protein_sequnece: str, protein_id='', human_readable_name='') -> bool:
         '''

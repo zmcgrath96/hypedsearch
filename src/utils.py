@@ -1,4 +1,6 @@
-import os, gzip, shutil, copy
+import os, gzip, shutil, copy, math
+from typing import Iterable, Any
+from itertools import product
 
 def make_valid_dir_string(dir_path: str) -> str:
     '''
@@ -193,3 +195,77 @@ def is_file(file: str) -> bool:
         bool    True if file exists False otherwise
     '''
     return os.path.isfile(file)
+
+def insort_by_key(value: Any, a: Iterable, key: str) -> Iterable:
+    '''
+    Insert value into list in order. List a given should be sorted prior to insort
+    
+    Inputs:
+        value:    (Any) thing to be inserted
+        a:        (Iterable) the list or list-like value to insert into
+        key:      (str) the key to use for comparison of two values
+    Ouputs:
+        Iterable a with value inserted in order by key
+    '''
+    if len(a) == 0:
+        return [value]
+    elif len(a) == 1:
+        return a + [value] if getattr(a[0], key) <= getattr(value, key) else [value] + a
+    
+    mid = math.floor(len(a)/2)
+    if getattr(a[mid-1], key) <= getattr(value, key) <= getattr(a[mid], key):
+        return a[:mid] + [value] + a[mid:]
+    elif getattr(a[mid], key) > getattr(value, key):
+        return insort_by_key(value, a[:mid], key) + a[mid:]
+    else:
+        return a[:mid] + insort_by_key(value, a[mid:], key)
+
+def insort_by_index(value: Any, a: Iterable, index: int) -> Iterable:
+    '''
+    Insert value into list in order. List a given should be sorted prior to insort
+    
+    Inputs:
+        value:    (Any) thing to be inserted
+        a:        (Iterable) the list or list-like value to insert into
+        index:    (int) the index to use for comparison of two values
+    Ouputs:
+        Iterable a with value inserted in order by index
+    '''
+    if len(a) == 0:
+        return [value]
+    elif len(a) == 1:
+        return a + [value] if a[0][index] <= value[index] else [value] + a
+    
+    mid = math.floor(len(a)/2)
+    if a[mid-1][index] <= value[index] <= a[mid][index]:
+        return a[:mid] + [value] + a[mid:]
+    elif a[mid][index] > value[index]:
+        return insort_by_index(value, a[:mid], index) + a[mid:]
+    else:
+        return a[:mid] + insort_by_index(value, a[mid:], index)
+
+def all_perms_of_s(s: str, keyletters: str) -> list:
+    '''
+    Find all permutations of a string that has values 'keyletters' in them
+    
+    Inputs:
+        s:          (str) the string to evaluate
+        keyletters: (str) the letters to permutate
+    Outputs:
+        list of all the permutations of keyletters
+    '''
+
+    # Convert input string into a list so we can easily substitute letters
+    seq = list(s)
+    
+    perms = []
+
+    # Find indices of key letters in seq
+    indices = [ i for i, c in enumerate(seq) if c in keyletters ]
+
+    # Generate key letter combinations & place them into the list
+    for t in product(keyletters, repeat=len(indices)):
+        for i, c in zip(indices, t):
+            seq[i] = c
+        perms.append(''.join(seq))
+    return perms

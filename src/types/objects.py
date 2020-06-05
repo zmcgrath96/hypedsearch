@@ -23,20 +23,18 @@ Spectrum = namedtuple(
 )
 
 '''
-Kmer:
-    holds kmer information for indexing databases and incrementing sequences
+KmerMetaData:
+    Holds metadata of a kmer
 
     Properties:
-        k:              (int) the length of the kmer
-        sequence:       (str) the actual kmer
-        protein:        (str) the name of the protein the kmer is taken from
-        start_position: (int) the starting position from the protein sequence the kmer is taken from
-        end_position:   (int) the ending position from the protein sequence the kmer is taken from
+        protein:        (str) name of the source protein
+        start_position: (int) index of where the substring starts within the protein sequence
+        end_position:   (int) index of where the substring ends (inclusive) within the protein
 '''
-Kmer = namedtuple(
-    'Kmer', 
-    ['k', 'sequence', 'protein', 'start_position', 'end_position'], 
-    defaults=[[0, '', '', -1, -1]]
+KmerMetaData = namedtuple(
+    'KmerMetaData',
+    ['protein', 'start_position', 'end_position'], 
+    defaults=['', 0, 0]
 )
 
 '''
@@ -47,41 +45,88 @@ MassSequence:
         mass:       (float) some mass associated with a sequence
         sequence:   (str) the sequence associated with the mass
 '''
-MassSequence = namedtuple('MassSequence', ['mass', 'sequence'])
-
-
-'''
-ScoredKmer:
-    holds information regarding a scored kmer
-
-    Properties:
-        b_score:    (float) the b-ion score of the kmer 
-        y_score:    (float) the y-ion score of the kmer
-        kmer:       (Kmer) a Kmer namedtuple instance
-'''
-ScoredKmer = namedtuple(
-    'ScoredKmer', 
-    ['b_score', 'y_score', 'kmer'],
-    defaults=[0, 0, Kmer(0, '', '', -1, -1)]
+MassSequence = namedtuple(
+    'MassSequence', 
+    ['mass', 'sequence'], 
+    defaults=[0.0, '']
 )
 
 '''
-AlignedScoredKmers:
-    holds score information of two scored kmers and an attempted alignment
+KmerMasses:
+    Holds mass dictionaries for b+, b++, y+, y++ ions. The keys to the
+    dictionaries are the integer values of masses and the values
+    ares lists of MassSequence types
 
     Properties:
-        b_alignment:    (Kmer) the Kmer namedtuple instance associated with the left alignment
-        y_alignment:    (Kmer) the Kmer namedtuple instance associated with the right alignment
-        spectrum:       (Spectrum) the Spectrum namedtuple instance this alignment was created for
-        protein:        (str) the name of the protein this is assumed to be from. If hybrid the name will be <left protein>-<right protein>-hybrid
-        b_score:        (float) the b_score associated with the sequence compared to some spectrum
-        y_score:        (float) the y_score associated with the sequence compared to some spectrum
-        sequence:       (str) the predicted amino acid sequence 
-        hybrid:         (bool) True if predicted sequence is a hybrid false otherwise
-        hybrid_sequence:(str) if the sequence is a hybrid, a sequence is shown here with a - where the junction is
+        (bs, bd, ys, yd):   (list) MassSequence pairs with masses who's integer values are the keys
 '''
-AlignedScoredKmers = namedtuple(
-    'AlignedScoreKmers',
-    ['b_alignment', 'y_alignment', 'spectrum', 'protein', 'alignment_score', 'sequence', 'hybrid', 'hybrid_sequence'],
-    defaults=[ScoredKmer(0, 0,  Kmer(0, '', '', -1, -1)), ScoredKmer(0, 0,  Kmer(0, '', '', -1, -1)), Spectrum([], [], 0, -1, 0, ''), '', 0, '', False, '']
+KmerMasses = namedtuple(
+    'KmerMasses', 
+    ['bs', 'bd', 'ys', 'yd'],
+    defaults=[{}, {}, {}, {}]
+)
+
+'''
+KmerMassesResults:
+    Holds the hits from a hash on the entries of KmerMassesResults.
+
+    Properties:
+        (bs, bd, ys, yd):   (list) MassSequence hits 
+'''
+KmerMassesResults = namedtuple(
+    'KmerMassesResults', 
+    ['bs', 'bd', 'ys', 'yd'], 
+    defaults=[[], [], [], []]
+)
+
+'''
+SequenceAlignment:
+    Information on a nonhybrid peptide alignment. 
+
+    Properties:
+        proteins:       (list) proteins that this sequence is found in
+        sequence:       (str) Amino acid sequence tagged
+        b_score:        (float) b ion score of the sequence
+        y_score:        (float) y ion score of the sequence
+        total_score:    (float) score given to the sequence
+'''
+SequenceAlignment = namedtuple(
+    'SequenceAlignment', 
+    ['proteins', 'sequence', 'b_score', 'y_score', 'total_score'],
+    defaults=[[], '', 0.0, 0.0, 0.0]
+)
+
+'''
+HybridSequenceAlignment
+    Information on a hybrid sequence alignment
+
+    Properties:
+        left_proteins:      (list) proteins that contain the sequence of amino acids that contribute
+                                   to the left side of the hybrid peptide
+        right_proteins:     (list) proteins that contain the sequence of amino acids that contribute 
+                                   to the right side of the hybrid peptide
+        sequence:           (str) Amino acid sequence tagged
+        hybrid_sequence:    (str) Amino acid sequence tagged with indicators for the junction area
+        b_score:            (float) b ion score of the sequence
+        y_score:            (float) y ion score of the sequence
+        total_score:        (float) the score given to the sequence
+'''
+HybridSequenceAlignment = namedtuple(
+    'HybridSequenceAlignment', 
+    ['left_proteins', 'right_proteins', 'sequence', 'hybrid_sequence', 'b_score', 'y_score', 'total_score'],
+    defaults=[[], [], '', '', 0.0, 0.0, 0.0]
+)
+
+'''
+Alignments
+    Contains the spectrum with SequenceAlignments and HybridSequenceAlignments
+
+    Properties:
+        spectrum:       (Spectrum) The spectrum being aligned
+        alignments:     (list) contains both HybridSequenceAlignment and SequenceAlignment 
+'''
+Alignments = namedtuple(
+    'Alignments', 
+    ['spectrum', 'alignments'], 
+    defaults=[Spectrum([], [], 0, 0, 0.0, ''), []]
 )

@@ -1,8 +1,8 @@
 from src.file_io import mzML
-from src.identfication import search
+from src.identfication.search import search_kmers_hash
+from src.identfication.alignment import attempt_alignment
 from src.types.database import Database
-from src.types.aligner import Aligner
-from src.types.objects import Spectrum, MassSequence
+from src.types.objects import Spectrum, MassSequence, KmerMasses, KmerMassesResults, Alignments
 from src.scoring import mass_comparisons
 from src.spectra.gen_spectra import gen_spectrum
 
@@ -10,88 +10,106 @@ from collections import defaultdict
 import math 
 from bisect import bisect
 
-############## Constants ##############
-TOP_N = 5
-#######################################
+###################################################################################
+#                   PRE-SEARCH DATABASE FUNCTIONS
+###################################################################################
 
-def make_all_base_mers(database: Database, base_mer: int) -> defaultdict:
+def build_kmermasses(database: Database, min_peptide_len: int, max_peptide_len: int) -> KmerMasses:
     '''
-    Create the list of all the base mers from 1 to base_mer with mass, protein, start position information
+    Build a KmerMasses object from a database. The entries to the KmerMasses object 
+    are dictionaries where keys are integer values of masses and the entries are lists of MassSequence objects
     
-    Inputs:
-        database:    (Database) source of the sequences
-        base_mer:    (int) the base k-mer to make up to
+    Inputs: 
+        database:          (Database) object used for reading in proteins, creating the tree, and indexing
+        min_peptide_len:   (int) the minimum length peptide to consider. NOTE: this is also the minimum length 
+                                 any protein can contribute to a hybrid peptide. 
+                                 Example:
+                                     protein 1: ABCDEFGHIJK, protein 2: LMNOPQRSTUV
+                                     true hybrid sequence: IJK-LMNOPQ
+                                     min_peptide_len should be set to 3
+        max_peptide_len:   (int) the maximum peptide length to consider
     Outputs:
-        list of MassSequence for all singly, doubly b and y masses
+        KmerMasses object
     '''
-    allbasemers = defaultdict(list)
-    database.set_kmer_size(base_mer)
+    bs = defaultdict(list)
+    bd = defaultdict(list)
+    ys = defaultdict(list)
+    yd = defaultdict(list)
+    
+    kmer_tracker = defaultdict(str)
+    
+    print(f'Indexing database for k={max_peptide_len}...')
+    database.set_kmer_size(max_peptide_len)
     database.index()
-    md = database.metadata
-    for mer in md:
-        mer_spec = gen_spectrum(mer)['spectrum']
-        for mass in mer_spec:
-            mass_key = math.floor(mass)
-            allbasemers[mass_key].append(MassSequence(mass, mer))
-
-    return allbasemers
-
-def search_base_kmers(observed: Spectrum, allbasemers: dict, tolerance: float) -> list:
-    '''
-    Search through all of the base kmers and find those that gave us good hits
+    print('Done')
+    mdl = len(database.metadata.keys())
     
-    Inputs:
-        spectrum:    (Spectrum) what to sequence
-        allbasemers: (dict of list of MassSequence) all of the basemers made from the function 'make_all_base_mers_hash'
-        tolerance:   (float) the ppm tolerance to accept for each mass
-    Outputs:
-        list of MassSequence for all masses that were in the acceptable range of an observed mass
-    '''
-    hits = []
-    for mass in observed.spectrum:
-        tol = mass_comparisons.ppm_opt(mass, tolerance)
-        lb_mass = mass - tol
-        ub_mass = mass + tol
-        lb_mass_key = math.floor(lb_mass)
-        ub_mass_key = math.floor(ub_mass)
-        
-        hits += [x.sequence for x in allbasemers[ub_mass_key] if lb_mass <= x.mass <= ub_mass]
-        if lb_mass_key != ub_mass_key:
-            hits += [x.sequence for x in allbasemers[ub_mass_key] if lb_mass <= x.mass <= ub_mass]
+    printskiplen = mdl // 1000
+    printskipc = 0
+    
+    for i, kmer in enumerate(list(database.metadata.keys())):
+        if len(kmer) < min_peptide_len: 
+            continue
             
-    return list(set(hits))
+        if printskipc == printskiplen:
+            print(f'Looking at kmer {i + 1}/{mdl}\r', end='')
+            printskipc = 0
+            
+        printskipc += 1
+        
+        kmerspecbs = gen_spectrum(kmer, ion='b', charge=1)['spectrum']
+        kmerspecbd = gen_spectrum(kmer, ion='b', charge=2)['spectrum']
+        kmerspecys = gen_spectrum(kmer, ion='y', charge=1)['spectrum']
+        kmerspecyd = gen_spectrum(kmer, ion='y', charge=2)['spectrum']
+        
+        for i in range(min_peptide_len, len(kmer)):
+            subseq_b = kmer[:i]
+            subseq_y = kmer[len(kmer)-i-1:]
+            
+            if 'b' not in kmer_tracker[subseq_b]:
+                kmer_tracker[subseq_b] += 'b'
+        
+                bs[math.floor(kmerspecbs[i-1])].append(MassSequence(kmerspecbs[i-1], subseq_b))
+                bd[math.floor(kmerspecbd[i-1])].append(MassSequence(kmerspecbd[i-1], subseq_b))
+            
+            if 'y' not in kmer_tracker[subseq_y]:
+                kmer_tracker[subseq_y] += 'y'
+            
+                ys[math.floor(kmerspecys[i-1])].append(MassSequence(kmerspecys[i-1], subseq_y))
+                yd[math.floor(kmerspecyd[i-1])].append(MassSequence(kmerspecyd[i-1], subseq_y))
+                    
+    del kmer_tracker
+        
+    return KmerMasses(bs, bd, ys, yd)
 
+###################################################################################
+#                   /PRE-SEARCH DATABASE FUNCTIONS
+###################################################################################
 
-
-
-def id_spectrum(spectrum: Spectrum, database: Database, base_kmers: list, n=TOP_N, min_peptide_len=5, max_peptide_len=20) -> Aligner:
+def id_spectrum(spectrum: Spectrum, db: Database, kmermasses: KmerMasses, min_peptide_len: int, n=3) -> Alignments:
     '''
     Run a scoring and alignment on a specific spectrum 
 
     Inputs:
-        spectrum:   Spectrum namedtuple instance
-        database:   Database class instance
-        base_kmers: list of top scoring candiates for extension
+        spectrum:   (Spectrum) the spectrum to id
+        kmermasses: (KmerMasses) hash tables with al the necessary dictionaries
     kwargs:
         n:                  number of alignments to return for each spectrum. Default=3
-        min_peptide_len:     minimum peptide length to consider. Default=5
-        max_peptide_len:    maximum peptide length to consider. Default=20
     Outputs:
-        Aligner
+        Alignments
     '''
-    # get the top b and top y scores from the database
-    top_b, top_y = search.search_database(spectrum, database, base_kmers, TOP_N)
-    # top b and y are dictionaries with rank as key and values are Scores objects
-    # try and find some alignment from these scores
-    aligner = Aligner(spectrum)
-    aligner.add_scores([x for _, x in top_b.items()], 'b')
-    aligner.add_scores([x for _, x in top_y.items()], 'y')
-    aligner.make_alignments()
-        
-    return aligner
+    bs, bd, ys, yd = search_kmers_hash(spectrum, kmermasses.bs, 20), \
+                    search_kmers_hash(spectrum, kmermasses.bd, 20), \
+                    search_kmers_hash(spectrum, kmermasses.ys, 20), \
+                    search_kmers_hash(spectrum, kmermasses.yd, 20)
+    
+    hits = KmerMassesResults(bs, bd, ys, yd)
+    # attempt alignments
+    a = attempt_alignment(spectrum, db, hits, min_peptide_len)
+    
+    return Alignments(spectrum, a)
 
-
-def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptide_len=5, max_peptide_len=20, ppm_tolerance=20) -> dict:
+def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptide_len=5, max_peptide_len=20, result_count=3, ppm_tolerance=20) -> dict:
     '''
     Run a scoring and alignment on each spectra passed in
 
@@ -104,14 +122,17 @@ def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptid
         max_peptide_len:    (int) maximum length sequence to consider for alignemtn. Default=20
         ppm_tolerance:      (float) tolerance for ppm to include in search. Default=20
     Outputs:
-        dict containing the results. All information is keyed by the spectrum file name with scan number appended and the values are Aligner objects
+        dict containing the results. All information is keyed by the spectrum file name with scan number appended and the values are list of SequenceAligment objects
     '''
+
     verbose and print('Loading database...')
-    database = Database(database_file, is_uniprot=True, kmer_size=min_peptide_len)
-    verbose and print('Done. Indexing database...')
-    base_k_mer_masses = make_all_base_mers(database, min_peptide_len)
-    verbose and print('Done.')
-    verbose and print('Number of {}-mers found in the database: {}'.format(min_peptide_len, len(database.metadata.keys())))
+    db = Database(database_file)
+    verbose and print('\nDone.')
+
+    verbose and print('Building hashes for kmers...')
+    kmermasses = build_kmermasses(db, min_peptide_len, max_peptide_len)
+    verbose and print(f'\nDone.')
+
     results = {}
     # go through all of the mzml files
     for i, spectrum_file in enumerate(spectra_files):
@@ -121,11 +142,14 @@ def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptid
         # go through each spectrum in the mzml file
         for j, spec in enumerate(spectra):
             print('Analyzing spectrum {}/{}[{}%]\r'.format(j + 1, len(spectra), int(float(j)/float(len(spectra)) * 100)), end='')
+
             # make a Spectrum namedtuple object
             spectrum = Spectrum(spec['spectrum'], spec['abundance'], spec['level'], spec['scan_no'], spec['precursor_mass'], spectrum_file)
-            # get the good kmers
-            interesting_kmers = search_base_kmers(spectrum, base_k_mer_masses, ppm_tolerance)
-            aligned_spectrum = id_spectrum(spectrum, database, interesting_kmers, min_peptide_len=min_peptide_len, max_peptide_len=max_peptide_len)
+            
+            # align this spectrum
+            aligned_spectrum = id_spectrum(spectrum, db, kmermasses, min_peptide_len, result_count)
+            
+            # save the results in the dictionary for now
             entry_name = '{}_{}'.format(spectrum_file, spectrum.scan_number)
             results[entry_name] = aligned_spectrum
 
