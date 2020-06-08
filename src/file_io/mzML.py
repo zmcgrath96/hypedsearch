@@ -1,42 +1,31 @@
-from pyopenms import MSExperiment, MzMLFile
 from src.utils import file_exists
+from src.types.objects import Spectrum
+from pyteomics import mzml
 
-def read(file: str) -> list:
+def read(filename: str) -> list:
     '''
     read an .mzML file into memory
 
     Inputs:
-        file: str path to the file to import
+        filename:   (str) path to the file to import
     Outputs:
-        list of dictionaries with spectra information of the form
-        {
-            'level': int, 
-            'spectrum': list of floats,
-            'abundance': list of floats,
-            'scan_no': int
-        }
+        (list) Spectrum namedtuple instances
     '''
-    if not file_exists(file):
-        print('File {} not found. Please make sure that this file exists'.format(file))
+    if not file_exists(filename):
+        print('File {} not found. Please make sure that this file exists'.format(filename))
         return
     else: 
         spectra = []
-        exp = MSExperiment()
-        MzMLFile().load(file, exp)
-
-        for s in exp.getSpectra():
-            # get_peaks returns two lists. 0 is the mz and the second is the abundance
-            spec = [float(x) for x in list(s.get_peaks())[0]]
-            abundance = [float(x) for x in list(s.get_peaks())[1]]
-            if not len(spec) > 0:
-                continue
-            precursor = max(spec)
-            spectra.append({
-                'level': int(s.getMSLevel()),
-                'spectrum': spec, 
-                'abundance': abundance, 
-                'scan_no': int(str(s.getNativeID()).split('=')[-1].replace("'", '')),
-                'precursor_mass': precursor
-            })
+        
+        filecontents = mzml.read(filename)
+        for content in filecontents:
+            spectra.append(Spectrum(
+                content['m/z array'],
+                content['intensity array'],
+                content['ms level'],
+                content['index'],
+                content['ms level'],
+                filename
+            ))
 
         return spectra

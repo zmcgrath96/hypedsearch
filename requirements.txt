@@ -1,2 +1,3 @@
-pyopenms
+lxml
 numpy
+pyteomics

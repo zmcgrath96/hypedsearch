@@ -141,16 +141,12 @@ def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptid
         spectra = mzML.read(spectrum_file)
         # go through each spectrum in the mzml file
         for j, spec in enumerate(spectra):
-            verbose and print('Analyzing spectrum {}/{}[{}%]\r'.format(j + 1, len(spectra), int(float(j)/float(len(spectra)) * 100)), end='')
-
-            # make a Spectrum namedtuple object
-            spectrum = Spectrum(spec['spectrum'], spec['abundance'], spec['level'], spec['scan_no'], spec['precursor_mass'], spectrum_file)
-            
+            verbose and print('Analyzing spectrum {}/{}[{}%]\r'.format(j + 1, len(spectra), int(float(j)/float(len(spectra)) * 100)), end='')            
             # align this spectrum
-            aligned_spectrum = id_spectrum(spectrum, db, kmermasses, min_peptide_len, result_count)
+            aligned_spectrum = id_spectrum(spec, db, kmermasses, min_peptide_len, result_count)
             
             # save the results in the dictionary for now
-            entry_name = '{}_{}'.format(spectrum_file, spectrum.scan_number)
+            entry_name = '{}_{}'.format(spectrum_file, spec.scan_number)
             results[entry_name] = aligned_spectrum
 
     return results
