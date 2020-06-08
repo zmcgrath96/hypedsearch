@@ -1,17 +1,6 @@
 from src.types.objects import Spectrum
+from src.utils import ppm_to_da
 import math
-
-def ppm_to_da(observed: float, ppm_tolerance: float) -> float:
-    '''
-    Calculate the absolute boundary value from an observed mass. Value returned is in Da
-    
-    Inputs:
-        observed:      (float) the observed mass used to calculate the tolerances
-        ppm_tolerance: (float or int) the tolerance in ppm to use to convert to Da
-    Outputs:
-        float value in Da 
-    '''
-    return abs((ppm_tolerance / 1000000)*observed)
 
 def search_kmers_hash(observed: Spectrum, kmers: dict, tolerance: float) -> list:
     '''

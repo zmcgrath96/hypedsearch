@@ -9,7 +9,8 @@ from collections import defaultdict
 def slope_filtering(a: Iterable, min_window_size=5, mean_filter=1) -> list:
     '''
     Filter out values by slope. Use a window size of at least min_window_size and at max 1% the size of 
-    iterable a. Result is the subset of results whose window mean > mean_filter*mean_slope
+    iterable a. Result is the subset of results whose window mean > mean_filter*mean_slope. a should be sorted
+    with the steepest slope at the earliest indices 
     
     Inputs:
         a:     (Iterable) the list or list like object to filter
@@ -85,7 +86,7 @@ def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_leng
     b_filtered = [b_scores[-1*i - 1] for i in range(len(slope_filtering([x[1] for x in b_scores[::-1]])))]
     y_filtered = [y_scores[-1*i - 1] for i in range(len(slope_filtering([x[1] for x in y_scores[::-1]])))]
     
-    if len(b_filtered) < 5:
+    if len(b_filtered) < 5: # default to be able to report some result
         b_filtered = b_scores[::-1][:5]
     if len(y_filtered) < 5:
         y_filtered = y_scores[::-1][:5]

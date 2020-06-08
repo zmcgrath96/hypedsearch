@@ -14,7 +14,7 @@ from bisect import bisect
 #                   PRE-SEARCH DATABASE FUNCTIONS
 ###################################################################################
 
-def build_kmermasses(database: Database, min_peptide_len: int, max_peptide_len: int) -> KmerMasses:
+def build_kmermasses(database: Database, min_peptide_len: int, max_peptide_len: int, verbose=False) -> KmerMasses:
     '''
     Build a KmerMasses object from a database. The entries to the KmerMasses object 
     are dictionaries where keys are integer values of masses and the entries are lists of MassSequence objects
@@ -38,10 +38,10 @@ def build_kmermasses(database: Database, min_peptide_len: int, max_peptide_len: 
     
     kmer_tracker = defaultdict(str)
     
-    print(f'Indexing database for k={max_peptide_len}...')
+    verbose and print(f'Indexing database for k={max_peptide_len}...')
     database.set_kmer_size(max_peptide_len)
     database.index()
-    print('Done')
+    verbose and print('Done')
     mdl = len(database.metadata.keys())
     
     printskiplen = mdl // 1000
@@ -52,7 +52,7 @@ def build_kmermasses(database: Database, min_peptide_len: int, max_peptide_len: 
             continue
             
         if printskipc == printskiplen:
-            print(f'Looking at kmer {i + 1}/{mdl}\r', end='')
+            verbose and print(f'Looking at kmer {i + 1}/{mdl}\r', end='')
             printskipc = 0
             
         printskipc += 1
@@ -62,9 +62,9 @@ def build_kmermasses(database: Database, min_peptide_len: int, max_peptide_len: 
         kmerspecys = gen_spectrum(kmer, ion='y', charge=1)['spectrum']
         kmerspecyd = gen_spectrum(kmer, ion='y', charge=2)['spectrum']
         
-        for i in range(min_peptide_len, len(kmer)):
+        for i in range(min_peptide_len, len(kmer)+1):
             subseq_b = kmer[:i]
-            subseq_y = kmer[len(kmer)-i-1:]
+            subseq_y = kmer[len(kmer)-i:]
             
             if 'b' not in kmer_tracker[subseq_b]:
                 kmer_tracker[subseq_b] += 'b'
@@ -130,18 +130,18 @@ def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptid
     verbose and print('\nDone.')
 
     verbose and print('Building hashes for kmers...')
-    kmermasses = build_kmermasses(db, min_peptide_len, max_peptide_len)
+    kmermasses = build_kmermasses(db, min_peptide_len, max_peptide_len, verbose=verbose)
     verbose and print(f'\nDone.')
 
     results = {}
     # go through all of the mzml files
     for i, spectrum_file in enumerate(spectra_files):
-        print('Analyzing spectra file {}/{}[{}%]\n'.format(i + 1, len(spectra_files), int(float(i)/float(len(spectra_files)) * 100)))
+        verbose and print('Analyzing spectra file {}/{}[{}%]\n'.format(i + 1, len(spectra_files), int(float(i)/float(len(spectra_files)) * 100)))
 
         spectra = mzML.read(spectrum_file)
         # go through each spectrum in the mzml file
         for j, spec in enumerate(spectra):
-            print('Analyzing spectrum {}/{}[{}%]\r'.format(j + 1, len(spectra), int(float(j)/float(len(spectra)) * 100)), end='')
+            verbose and print('Analyzing spectrum {}/{}[{}%]\r'.format(j + 1, len(spectra), int(float(j)/float(len(spectra)) * 100)), end='')
 
             # make a Spectrum namedtuple object
             spectrum = Spectrum(spec['spectrum'], spec['abundance'], spec['level'], spec['scan_no'], spec['precursor_mass'], spectrum_file)

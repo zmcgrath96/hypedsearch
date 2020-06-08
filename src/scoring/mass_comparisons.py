@@ -1,5 +1,6 @@
 from src.spectra.gen_spectra import calc_masses
 from bisect import bisect
+from src.utils import ppm_to_da
 
 def cmp_spectra_spectra__JAN_2020(spec: list, reference: list) -> float:
     '''
@@ -181,13 +182,6 @@ def compare_sequence_sequence_ion_type(spectra: str, reference: str, ion: str) -
     reference_ions , _= calc_masses(reference, ion=ion)
     return compare_masses(spectra_ions, reference_ions)
 
-
-def ppm_opt(reference: float, ppm_tolerance: float) -> float:
-    '''
-    Calculate the ppm difference between the observed and actual
-    '''
-    return abs((ppm_tolerance / 1000000)*reference)
-
 def optimized_compare_masses(observed: list, reference: list, ppm_tolerance=20) -> float:
     '''
     CREATED MAY 19 2020
@@ -208,7 +202,7 @@ def optimized_compare_masses(observed: list, reference: list, ppm_tolerance=20) 
         return 0.0
     observed.sort()
     def boundaries(mass):
-        tol = ppm_opt(mass, ppm_tolerance)
+        tol = ppm_to_da(mass, ppm_tolerance)
         return [mass - tol, mass + tol]
                 
     # calculate the boundaries for each of the reference masses for binary search

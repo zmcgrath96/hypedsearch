@@ -49,8 +49,9 @@ def align_overlaps(seq1: str, seq2: str) -> str:
                 right_seq = seq2[s2_start:] if s2_start < len(seq2) else ''
                 alignment = seq1 + right_seq
                 break
-            else:
-                alignment = seq1 + seq2
+  
+    if alignment is None:
+        alignment = seq1 + '-' + seq2
     return alignment
             
 
@@ -92,7 +93,8 @@ def hybrid_alignment(seq1: str, seq2: str) -> (str, str):
 
 def align_b_y(b_results: list, y_results: list, db: Database) -> list:
     '''
-    Match b and y results to find a good match
+    Take 2 lists of sequences and create all alignments possible. If they
+    are from the same protein, try and create a nonhybrid alignment
 
     Inputs:
         b_results:  (list of str) sequences found from b hits

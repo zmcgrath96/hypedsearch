@@ -210,12 +210,12 @@ def insort_by_key(value: Any, a: Iterable, key: str) -> Iterable:
     if len(a) == 0:
         return [value]
     elif len(a) == 1:
-        return a + [value] if getattr(a[0], key) <= getattr(value, key) else [value] + a
+        return a + [value] if a[0][key] <= value[key] else [value] + a
     
     mid = math.floor(len(a)/2)
-    if getattr(a[mid-1], key) <= getattr(value, key) <= getattr(a[mid], key):
+    if a[mid-1][key] <= value[key] <= a[mid][key]:
         return a[:mid] + [value] + a[mid:]
-    elif getattr(a[mid], key) > getattr(value, key):
+    elif a[mid][key] > value[key]:
         return insort_by_key(value, a[:mid], key) + a[mid:]
     else:
         return a[:mid] + insort_by_key(value, a[mid:], key)
@@ -269,3 +269,15 @@ def all_perms_of_s(s: str, keyletters: str) -> list:
             seq[i] = c
         perms.append(''.join(seq))
     return perms
+
+def ppm_to_da(observed: float, ppm_tolerance: float) -> float:
+    '''
+    Calculate the absolute boundary value from an observed mass. Value returned is in Da
+    
+    Inputs:
+        observed:      (float) the observed mass used to calculate the tolerances
+        ppm_tolerance: (float or int) the tolerance in ppm to use to convert to Da
+    Outputs:
+        float value in Da 
+    '''
+    return abs((ppm_tolerance / 1000000)*observed)

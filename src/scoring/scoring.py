@@ -1,51 +1,6 @@
 from src.scoring import mass_comparisons
 from src.spectra import gen_spectra
 
-def confidence(b_entry: dict, y_entry: dict) -> float:
-    '''
-    CREATED 15 APRIL 2020
-    Calculate a confidence score from some alignment. The calculation works as follows:
-        overlapped_b_ion:   and identified b_ion that are in the identified y_ion range
-        overlapped_y_ion:   and identified y_ion that are in the identified b_ion range
-
-        ((# overlapped_b_ions * b_score) + (# overlapped_y_ions * y_score) + # total ions identified) - (# non overlapped_b_ions + # non overlapped_y_ions)
-
-    Inputs:
-        (b_entry, y_entry):     dict of the form 
-            {starting_position: int, ending_position: int, k: int, b_score: float, y_score: float`}
-    Outputs:
-        float the score calculated by the above formula
-    '''
-    b_range = range(b_entry['starting_position'], b_entry['ending_position'] + 1)
-    y_range = range(y_entry['starting_position'], y_entry['ending_position'] + 1)
-    overlapped_b_ions = sum([1 if x in y_range else 0 for x in b_range])
-    overlapped_y_ions = sum([1 if x in b_range else 0 for x in y_range])
-    non_overlapped_b_ions = sum([1 if x not in y_range else 0 for x in b_range])
-    non_overlapped_y_ions = sum([1 if x not in b_range else 0 for x in y_range])
-    
-    return (overlapped_b_ions * b_entry['b_score'] + overlapped_y_ions * y_entry['y_score'] + len(b_range) + len(y_range)) - (non_overlapped_b_ions + non_overlapped_y_ions)
-
-def confidence_simple(b_entry: dict, y_entry: dict) -> float:
-    '''
-    CREATED 15 APRIL 2020
-    Calculate a simple confidence score. The calculation is a follows:
-        
-        score = # overlaps (number of amino acids described by both the b and y ions)
-        perfect_score = max(len(b_sequence), len(y_sequence))
-        confidence = (score / perfect_score) * 100 
-
-    Inputs:
-        (b_entry, y_entry):     dict of the form 
-            {starting_position: int, ending_position: int, k: int, b_score: float, y_score: float`}
-    Outputs:
-        float the score calculated by the above formula
-    '''
-    b_range = range(b_entry['starting_position'], b_entry['ending_position'] + 1)
-    y_range = range(y_entry['starting_position'], y_entry['ending_position'] + 1)
-    perfect_score = max(len(b_range), len(y_range))
-    score = sum([1 if x in y_range else 0 for x in b_range])
-    return (float(score) / float(perfect_score)) * 100
-
 def score_subsequence(pepspec: list, subseq: str) -> (float, float):
     '''
     Score a mass spectrum to a substring of tagged amino acids

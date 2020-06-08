@@ -83,7 +83,7 @@ class Database(object):
         for key, value in self.proteins.items():
             if printskipc == printskiplen:
                 printskipc = 0
-                print(f'Adding protein {i + 1}/{plen} to tree\r', end='')
+                self.verbose and print(f'Adding protein {i + 1}/{plen} to tree\r', end='')
             
             i += 1
             printskipc += 1
@@ -219,3 +219,7 @@ class Database(object):
                     self.metadata[mer] = []
                 pairing = (protein_name, start_pos, end_pos)
                 self.metadata[mer].append(pairing)
+
+        # add it to the tree
+        if self.tree:
+            self.tree.add(protein_name, protein_sequnece)
