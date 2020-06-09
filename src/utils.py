@@ -270,14 +270,14 @@ def all_perms_of_s(s: str, keyletters: str) -> list:
         perms.append(''.join(seq))
     return perms
 
-def ppm_to_da(observed: float, ppm_tolerance: float) -> float:
+def ppm_to_da(mass: float, ppm_tolerance: float) -> float:
     '''
-    Calculate the absolute boundary value from an observed mass. Value returned is in Da
+    Calculate the absolute boundary value from an mass mass. Value returned is in Da
     
     Inputs:
-        observed:      (float) the observed mass used to calculate the tolerances
-        ppm_tolerance: (float or int) the tolerance in ppm to use to convert to Da
+        mass:           (float) the mass mass used to calculate the tolerances
+        ppm_tolerance:  (float or int) the tolerance in ppm to use to convert to Da
     Outputs:
         float value in Da 
     '''
-    return abs((ppm_tolerance / 1000000)*observed)
+    return abs((ppm_tolerance / 1000000)*mass)

@@ -104,8 +104,13 @@ def id_spectrum(spectrum: Spectrum, db: Database, kmermasses: KmerMasses, min_pe
                     search_kmers_hash(spectrum, kmermasses.yd, 20)
     
     hits = KmerMassesResults(bs, bd, ys, yd)
-    if all([len(x) == 0 for _, x in hits._asdict().items()]):
-        print(spectrum)
+
+    # for s in spectrum.spectrum:
+    #     for table in kmermasses:
+    #         if len(table[math.floor(s)]) > 0:
+    #             viewtol = 0.05
+    #             print(f'sequences with in +/- {viewtol} of {s}')
+    #             print([x for x in table[math.floor(s)] if s - viewtol <= x.mass <= s + viewtol])
         
     # attempt alignments
     a = attempt_alignment(spectrum, db, hits, min_peptide_len)
