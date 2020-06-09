@@ -8,9 +8,15 @@ Description:
 Main file for hypedsearch. Handles input parameters and flow of the program
 '''
 import argparse
-from src.utils import utils
+from src import utils, runner
 import sys
-from src import runner
+
+def stringtobool(s: str) -> bool:
+    s = str(s)
+    if s.lower() == 'false' or 'f' in s.lower():
+        return False
+    return True
+
 
 ##############################################################
 
@@ -32,6 +38,8 @@ def main(args: object) -> None:
         'output_dir': output_dir,
         'min_peptide_len': args.min_peptide_len,
         'max_peptide_len': args.max_peptide_len,
+        'tolerance': args.tolerance,
+        'verbose': stringtobool(args.verbose)
     }
     runner.run(arguments)
 
@@ -43,5 +51,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', dest='save_dir', type=str, default='~/', help='Directory to save all figures. Default=~/')
     parser.add_argument('--min-peptide-len', dest='min_peptide_len', type=int, default=5, help='Minimum peptide length to consider. Default=5')
     parser.add_argument('--max-peptide-len', dest='max_peptide_len', type=int, default=20, help='Maximum peptide length to consider. Default=20')
+    parser.add_argument('--tolerance', dest='tolerance', type=int, default=20, help='ppm tolerance to allow in search. Deafult=20')
+    parser.add_argument('--verbose', dest='verbose', type=bool, default=True, help='Extra printing to console during run. Default=True')
     args = parser.parse_args()
     main(args)

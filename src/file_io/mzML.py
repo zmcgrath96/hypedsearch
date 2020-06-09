@@ -20,11 +20,11 @@ def read(filename: str) -> list:
         filecontents = mzml.read(filename)
         for content in filecontents:
             spectra.append(Spectrum(
-                content['m/z array'],
-                content['intensity array'],
-                content['ms level'],
-                content['index'],
-                content['ms level'],
+                [float(x) for x in content['m/z array']],
+                [float(x) for x in content['intensity array']],
+                int(content['ms level']),
+                int(content['index']),
+                int(max(content['m/z array'])),
                 filename
             ))
 

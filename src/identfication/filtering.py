@@ -21,6 +21,8 @@ def slope_filtering(a: Iterable, min_window_size=5, mean_filter=1) -> list:
     Outputs:
         list with the filtered results
     '''
+    if len(a) < min_window_size:
+        return a
     adjusted_window_size = len(a) // 100
     window_size = min_window_size if adjusted_window_size < min_window_size else adjusted_window_size
     slopes = [(a[i+window_size] - a[i])/window_size for i in range(len(a) - window_size)]

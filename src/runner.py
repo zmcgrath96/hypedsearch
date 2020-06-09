@@ -17,11 +17,13 @@ def run(args: dict) -> None:
 
     Inputs:
         args:   object arguments from main. Should be validated in main. Attributes of args:
-            'spectra_folder':   string full path the the directory containing all spectra files
-            'database_file':    string full path to the .fasta database file
-            'output_dir':       string full path the the directory to save output to
-            'min_peptide_len':  int minimum peptide length to consider
-            'max_peptide_len':  int maximum peptide length to consider
+            spectra_folder:     (str) full path the the directory containing all spectra files
+            database_file:      (str) full path to the .fasta database file
+            output_dir:         (str) full path the the directory to save output to
+            min_peptide_len:    (int) minimum peptide length to consider
+            max_peptide_len:    (int) maximum peptide length to consider
+            tolerance:          (float) the ppm tolerance to allow in search
+            verbose:            (bool) extra printing
     Outputs:
         None
     '''
@@ -34,7 +36,7 @@ def run(args: dict) -> None:
             spectra_files.append(args['spectra_folder'] + fname)
         break
 
-    matched_spectra = id_spectra.id_spectra(spectra_files, args['database_file'], min_peptide_len=args['min_peptide_len'], max_peptide_len=args['max_peptide_len'])
+    matched_spectra = id_spectra.id_spectra(spectra_files, args['database_file'], min_peptide_len=args['min_peptide_len'], max_peptide_len=args['max_peptide_len'], ppm_tolerance=args['tolerance'], verbose=True)
     print('\nFinished search. Writting results to {}...'.format(args['output_dir']))
     summary.generate(matched_spectra, args['output_dir'])
     

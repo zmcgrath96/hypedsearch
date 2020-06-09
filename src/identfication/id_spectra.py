@@ -104,6 +104,9 @@ def id_spectrum(spectrum: Spectrum, db: Database, kmermasses: KmerMasses, min_pe
                     search_kmers_hash(spectrum, kmermasses.yd, 20)
     
     hits = KmerMassesResults(bs, bd, ys, yd)
+    if all([len(x) == 0 for _, x in hits._asdict().items()]):
+        print(spectrum)
+        
     # attempt alignments
     a = attempt_alignment(spectrum, db, hits, min_peptide_len)
     
@@ -126,7 +129,7 @@ def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptid
     '''
 
     verbose and print('Loading database...')
-    db = Database(database_file)
+    db = Database(database_file, verbose=verbose)
     verbose and print('\nDone.')
 
     verbose and print('Building hashes for kmers...')
