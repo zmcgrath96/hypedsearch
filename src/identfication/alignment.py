@@ -1,5 +1,5 @@
 from src.utils import insort_by_index, all_perms_of_s
-from src.scoring.scoring import score_subsequence
+from src.scoring.scoring import score_subsequence, backbone_score
 from src.identfication.filtering import result_filtering
 from src.types.objects import Spectrum, KmerMassesResults, SequenceAlignment, HybridSequenceAlignment
 from src.types.database import Database
@@ -189,7 +189,7 @@ def replace_ambiguous_hybrids(hybrid_alignments: list, db: Database) -> list:
 #          / SINGLE STRING ALIGNMENT FUNCTIONS
 ########################################################################
 
-def attempt_alignment(spectrum: Spectrum, db: Database, hits: KmerMassesResults, base_kmer_len: int, n=3) -> list:
+def attempt_alignment(spectrum: Spectrum, db: Database, hits: KmerMassesResults, base_kmer_len: int, n=3, ppm_tolerance=20) -> list:
     '''
     Given a set of hits, a spectrum, and a database, attempt to create an alignment for this
 
@@ -198,6 +198,9 @@ def attempt_alignment(spectrum: Spectrum, db: Database, hits: KmerMassesResults,
         db:             (Database) Holds the tree and protein entries
         hits:           (KmerMassesResults) hits from the hashing on a KmerMasses object
         base_kmer_len:  (int) minimum length kmer length used for filtering results
+    kwargs:
+        n:              (int) number of results to return. Default=3
+        ppm_tolerance:  (int) ppm tolerance to allow when scoring. Default=20
     Outputs:
         attempted_alignments: (list) attempted alignemnts. Contains both or either of SequenceAlignment and HybridSequenceAlignment
     '''
@@ -207,7 +210,7 @@ def attempt_alignment(spectrum: Spectrum, db: Database, hits: KmerMassesResults,
 
     a = align_b_y(b_results, y_results, db)
     # sort them by their score agains the spectrum and save them
-    a = sorted(a, key=lambda x: score_subsequence(spectrum.spectrum, x.replace('-', '').replace('(', '').replace(')', '')), reverse=True)[:n]
+    a = sorted(a, key=lambda x: backbone_score(spectrum, x.replace('-', '').replace('(', '').replace(')', ''), ppm_tolerance), reverse=True)
     nonhyba, hyba = [], []
     for aligned in a:
         if hyb_alignment_pattern.findall(aligned):
@@ -224,9 +227,11 @@ def attempt_alignment(spectrum: Spectrum, db: Database, hits: KmerMassesResults,
         if hyb_alignment_pattern.findall(sequence):
             aa_seq = re.sub(hyb_alignment_pattern, '', sequence)
             b_score, y_score = score_subsequence(spectrum.spectrum, aa_seq)
-            alignments.append(HybridSequenceAlignment(parents[0], parents[1], aa_seq, sequence, b_score, y_score, b_score+y_score))
+            bb_score = backbone_score(spectrum, aa_seq, ppm_tolerance)
+            alignments.append(HybridSequenceAlignment(parents[0], parents[1], aa_seq, sequence, b_score, y_score, bb_score))
         else:
             b_score, y_score = score_subsequence(spectrum.spectrum, sequence)
-            alignments.append(SequenceAlignment(parents[0], sequence, b_score, y_score, b_score+y_score))
+            bb_score = backbone_score(spectrum, sequence, ppm_tolerance)
+            alignments.append(SequenceAlignment(parents[0], sequence, b_score, y_score, bb_score))
 
-    return sorted(alignments, key=lambda x: x.total_score, reverse=True)
+    return sorted(alignments, key=lambda x: x.total_score, reverse=True)[:n]

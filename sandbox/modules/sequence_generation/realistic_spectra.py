@@ -49,7 +49,7 @@ def gen_realistic_spectra(sequences: list, DEBUG=False) -> list:
         precursor = spec_props['precursor_mass']
         # Mess with it
         # 1. Drop out peaks
-        dropout_rate = randint(60, 85) # rate found from experiments
+        dropout_rate = randint(20, 30) # rate found from experiments, updated with aarons recomendation
         DEBUG and print(f'Dropout rate: {dropout_rate}')
         dropouts = [randint(0, 100) < dropout_rate for _ in range(len(spec))]
         leftover_peaks = [spec[i] for i in range(len(spec)) if not dropouts[i]]
@@ -61,8 +61,9 @@ def gen_realistic_spectra(sequences: list, DEBUG=False) -> list:
             error = factor * np.random.pareto(600)
             leftover_peaks[i] += error  #found from experiments
 
-        # 3. Introduce noise
-        leftover_peaks += [uniform(0, max(leftover_peaks) + 100) for _ in range(100-len(leftover_peaks))]
+        # 3. Introduce noise, 
+        # updated from aaron, fewer noise with high abundance or lower abundance and lots of noise, 10-15 peaks, 
+        leftover_peaks += [uniform(0, max(leftover_peaks) + 100) for _ in range(15)]
 
         # 4. pick the abundance
         abundances = list(np.random.pareto(1, len(leftover_peaks)) * 2000) # found from experiments

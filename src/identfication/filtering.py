@@ -1,5 +1,5 @@
 from src.types.objects import KmerMassesResults, Spectrum
-from src.scoring.scoring import score_subsequence
+from src.scoring.scoring import score_subsequence, backbone_score
 from src.utils import insort_by_index
 
 from statistics import mean
@@ -36,7 +36,7 @@ def slope_filtering(a: Iterable, min_window_size=5, mean_filter=1) -> list:
     return filtered
 
 
-def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_length: int):
+def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_length: int, ppm_tolerance=20):
     # narrow down the results to a few promising kmers
     basemerhashedb = defaultdict(list)
     basemerhashedy = defaultdict(list)
@@ -56,13 +56,13 @@ def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_leng
                     continue
                 # if we've not seen it, try and add it
                 if basemerb not in basemerhashedb:
-                    basemerbscore = score_subsequence(spectrum.spectrum, basemerb)[0]
+                    basemerbscore = backbone_score(spectrum, basemerb, ppm_tolerance)  
                     # blacklist for bad scores
                     if not basemerbscore > 0:
                         basemerbblacklist[basemerb] = None
                         continue
                     # insert in order
-                    b_scores = insort_by_index((basemerb, score_subsequence(spectrum.spectrum, basemerb)[0]), b_scores, 1)
+                    b_scores = insort_by_index((basemerb, basemerbscore), b_scores, 1)
                 basemerhashedb[basemerb].append(masssequence_hit)
         else:
             for masssequence_hit in hitlist:
@@ -73,13 +73,13 @@ def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_leng
                     continue
                 # if we've not seen it, try and add it
                 if basemery not in basemerhashedy:
-                    basemeryscore = score_subsequence(spectrum.spectrum, basemery)[1]
+                    basemeryscore = backbone_score(spectrum, basemery, ppm_tolerance)
                     # blacklist for bad score
                     if not basemeryscore > 0:
                         basemeryblacklist[basemery] = None
                         continue
                     # insert in order
-                    y_scores = insort_by_index((basemery, score_subsequence(spectrum.spectrum, basemery)[1]), y_scores, 1)
+                    y_scores = insort_by_index((basemery, basemeryscore), y_scores, 1)
                 basemerhashedy[basemery].append(masssequence_hit)
 
     toscoreb = []
@@ -100,7 +100,7 @@ def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_leng
     for basemery in y_filtered:
         toscorey += [basemery[0]] + basemerhashedy[basemery[0]]
     
-    best_b_results = sorted(toscoreb, key=lambda mer: score_subsequence(spectrum.spectrum, mer)[0], reverse=True)
-    best_y_results = sorted(toscorey, key=lambda mer: score_subsequence(spectrum.spectrum, mer)[1], reverse=True)
+    best_b_results = sorted(toscoreb, key=lambda mer: backbone_score(spectrum, mer, ppm_tolerance), reverse=True)
+    best_y_results = sorted(toscorey, key=lambda mer: backbone_score(spectrum, mer, ppm_tolerance), reverse=True)
 
     return (best_b_results, best_y_results)
