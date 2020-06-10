@@ -11,6 +11,16 @@ def slope_filtering(a: Iterable, min_window_size=5, mean_filter=1) -> list:
     Filter out values by slope. Use a window size of at least min_window_size and at max 1% the size of 
     iterable a. Result is the subset of results whose window mean > mean_filter*mean_slope. a should be sorted
     with the steepest slope at the earliest indices 
+
+    Example:
+        a: [10, 9, 8, 7, 6.3, 5.8, 5.4, 5.3, 5.25, 5.23]
+        min window size: 1
+        mean_filter: 1
+
+        slopes of a = [1, 1, 1, .7, .5, .4, .1, .05, .02]
+        mean slope of a = .53
+
+        output is then [10, 9, 8, 7, 6.3]
     
     Inputs:
         a:     (Iterable) the list or list like object to filter
@@ -36,12 +46,33 @@ def slope_filtering(a: Iterable, min_window_size=5, mean_filter=1) -> list:
     return filtered
 
 
-def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_length: int, ppm_tolerance=20):
-    # narrow down the results to a few promising kmers
+def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_length: int, ppm_tolerance=20) -> (list, list):
+    '''
+    Filter out the sequences that do not score well. Use a mean filter to do so.
+    Starting with KmerMassesResults namedtuple, each entry a list of MassSequence namedtuples,
+    filter out by the base kmer length. This bins sequences 'MALWAR' into the same one as 'MALWARMQAAR'
+    The point of doing so is to reduce the interested sequences. Once we filter out by the base kmers, 
+    we then score all the remaining sequences and return the top scoring ones.
+
+    Inputs:
+        spectrum:           (Spectrum) the mass spectrum being aligned
+        hits:               (KmerMassesResults) raw results from the search algorithm on the KmerMasses 
+        base_kmer_length:   (int) the smallest length k-mer to consider
+    kwargs:
+        ppm_tolerance:      (int) the ppm tolerance to accept when scoring. Default=20
+    Outputs:
+        (list, list)    list of strings of the results from the left (N terminus) and right (C terminus) sides 
+                        respectively
+    '''
+    # keep track of the sequences that start with the base kmers 
     basemerhashedb = defaultdict(list)
     basemerhashedy = defaultdict(list)
+    
+    # keep track of base kmers that don't score > 0
     basemerbblacklist = {}
     basemeryblacklist = {}
+
+    # sorted lists of (basekmers, score) by score
     b_scores = []
     y_scores = []
 
@@ -85,6 +116,7 @@ def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_leng
     toscoreb = []
     toscorey = []
     
+    # mean filtered base kmers by scores
     b_filtered = [b_scores[-1*i - 1] for i in range(len(slope_filtering([x[1] for x in b_scores[::-1]])))]
     y_filtered = [y_scores[-1*i - 1] for i in range(len(slope_filtering([x[1] for x in y_scores[::-1]])))]
     
@@ -100,6 +132,7 @@ def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_leng
     for basemery in y_filtered:
         toscorey += [basemery[0]] + basemerhashedy[basemery[0]]
     
+    # sorted score of all leftover sequences from highest to lowest
     best_b_results = sorted(toscoreb, key=lambda mer: backbone_score(spectrum, mer, ppm_tolerance), reverse=True)
     best_y_results = sorted(toscorey, key=lambda mer: backbone_score(spectrum, mer, ppm_tolerance), reverse=True)
 
