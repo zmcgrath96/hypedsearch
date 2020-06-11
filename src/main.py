@@ -45,7 +45,7 @@ def main(args: object) -> None:
     runner.run(arguments)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Entry file for the database experiments')
+    parser = argparse.ArgumentParser(description='Tool for identifying proteins, both hybrid and non hybrid from MS/MS data')
 
     parser.add_argument('spectra_folder', type=str, metavar='SF', help='Path to folder containing spectra files.')
     parser.add_argument('database_file', type=str, metavar='DB', help='Path to .fasta file containing proteins')
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     parser.add_argument('--min-peptide-len', dest='min_peptide_len', type=int, default=5, help='Minimum peptide length to consider. Default=5')
     parser.add_argument('--max-peptide-len', dest='max_peptide_len', type=int, default=20, help='Maximum peptide length to consider. Default=20')
     parser.add_argument('--tolerance', dest='tolerance', type=int, default=20, help='ppm tolerance to allow in search. Deafult=20')
-    parser.add_argument('--verbose', dest='verbose', type=bool, default=True, help='Extra printing to console during run. Default=True')
     parser.add_argument('--score', dest='scoring_alg', type=str, default='ibb', help='Scoring algorithm to use. Options are [bb, ion, ibb] for backbone, ion, and ion backbone respectively. Default=bb')
+    parser.add_argument('--verbose', dest='verbose', type=bool, default=True, help='Extra printing to console during run. Default=True')
     args = parser.parse_args()
     main(args)
