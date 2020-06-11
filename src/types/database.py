@@ -77,7 +77,7 @@ class Database(object):
         '''
         t = Tree()
         plen = len(self.proteins)
-        printskiplen = plen // 100
+        printskiplen = plen // 1000 if plen > 1000 else plen // 100
         printskipc = 0
         i = 0
         for key, value in self.proteins.items():
