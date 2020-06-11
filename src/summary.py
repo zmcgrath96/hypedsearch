@@ -1,8 +1,10 @@
 import json
 from src.utils import make_dir, make_valid_dir_string
 from src.file_io import JSON
+import pandas as pd
 
 SUMMARY_NAME = 'summary'
+HYBRID_PREFIX = 'hybrid_'
 
 def json_file(results: dict, output_dir='./') -> None:
     '''
@@ -25,6 +27,44 @@ def json_file(results: dict, output_dir='./') -> None:
         }
     JSON.save_dict(json_file_name, dictified)
 
+def tsv_file(results: dict, output_dir='./') -> None:
+    '''
+    Write the results of the experiment to 2 tsv files. One tsv file is for 
+    non hybrid identified sequences, the other is for hybrid identified sequences.
+
+    Inputs: 
+        results:    (dict) results of the search. The key of each entry is the name
+                            of each entry and the value is an Alignments namedtuple 
+    kwargs:
+        output_dir: (str) path to the directory to save the tsvs. Default = ./
+    Outputs:
+        None
+    '''
+    # seperate the hybrids from the nonhybrids
+    hybrids, nonhybrids = [], []
+    for name, alignment in results.items():
+        topalignment = alignment.alignments[0]._asdict()
+        topalignment['entry name'] = name
+        if 'hybrid_sequence' in topalignment:
+            hybrids.append(topalignment)
+        else:
+            nonhybrids.append(alignment)
+
+    # move to pandas dataframe for easy writing
+    hybridresults = pd.DataFrame(hybrids)
+    with open(f'{output_dir + HYBRID_PREFIX + SUMMARY_NAME}.tsv', 'w') as ho:
+        ho.write(hybridresults.to_csv(sep='\t'))
+
+    del hybridresults
+    del hybrids
+
+    nonhybridresults = pd.DataFrame(nonhybrids)
+    with open(f'{output_dir + SUMMARY_NAME}.tsv', 'w') as nho:
+        nho.write(nonhybridresults.to_csv(sep='\t'))
+
+    del nonhybridresults
+    del nonhybrids
+
 def generate(alignments: dict, output_dir='./') -> None:
     '''
     Generate a summary text and json file for the alignments made
@@ -41,3 +81,4 @@ def generate(alignments: dict, output_dir='./') -> None:
     make_dir(output_dir)
 
     json_file(alignments, output_dir)
+    tsv_file(alignments, output_dir=output_dir)
