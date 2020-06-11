@@ -105,7 +105,7 @@ def build_kmermasses(database: Database, min_peptide_len: int, max_peptide_len: 
 #                   /PRE-SEARCH DATABASE FUNCTIONS
 ###################################################################################
 
-def id_spectrum(spectrum: Spectrum, db: Database, kmermasses: KmerMasses, min_peptide_len: int, n=3, ppm_tolerance=20, scoring_alg='bb') -> Alignments:
+def id_spectrum(spectrum: Spectrum, db: Database, kmermasses: KmerMasses, min_peptide_len: int, n=3, ppm_tolerance=20, scoring_alg='ibb') -> Alignments:
     '''
     Run an alignemnt in the form of an Amino Acid sequence with a score to the caller for this spectrum.
     The top n results are returned 
@@ -116,7 +116,7 @@ def id_spectrum(spectrum: Spectrum, db: Database, kmermasses: KmerMasses, min_pe
     kwargs:
         n:                  (int) number of alignments to return for each spectrum. Default=3
         ppm_tolerance:      (int) the ppm tolerance to allow when searching. Default=20
-        scoring_alg:        (str) the name of the scoring algoirhtm to use. Options are 'bb' or 'ion'. Default=bb
+        scoring_alg:        (str) the name of the scoring algoirhtm to use. Options are 'bb', 'ion', 'ibb'. Default=bb
     Outputs:
         Alignments namedtuple 
     '''
@@ -135,7 +135,7 @@ def id_spectrum(spectrum: Spectrum, db: Database, kmermasses: KmerMasses, min_pe
     # return the alignments in a structure
     return Alignments(spectrum, a)
 
-def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptide_len=5, max_peptide_len=20, result_count=3, ppm_tolerance=20, scoring_alg='bb') -> dict:
+def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptide_len=5, max_peptide_len=20, result_count=3, ppm_tolerance=20, scoring_alg='ibb') -> dict:
     '''
     Run a scoring and alignment on each spectra passed in and give spectra a sequence of 
     Amino Acids that best describes the spectrum
