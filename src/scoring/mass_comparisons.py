@@ -182,25 +182,32 @@ def compare_sequence_sequence_ion_type(spectra: str, reference: str, ion: str) -
     reference_ions , _= calc_masses(reference, ion=ion)
     return compare_masses(spectra_ions, reference_ions)
 
-def optimized_compare_masses(observed: list, reference: list, ppm_tolerance=20) -> float:
+def optimized_compare_masses(observed: list, reference: list, ppm_tolerance=20, needs_sorted=False) -> float:
     '''
     CREATED MAY 19 2020
     Score two spectra against eachother. Simple additive scoring with bonuses for streaks
     Divides by the length of the reference to make it length biased for the reference
 
     Note:   the difference between this one and the April 27 one is this one attempts
-            to be more optimized in terms of search complexity
+            to be more optimized in terms of search complexity. Uses binary search
+            for the faster search. NOTE: observed should be sorted before passed in.
+            If not, pass True in the needs_sorted flag
 
     Inputs:
-        observed:       list of floats (from mass spectra)
-        reference:      list of floats (calculated from protein sequence)
-        ppm_tolerance:  float of the mass error tolerance allowed
+        observed:       (list of floats) spectrum being scored
+        reference:      (list of floats) reference spectrum to score observed againsts
+    kwargs:
+        ppm_tolerance:  (float) the mass error tolerance allowed. Default=20
+        needs_sorted:   (bool) the observed mass needs to be sorted before binary search. Default=False
     Outputs:
         score:      float score 
     '''
     if len(observed) == 0 or len(reference) == 0:
         return 0.0
-    observed.sort()
+
+    if needs_sorted:
+        observed.sort()
+        
     def boundaries(mass):
         tol = ppm_to_da(mass, ppm_tolerance)
         return [mass - tol, mass + tol]
