@@ -39,7 +39,8 @@ def main(args: object) -> None:
         'min_peptide_len': args.min_peptide_len,
         'max_peptide_len': args.max_peptide_len,
         'tolerance': args.tolerance,
-        'verbose': stringtobool(args.verbose)
+        'verbose': stringtobool(args.verbose), 
+        'scoring_alg': args.scoring_alg
     }
     runner.run(arguments)
 
@@ -53,5 +54,6 @@ if __name__ == '__main__':
     parser.add_argument('--max-peptide-len', dest='max_peptide_len', type=int, default=20, help='Maximum peptide length to consider. Default=20')
     parser.add_argument('--tolerance', dest='tolerance', type=int, default=20, help='ppm tolerance to allow in search. Deafult=20')
     parser.add_argument('--verbose', dest='verbose', type=bool, default=True, help='Extra printing to console during run. Default=True')
+    parser.add_argument('--score', dest='scoring_alg', type=str, default='bb', help='Scoring algorithm to use. Options are [bb, ion] for backbone and ion respectively. Default=bb')
     args = parser.parse_args()
     main(args)

@@ -24,6 +24,7 @@ def run(args: dict) -> None:
             max_peptide_len:    (int) maximum peptide length to consider
             tolerance:          (float) the ppm tolerance to allow in search
             verbose:            (bool) extra printing
+            scoring_alg:        (str) scoring algorithm to use
     Outputs:
         None
     '''
@@ -36,7 +37,14 @@ def run(args: dict) -> None:
             spectra_files.append(args['spectra_folder'] + fname)
         break
 
-    matched_spectra = id_spectra.id_spectra(spectra_files, args['database_file'], min_peptide_len=args['min_peptide_len'], max_peptide_len=args['max_peptide_len'], ppm_tolerance=args['tolerance'], verbose=True)
+    matched_spectra = id_spectra.id_spectra(
+        spectra_files, args['database_file'], 
+        min_peptide_len=args['min_peptide_len'], 
+        max_peptide_len=args['max_peptide_len'], 
+        ppm_tolerance=args['tolerance'], 
+        verbose=True, 
+        scoring_alg=args['scoring_alg']
+    )
     print('\nFinished search. Writting results to {}...'.format(args['output_dir']))
     summary.generate(matched_spectra, args['output_dir'])
     

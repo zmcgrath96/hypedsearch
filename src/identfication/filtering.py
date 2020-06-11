@@ -46,7 +46,7 @@ def slope_filtering(a: Iterable, min_window_size=5, mean_filter=1) -> list:
     return filtered
 
 
-def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_length: int, ppm_tolerance=20) -> (list, list):
+def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_length: int, ppm_tolerance=20, scoring_alg='bb') -> (list, list):
     '''
     Filter out the sequences that do not score well. Use a mean filter to do so.
     Starting with KmerMassesResults namedtuple, each entry a list of MassSequence namedtuples,
@@ -60,6 +60,8 @@ def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_leng
         base_kmer_length:   (int) the smallest length k-mer to consider
     kwargs:
         ppm_tolerance:      (int) the ppm tolerance to accept when scoring. Default=20
+        scoring_alg:        (str) scoring algoirithm to use. 'bb' for backbone, 'ion' for separate ion score.
+                                    Default='bb'
     Outputs:
         (list, list)    list of strings of the results from the left (N terminus) and right (C terminus) sides 
                         respectively
@@ -68,6 +70,10 @@ def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_leng
     basemerhashedb = defaultdict(list)
     basemerhashedy = defaultdict(list)
     
+    # scoring algorithm to use
+    bscoringalg = lambda spec, refseq, tol: backbone_score(spec, refseq, tol) if 'bb' == scoring_alg.lower() else score_subsequence(spec.spectrum, refseq)[0]
+    yscoringalg = lambda spec, refseq, tol: backbone_score(spec, refseq, tol) if 'bb' == scoring_alg.lower() else score_subsequence(spec.spectrum, refseq)[1]
+
     # keep track of base kmers that don't score > 0
     basemerbblacklist = {}
     basemeryblacklist = {}
@@ -87,7 +93,7 @@ def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_leng
                     continue
                 # if we've not seen it, try and add it
                 if basemerb not in basemerhashedb:
-                    basemerbscore = backbone_score(spectrum, basemerb, ppm_tolerance)  
+                    basemerbscore = bscoringalg(spectrum, basemerb, ppm_tolerance)
                     # blacklist for bad scores
                     if not basemerbscore > 0:
                         basemerbblacklist[basemerb] = None
@@ -104,7 +110,7 @@ def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_leng
                     continue
                 # if we've not seen it, try and add it
                 if basemery not in basemerhashedy:
-                    basemeryscore = backbone_score(spectrum, basemery, ppm_tolerance)
+                    basemeryscore = yscoringalg(spectrum, basemery, ppm_tolerance)
                     # blacklist for bad score
                     if not basemeryscore > 0:
                         basemeryblacklist[basemery] = None
@@ -133,7 +139,7 @@ def result_filtering(spectrum: Spectrum, hits: KmerMassesResults, base_kmer_leng
         toscorey += [basemery[0]] + basemerhashedy[basemery[0]]
     
     # sorted score of all leftover sequences from highest to lowest
-    best_b_results = sorted(toscoreb, key=lambda mer: backbone_score(spectrum, mer, ppm_tolerance), reverse=True)
-    best_y_results = sorted(toscorey, key=lambda mer: backbone_score(spectrum, mer, ppm_tolerance), reverse=True)
+    best_b_results = sorted(toscoreb, key=lambda mer: bscoringalg(spectrum, mer, ppm_tolerance), reverse=True)
+    best_y_results = sorted(toscorey, key=lambda mer: yscoringalg(spectrum, mer, ppm_tolerance), reverse=True)
 
     return (best_b_results, best_y_results)
