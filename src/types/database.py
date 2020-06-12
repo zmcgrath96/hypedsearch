@@ -82,7 +82,8 @@ class Database(object):
         i = 0
         for key, value in self.proteins.items():
             self.verbose and print(f'Adding protein {i + 1}/{plen} to tree\r', end='')
-
+            i += 1
+            
             # add each subsequence to the tree
             for j in range(len(value.sequence) - self.min_len):
                 subseqlen = self.max_len if j + self.max_len < len(value.sequence) - 1 else len(value.sequence) - j
