@@ -83,7 +83,7 @@ class Database(object):
         for key, value in self.proteins.items():
             self.verbose and print(f'Adding protein {i + 1}/{plen} to tree\r', end='')
             i += 1
-            
+
             # add each subsequence to the tree
             for j in range(len(value.sequence) - self.min_len):
                 subseqlen = self.max_len if j + self.max_len < len(value.sequence) - 1 else len(value.sequence) - j
@@ -123,8 +123,12 @@ class Database(object):
                         prots[name] = e
 
                     seq = '' 
-                    name = str(str(line.split('|')[2]).split(' ')[0]).replace('\n', '')
-                    identifier = str(line.split('|')[1])
+                    if '|' in line:
+                        name = str(str(line.split('|')[2]).split(' ')[0]).replace('\n', '')
+                        identifier = str(line.split('|')[1])
+                    else: 
+                        name = line.replace('\n', '')
+                        identifier = ''
                     if is_uniprot:
                         after_bar = str(line.split('|')[2])
                         hmn_rdble_name = str(' '.join(after_bar.split(' ')[1:]).split('OS=')[0]).strip()
