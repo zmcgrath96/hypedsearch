@@ -46,7 +46,7 @@ def build_kmermasses(database: Database, min_peptide_len: int, max_peptide_len: 
     verbose and print(f'Indexing database for k={max_peptide_len}...')
     
     # set the kmer size the the max peptide length
-    database.set_kmer_size(max_peptide_len)
+    database.set_max_len(max_peptide_len)
     # index in order to get all of the possible max length kmers
     database.index()
 
@@ -55,19 +55,11 @@ def build_kmermasses(database: Database, min_peptide_len: int, max_peptide_len: 
     # database metadata keys are the max length kmers found in the database
     mdl = len(database.metadata.keys())
     
-    # reduce printing
-    printskiplen = mdl // 1000
-    printskipc = 0
-    
     for i, kmer in enumerate(list(database.metadata.keys())):
         if len(kmer) < min_peptide_len: 
             continue
-            
-        if printskipc == printskiplen:
-            verbose and print(f'Looking at kmer {i + 1}/{mdl}\r', end='')
-            printskipc = 0
-            
-        printskipc += 1
+
+        verbose and print(f'Looking at kmer {i + 1}/{mdl}\r', end='')
         
         # generate singly and doubly b and y ion spectra
         kmerspecbs = gen_spectrum(kmer, ion='b', charge=1)['spectrum']
@@ -155,7 +147,7 @@ def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptid
 
     # load the database into memory
     verbose and print('Loading database...')
-    db = Database(database_file, verbose=verbose)
+    db = Database(database_file,min_len=min_peptide_len, max_len=max_peptide_len , verbose=verbose)
     verbose and print('\nDone.')
 
     # build the kmermasses namedtuple object once for fast search

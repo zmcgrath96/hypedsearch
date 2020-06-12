@@ -2,4 +2,4 @@ lxml
 numpy
 pyteomics
 pandas
-suffix_tree
+datrie

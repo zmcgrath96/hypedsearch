@@ -1,11 +1,12 @@
-from suffix_tree import Tree
+from datrie import Trie
+import string
 from src.types.objects import KmerMetaData
 
 class Entry(object):
     '''
     Class to contain protein entry information
     '''
-    def __init__(self, name: str, sequence: str, readable_name='', id='', kmer_size=3):
+    def __init__(self, name: str, sequence: str, readable_name='', id='', kmer=3):
         '''
         init
 
@@ -15,18 +16,18 @@ class Entry(object):
         kwargs:
             readable_name:  string the easy to read name of the protein
             id:             id of the protein from the source
-            kmer_size:      int the size of kmer to use for indexing
+            kmer:           int the size of kmer to use for indexing
         '''
         self.name: str = name
         self.sequence: str = sequence
         self.readable_name: str = readable_name
         self.id: str = id
         self.kmers: list = None
-        self.kmer_size: int = None
+        self.k: int = None
 
     ##################### Setters #####################
-    def set_kmer_size(self, k: int):
-        self.kmer_size = k
+    def set_kmer_len(self, k: int):
+        self.k = k
 
     ##################### Public Methods #####################
     def index(self):
@@ -37,8 +38,8 @@ class Entry(object):
             list of tuples in the form (kmer, start_position, end_position)
         '''
         kmers = []
-        for i in range(len(self.sequence) + self.kmer_size -1):
-            entry = (self.sequence[i: i+self.kmer_size], i, i + self.kmer_size-1)
+        for i in range(len(self.sequence) + self.k -1):
+            entry = (self.sequence[i: i+self.k], i, i + self.k-1)
             kmers.append(entry)
         self.kmers = kmers
         return self.kmers
@@ -49,7 +50,7 @@ class Database(object):
 
     Container for multiple database operations. Packages 
     '''
-    def __init__(self, fasta_file_name='', is_uniprot=False, kmer_size=3, verbose=False) -> None:
+    def __init__(self, fasta_file_name='', is_uniprot=False, min_len=3, max_len=20, verbose=False) -> None:
         '''
         Init the database with a fasta file name
 
@@ -57,7 +58,7 @@ class Database(object):
         kwargs:
             fasta_file_name:    str name of fasta file to read
             is_uniprot:         bool Set to True if the database is from UnitPort. If True, extra informtion is kept
-            kmer_size:          int size of kmer to use for indexing the database
+            min_len:          int size of kmer to use for indexing the database
             verbose:        (bool) extra printing. Default=False
 
         Outputs: 
@@ -65,30 +66,28 @@ class Database(object):
         '''
         self.fasta_file: str = fasta_file_name
         self.proteins: dict = self.__read_fasta(fasta_file_name) if '.fasta' in fasta_file_name else {}
-        self.kmer_size: int = kmer_size
+        self.min_len: int = min_len
+        self.max_len: int = max_len
         self.metadata: dict = None
         self.verbose: bool = verbose
-        self.tree: Tree = self.__build_tree()
+        self.tree: Trie = self.__build_tree()
     
     ##################### Private Methods #####################
-    def __build_tree(self) -> Tree:
+    def __build_tree(self) -> Trie:
         '''
         Add a suffix tree to the database
         '''
-        t = Tree()
+        t = Trie(string.ascii_uppercase)
         plen = len(self.proteins)
-        printskiplen = plen // 1000 if plen > 1000 else plen // 100
-        printskipc = 0
         i = 0
         for key, value in self.proteins.items():
-            if printskipc == printskiplen:
-                printskipc = 0
-                self.verbose and print(f'Adding protein {i + 1}/{plen} to tree\r', end='')
-            
-            i += 1
-            printskipc += 1
+            self.verbose and print(f'Adding protein {i + 1}/{plen} to tree\r', end='')
 
-            t.add(key, value.sequence)
+            # add each subsequence to the tree
+            for j in range(len(value.sequence) - self.min_len):
+                subseqlen = self.max_len if j + self.max_len < len(value.sequence) - 1 else len(value.sequence) - j
+                t[value.sequence[j:j+subseqlen]] = key
+    
         return t
 
 
@@ -141,16 +140,16 @@ class Database(object):
         return prots
 
     ##################### Public Methods #####################
-    def set_kmer_size(self, k: int) -> None:
+    def set_max_len(self, k: int) -> None:
         '''
-        Change the k-mer size of the database for indexing
+        Change the max size of the database for indexing
 
         Inputs:
-            k:      (int) new kmer size 
+            k:      (int) new max size 
         Outputs:
             None
         '''
-        self.kmer_size = k
+        self.max_len = k
 
     def index(self) -> None:
         '''
@@ -165,7 +164,7 @@ class Database(object):
         kmers = {}
         for name, e in self.proteins.items():
             # e is an entry class
-            e.set_kmer_size(self.kmer_size)
+            e.set_kmer_len(self.max_len)
             # index the entry and add it to my index
             mers = e.index()
             for i in range(len(mers)):
@@ -207,7 +206,7 @@ class Database(object):
         if protein_name in self.proteins:
             return False
 
-        e = Entry(protein_name, protein_sequnece, human_readable_name, protein_id, self.kmer_size)
+        e = Entry(protein_name, protein_sequnece, human_readable_name, protein_id, self.min_len)
         self.proteins[protein_name] = e 
 
         if self.metadata:

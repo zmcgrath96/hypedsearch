@@ -135,9 +135,9 @@ def align_b_y(b_results: list, y_results: list, db: Database) -> list:
     # try and create an alignment
     spec_alignments = []
     for bs in b_results:
-        bproteins = [id_ for id_, _ in db.tree.find_all(bs)]
+        bproteins = [id_ for id_ in db.tree.values(bs)]
         for ys in y_results:
-            yproteins = [id_ for id_, _ in db.tree.find_all(ys)]
+            yproteins = [id_ for id_  in db.tree.values(ys)]
             
             # the sequence is from the same protein, try and overlap it
             if any([x in yproteins for x in bproteins]):
@@ -169,7 +169,7 @@ def get_parents(seq: str, db: Database) -> (list, list):
     Outputs:
         (list, list) lists of parents
     '''
-    get_sources = lambda s: [x[0] for x in db.tree.find_all(s)]
+    get_sources = lambda s: [x for x in db.tree.values(s)]
 
     if hyb_alignment_pattern.findall(seq):
         if '-' in seq:
@@ -213,12 +213,12 @@ def replace_ambiguous_hybrids(hybrid_alignments: list, db: Database) -> list:
 
         # also try to replace L and I with eachother
         possible = all_perms_of_s(nonhyb, 'LI')
-        if len(possible) == 0 and db.tree.find(nonhyb):
+        if len(possible) == 0 and db.tree.has_keys_with_prefix(nonhyb):
             ret.append(nonhyb)
             added = True
         else:
             for p in possible:
-                if db.tree.find(p):
+                if db.tree.has_keys_with_prefix(p):
                     ret.append(p)
                     added = True
                     break
