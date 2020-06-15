@@ -14,7 +14,12 @@ from bisect import bisect
 #                   PRE-SEARCH DATABASE FUNCTIONS
 ###################################################################################
 
-def build_kmermasses(database: Database, min_peptide_len: int, max_peptide_len: int, verbose=False) -> KmerMasses:
+def build_kmermasses(
+    database: Database, 
+    min_peptide_len: int, 
+    max_peptide_len: int, 
+    verbose=False
+) -> KmerMasses:
     '''
     Build a KmerMasses object from a database. The entries to the KmerMasses object 
     are dictionaries where keys are integer values of masses and the entries are 
@@ -47,6 +52,7 @@ def build_kmermasses(database: Database, min_peptide_len: int, max_peptide_len: 
     
     # set the kmer size the the max peptide length
     database.set_max_len(max_peptide_len)
+
     # index in order to get all of the possible max length kmers
     database.index()
 
@@ -62,12 +68,13 @@ def build_kmermasses(database: Database, min_peptide_len: int, max_peptide_len: 
         verbose and print(f'Looking at kmer {i + 1}/{mdl}\r', end='')
         
         # generate singly and doubly b and y ion spectra
-        kmerspecbs = gen_spectrum(kmer, ion='b', charge=1)['spectrum']
-        kmerspecbd = gen_spectrum(kmer, ion='b', charge=2)['spectrum']
-        kmerspecys = gen_spectrum(kmer, ion='y', charge=1)['spectrum']
-        kmerspecyd = gen_spectrum(kmer, ion='y', charge=2)['spectrum']
+        kmer_spec_b_s = gen_spectrum(kmer, ion='b', charge=1)['spectrum']
+        kmer_spec_b_d = gen_spectrum(kmer, ion='b', charge=2)['spectrum']
+        kmer_spec_y_s = gen_spectrum(kmer, ion='y', charge=1)['spectrum']
+        kmer_spec_y_d = gen_spectrum(kmer, ion='y', charge=2)['spectrum']
         
         for i in range(min_peptide_len, len(kmer)+1):
+
             # iterate from min to max and take left to right for b, right to left for y
             subseq_b = kmer[:i]
             subseq_y = kmer[len(kmer)-i:]
@@ -77,19 +84,16 @@ def build_kmermasses(database: Database, min_peptide_len: int, max_peptide_len: 
                 kmer_tracker[subseq_b] += 'b'
         
                 # add singly and doubly entry for this sequence to the dictionary respectively
-                bs[math.floor(kmerspecbs[i-1])].append(MassSequence(kmerspecbs[i-1], subseq_b))
-                bd[math.floor(kmerspecbd[i-1])].append(MassSequence(kmerspecbd[i-1], subseq_b))
+                bs[math.floor(kmer_spec_b_s[i-1])].append(MassSequence(kmer_spec_b_s[i-1], subseq_b))
+                bd[math.floor(kmer_spec_b_d[i-1])].append(MassSequence(kmer_spec_b_d[i-1], subseq_b))
             
             # check to see if we've seen this kmer as a y sequence before
             if 'y' not in kmer_tracker[subseq_y]:
                 kmer_tracker[subseq_y] += 'y'
             
                 # add singly and doubly entry for this sequence to the dictionary respectively
-                ys[math.floor(kmerspecys[i-1])].append(MassSequence(kmerspecys[i-1], subseq_y))
-                yd[math.floor(kmerspecyd[i-1])].append(MassSequence(kmerspecyd[i-1], subseq_y))
-
-    # delete this     
-    del kmer_tracker
+                ys[math.floor(kmer_spec_y_s[i-1])].append(MassSequence(kmer_spec_y_s[i-1], subseq_y))
+                yd[math.floor(kmer_spec_y_d[i-1])].append(MassSequence(kmer_spec_y_d[i-1], subseq_y))
         
     return KmerMasses(bs, bd, ys, yd)
 
@@ -97,7 +101,15 @@ def build_kmermasses(database: Database, min_peptide_len: int, max_peptide_len: 
 #                   /PRE-SEARCH DATABASE FUNCTIONS
 ###################################################################################
 
-def id_spectrum(spectrum: Spectrum, db: Database, kmermasses: KmerMasses, min_peptide_len: int, n=3, ppm_tolerance=20, scoring_alg='ibb') -> Alignments:
+def id_spectrum(
+    spectrum: Spectrum, 
+    db: Database, 
+    kmermasses: KmerMasses, 
+    min_peptide_len: int, 
+    n=3, 
+    ppm_tolerance=20, 
+    scoring_alg='ibb'
+) -> Alignments:
     '''
     Run an alignemnt in the form of an Amino Acid sequence with a score to the caller for this spectrum.
     The top n results are returned 
@@ -127,7 +139,16 @@ def id_spectrum(spectrum: Spectrum, db: Database, kmermasses: KmerMasses, min_pe
     # return the alignments in a structure
     return Alignments(spectrum, a)
 
-def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptide_len=5, max_peptide_len=20, result_count=3, ppm_tolerance=20, scoring_alg='ibb') -> dict:
+def id_spectra(
+    spectra_files: list, 
+    database_file: str, 
+    verbose=True, 
+    min_peptide_len=5, 
+    max_peptide_len=20, 
+    result_count=3, 
+    ppm_tolerance=20, 
+    scoring_alg='ibb'
+) -> dict:
     '''
     Run a scoring and alignment on each spectra passed in and give spectra a sequence of 
     Amino Acids that best describes the spectrum
@@ -142,7 +163,9 @@ def id_spectra(spectra_files: list, database_file: str, verbose=True, min_peptid
         ppm_tolerance:      (int) tolerance for ppm to include in search. Default=20
         scoring_alg:        (str) the scoring algorithm to use. Either 'bb' or 'ion'. Default=bb
     Outputs:
-        dict containing the results. All information is keyed by the spectrum file name with scan number appended and the values are list of SequenceAligment objects
+        dict containing the results. 
+        All information is keyed by the spectrum file name with scan number appended 
+        and the values are list of SequenceAligment objects
     '''
 
     # load the database into memory
