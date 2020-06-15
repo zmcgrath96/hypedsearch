@@ -279,8 +279,15 @@ def replace_ambiguous_hybrids(hybrid_alignments: list, db: Database) -> list:
 #          / SINGLE STRING ALIGNMENT FUNCTIONS
 ########################################################################
 
-def attempt_alignment(spectrum: Spectrum, db: Database, hits: KmerMassesResults, 
-                        base_kmer_len: int, n=3, ppm_tolerance=20, scoring_alg='ibb') -> list:
+def attempt_alignment(
+    spectrum: Spectrum, 
+    db: Database, 
+    hits: KmerMassesResults, 
+    base_kmer_len: int, 
+    n=3, 
+    ppm_tolerance=20, 
+    scoring_alg='ibb'
+    ) -> list:
     '''
     Given a set of hits in the form of KmerMassesResult (lists of sequences), reduce
     the number of hits and filter out poor scoring sequences. Combine N and C terminus

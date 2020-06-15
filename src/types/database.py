@@ -1,8 +1,9 @@
 from datrie import Trie
 import string
 from src.types.objects import KmerMetaData
+from collections import defaultdict
 
-class Entry(object):
+class Entry:
     '''
     Class to contain protein entry information
     '''
@@ -26,31 +27,37 @@ class Entry(object):
         self.k: int = None
 
     ##################### Setters #####################
-    def set_kmer_len(self, k: int):
+    def set_kmer_len(self, k: int) -> None:
         self.k = k
 
     ##################### Public Methods #####################
-    def index(self):
+    def index(self) -> list:
         '''
-        Index a protein by generating pairs from the protein of (kmer, start_position, end_position (inclusive))
+        Index a protein by generating pairs from the protein of 
+        (kmer, start_position, end_position (inclusive))
         
         Outputs:
             list of tuples in the form (kmer, start_position, end_position)
         '''
-        kmers = []
-        for i in range(len(self.sequence) + self.k -1):
-            entry = (self.sequence[i: i+self.k], i, i + self.k-1)
-            kmers.append(entry)
+        kmers = [(self.sequence[i:i+self.k], i, i + self.k - 1) \
+                    for i in range(len(self.sequence) + self.k - 1)]
         self.kmers = kmers
         return self.kmers
 
-class Database(object): 
+class Database: 
     '''
     Database
 
     Container for multiple database operations. Packages 
     '''
-    def __init__(self, fasta_file_name='', is_uniprot=False, min_len=3, max_len=20, verbose=False) -> None:
+    def __init__(
+        self, 
+        fasta_file_name='', 
+        is_uniprot=False, 
+        min_len=3, 
+        max_len=20, 
+        verbose=False
+    ) -> None:
         '''
         Init the database with a fasta file name
 
@@ -104,12 +111,12 @@ class Database(object):
             dictionary of Entry class keyed by the protein name 
         '''
         prots = {}
-        with open(fasta_file, 'r') as i:
+        with open(fasta_file, 'r') as fasta:
             name = None 
             seq = '' 
             identifier = ''
             hmn_rdble_name = ''
-            for line in i:
+            for line in fasta:
                 if '>' in line: #name line
 
                     # add the last thing to the list
@@ -166,18 +173,20 @@ class Database(object):
         Outputs: 
             None
         '''
-        kmers = {}
+        kmers = defaultdict(list)
+        e: Entry
+
         for name, e in self.proteins.items():
-            # e is an entry class
-            e.set_kmer_len(self.max_len)
+            
             # index the entry and add it to my index
+            e.set_kmer_len(self.max_len)
             mers = e.index()
-            for i in range(len(mers)):
-                mer, start_pos, end_pos = mers[i]
-                if mer not in kmers:
-                    kmers[mer] = []
+
+            # add the kmer with protein, starting and ending position into kmers dict
+            for mer, start_pos, end_pos in mers:
                 pairing = KmerMetaData(name, start_pos, end_pos)
                 kmers[mer].append(pairing)
+
         # set my metadata and entries
         self.verbose and print('{} unique kmers'.format(len(kmers.keys())))
         self.metadata = kmers
@@ -191,11 +200,15 @@ class Database(object):
         Outputs:
             Entry class of the protein. Empty Entry if not found
         '''
-        if name in self.proteins: 
-            return self.proteins[name]
-        return Entry('', '')
+        return self.proteins.get(name, Entry('', ''))
 
-    def add_entry(self, protein_name: str, protein_sequnece: str, protein_id='', human_readable_name='') -> bool:
+    def add_entry(
+        self, 
+        protein_name: str, 
+        protein_sequnece: str, 
+        protein_id='', 
+        human_readable_name=''
+    ) -> bool:
         '''
         Add an entry to the database. If it cannot be added to the database, False is returned
 
@@ -217,10 +230,9 @@ class Database(object):
         if self.metadata:
             # we need to index this bad boi
             mers = e.index()
-            for i in range(len(mers)):
-                mer, start_pos, end_pos = mers[i]
-                if mer not in self.metadata:
-                    self.metadata[mer] = []
+            for mer, start_pos, end_pos in mers:
+
+                # if we haven't found this kmer before, add it
                 pairing = (protein_name, start_pos, end_pos)
                 self.metadata[mer].append(pairing)
 
@@ -232,3 +244,5 @@ class Database(object):
             for i in range(len(protein_sequnece) - self.min_len):
                 subseqlen = self.max_len if i + self.max_len < len(protein_sequnece) -1 else len(protein_sequnece) - i
                 self.tree[protein_sequnece[i:i+subseqlen]] = protein_name
+
+        return True
