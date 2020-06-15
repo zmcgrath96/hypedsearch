@@ -2,6 +2,7 @@ from datrie import Trie
 import string
 from src.types.objects import KmerMetaData
 from collections import defaultdict
+from pyteomics import fasta
 
 class Entry:
     '''
@@ -111,44 +112,34 @@ class Database:
             dictionary of Entry class keyed by the protein name 
         '''
         prots = {}
-        with open(fasta_file, 'r') as fasta:
-            name = None 
-            seq = '' 
-            identifier = ''
-            hmn_rdble_name = ''
-            for line in fasta:
-                if '>' in line: #name line
+        e: Entry
 
-                    # add the last thing to the list
-                    if not ((name is None or name == '') and (seq is None or seq == '')):
-                        entry = {
-                            'sequence': seq,
-                            'identifier': identifier
-                        }
-                        entry['human_readable_name'] = hmn_rdble_name if is_uniprot else ''
-                        e = Entry(name, entry['sequence'], entry['human_readable_name'], entry['identifier'])
-                        prots[name] = e
+        # split the name on the OS value if it exists
+        get_name = lambda name: name[:name.index('OS=')-1] if 'OS=' in name else name
 
-                    seq = '' 
-                    if '|' in line:
-                        name = str(str(line.split('|')[2]).split(' ')[0]).replace('\n', '')
-                        identifier = str(line.split('|')[1])
-                    else: 
-                        name = line.replace('\n', '')
-                        identifier = ''
-                    if is_uniprot:
-                        after_bar = str(line.split('|')[2])
-                        hmn_rdble_name = str(' '.join(after_bar.split(' ')[1:]).split('OS=')[0]).strip()
-                else:
-                    seq += line.replace('\n', '')
-            # add the last one
-            entry = {
-                'sequence': seq,
-                'identifier': identifier
-            }
-            entry['human_readable_name'] = hmn_rdble_name if is_uniprot else ''
-            e = Entry(name, entry['sequence'], entry['human_readable_name'], entry['identifier'])
+        # go through each entry in the fasta and put it in memory
+        for i, entry in enumerate(fasta.read(fasta_file)):
+
+            # take the description without the 'sp' value
+            desc = entry.description.split('|')[1:]
+
+            # if the id is in the description, take it
+            if len(desc) > 1:
+                id_ = desc[0]
+                name = get_name(desc[1])
+                
+            # make the id just the number
+            else:
+                id_ = i
+                name = get_name(desc[0])
+                
+            # get the sequence
+            seq = entry.sequence
+
+            # make the entry and add it to prots
+            e = Entry(name, seq, name, id_)
             prots[name] = e
+
         return prots
 
     ##################### Public Methods #####################
