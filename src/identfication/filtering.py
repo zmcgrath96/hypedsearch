@@ -32,9 +32,13 @@ def slope_filtering(a: Iterable, min_window_size=5, mean_filter=1) -> list:
         list with the filtered results
     '''
     # we need data points. If not enough given, just return the list
-    if len(a) < 10 * min_window_size:
+    if len(a) < 2 * min_window_size:
         return a
+
+    # make a minimum window size (for large lists) of 1%
     adjusted_window_size = len(a) // 100
+
+    # try and make the window size about 1% of the size for large lists
     window_size = min_window_size if adjusted_window_size < min_window_size else adjusted_window_size
     
     # calculate the slope for a window size

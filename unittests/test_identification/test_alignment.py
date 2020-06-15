@@ -19,6 +19,8 @@ class test_alignment(unittest.TestCase):
         self.assertEqual(alignment.align_overlaps(seq3, seq2), seq3, 'ABCDEFGH and DEFGH should return the one that contains the subsequence')
         self.assertEqual(alignment.align_overlaps(seq1, seq4), seq1 + '-' + seq4, 'Non overlapping sequences should be concatenated')
 
+        self.assertEqual(alignment.align_overlaps(seq2, seq1), 'DEFGH-ABCDE', 'DEFGH and ABCDE should just append the latter to the former')
+
     def test_hybrid_alignemnt(self):
         seq1 = 'ABCDE'
         seq2 = 'DEFGH'

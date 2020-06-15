@@ -75,7 +75,7 @@ class Database(object):
     ##################### Private Methods #####################
     def __build_tree(self) -> Trie:
         '''
-        Add a suffix tree to the database
+        Add a prefix tree to the database
         '''
         t = Trie(string.ascii_uppercase)
         plen = len(self.proteins)
@@ -225,5 +225,10 @@ class Database(object):
                 self.metadata[mer].append(pairing)
 
         # add it to the tree
-        if self.tree:
-            self.tree.add(protein_name, protein_sequnece)
+        if not self.tree:
+            self.tree = self.__build_tree()
+
+        else:
+            for i in range(len(protein_sequnece) - self.min_len):
+                subseqlen = self.max_len if i + self.max_len < len(protein_sequnece) -1 else len(protein_sequnece) - i
+                self.tree[protein_sequnece[i:i+subseqlen]] = protein_name

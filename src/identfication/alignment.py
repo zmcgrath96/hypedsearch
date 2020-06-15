@@ -41,31 +41,42 @@ def align_overlaps(seq1: str, seq2: str) -> str:
     alignment = None
     # if we have a perfect overlap, return it
     if seq1 == seq2:
-        alignment = seq1
+        return seq1
     
     # if one is a full subsequence of another, return the larger one
     elif seq1 in seq2:
-        alignment = seq2
+        return seq2
     elif seq2 in seq1:
-        alignment = seq1
+        return seq1
     
-    else:
-        # try and find an alignment. seq2 should overlap as much of the right of seq1 as possible
-        start_points = [i for i in range(len(seq1)) if seq2[0] == seq1[i]]
-        for sp in start_points:
-            # try and see if extending it makes it match
-            for i in range(sp, len(seq1)):
-                if seq1[i] != seq2[i-sp]:
-                    i -= 1
-                    break
-            if i == len(seq1) - 1:
-                s2_start = len(seq1) - sp
-                right_seq = seq2[s2_start:] if s2_start < len(seq2) else ''
-                alignment = seq1 + right_seq
+    # try and find an alignment. seq2 should overlap as much of the right of seq1 as possible
+    # get the starting points. 
+    # Starting points means we found the first character in seq2 in seq1
+    start_points = [i for i in range(len(seq1)) if seq2[0] == seq1[i]]
+    for sp in start_points:
+
+        # try and see if extending it makes it match
+        # a correct overlap should mean we run out of characters in 
+        # seq1 before we hit the end of seq2
+        for i in range(sp, len(seq1)):
+
+            # if the next value i in seq1 does not equal the next 
+            # characeter i-sp in seq2
+            if seq1[i] != seq2[i-sp]:
+                i -= 1
                 break
+
+        # if i hits the the end of seq1, we have an overlap
+        if i == len(seq1) - 1:
+            s2_start = len(seq1) - sp
+            right_seq = seq2[s2_start:] if s2_start < len(seq2) else ''
+            alignment = seq1 + right_seq
+            break
   
+    # if no overlpa exists, just make append seq2 to seq1
     if alignment is None:
         alignment = seq1 + '-' + seq2
+
     return alignment
             
 
@@ -81,6 +92,7 @@ def hybrid_alignment(seq1: str, seq2: str) -> (str, str):
         seq2: DEFGH
 
         attempted alignment: ABC(DE)FGH
+        Output: (ABCDEFGH, ABC(DE)FGH)
 
     Example 2: no overlap between the two strings
 
@@ -88,6 +100,7 @@ def hybrid_alignment(seq1: str, seq2: str) -> (str, str):
         seq2: EFGH
 
         attempted alignment: ABCD-EFGH
+        Output: (ABCDEFGH, ABCD-EFGH)
         
     Inputs:
         seq1:    (str) the left sequence
@@ -100,16 +113,24 @@ def hybrid_alignment(seq1: str, seq2: str) -> (str, str):
     alignment = ''
     hybalignment = ''
     attempted_overlap = align_overlaps(seq1, seq2)
+
+    # If an alignment was made (the shorter length means combined sequences is shorter than
+    # just appending them), identify the ambiguous area
     if attempted_overlap is not None and 0 < len(attempted_overlap) < len(seq1) + len(seq2):
+        
         # there is an overlap and some ambiguity
         # get the starting point of seq2
         rightstart = attempted_overlap.index(seq2)
         leftend = len(seq1) - 1
+
         # range between leftend and rigth start is ambiguous
         middle_sec = attempted_overlap[rightstart:leftend + 1]
-        
         alignment = attempted_overlap
-        hybalignment = attempted_overlap[:rightstart] + '(' + middle_sec + ')' + attempted_overlap[leftend+1:]
+        hybalignment = attempted_overlap[:rightstart] \
+                        + '(' + middle_sec + ')' \
+                        + attempted_overlap[leftend+1:]
+    
+    # therwise just append right seq to the left with a - to seperate them 
     else:
         alignment = seq1 + seq2
         hybalignment = seq1 + '-' + seq2
@@ -132,19 +153,20 @@ def align_b_y(b_results: list, y_results: list, db: Database) -> list:
     Outputs:
         (list) matched b and y hits that form good alignments
     '''
-    # try and create an alignment
+    # try and create an alignment from each b and y sequence
     spec_alignments = []
-    for bs in b_results:
-        bproteins = [id_ for id_ in db.tree.values(bs)]
-        for ys in y_results:
-            yproteins = [id_ for id_  in db.tree.values(ys)]
+    for b_seq in b_results:
+        bproteins = [id_ for id_ in db.tree.values(b_seq)]
+        for y_seq in y_results:
+            yproteins = [id_ for id_  in db.tree.values(y_seq)]
             
             # the sequence is from the same protein, try and overlap it
             if any([x in yproteins for x in bproteins]):
-                spec_alignments.append(align_overlaps(bs, ys))
+                spec_alignments.append(align_overlaps(b_seq, y_seq))
+
             # otherwise try hybrid alignment
             else: 
-                spec_alignments.append(hybrid_alignment(bs, ys)[1])
+                spec_alignments.append(hybrid_alignment(b_seq, y_seq)[1])
         
     # remove repeats
     return list(set([x for x in spec_alignments if x is not None]))
@@ -163,6 +185,14 @@ def get_parents(seq: str, db: Database) -> (list, list):
     then the second entry of the tuple holds a list of proteins for the right contributor.
     Otherwise the right entry is empty.
 
+    Example 1: non hybrid peptide
+        sequence: ABCDE
+        Output: ([protein1, protein2], None)
+
+    Example 2: hybridpeptide
+        sequence: ABC(DE)FGH
+        output: ([protein1], [protein2])
+
     Inputs:
         seq:    (str) sequence to find parents for
         db:     (Database) holds source information
@@ -171,17 +201,23 @@ def get_parents(seq: str, db: Database) -> (list, list):
     '''
     get_sources = lambda s: [x for x in db.tree.values(s)]
 
+    # If the sequence is hybrid, split it to find each parent
     if hyb_alignment_pattern.findall(seq):
+        
+        # straightforward left right split
         if '-' in seq:
             div = seq.split('-')
             left, right = div[0], div[1]
             return (get_sources(left), get_sources(right))
+
+        # split by the () and make sure each side has the ambiguous area
         else:
             left = seq[:seq.index(')')].replace('(', '')
             right = seq[seq.index('(')+1:].replace(')', '')
             return (get_sources(left), get_sources(right))
-    else:
-        return (get_sources(seq), None)
+
+    # otherwise just look up the one for the full sequence
+    return (get_sources(seq), None)
 
 
 def replace_ambiguous_hybrids(hybrid_alignments: list, db: Database) -> list:
@@ -209,19 +245,31 @@ def replace_ambiguous_hybrids(hybrid_alignments: list, db: Database) -> list:
     ret = []
     for hybalignment in hybrid_alignments:
         added = False
+
+        # get the sequence without the hybrid characters -()
         nonhyb = re.sub(hyb_alignment_pattern, '', hybalignment)
 
         # also try to replace L and I with eachother
         possible = all_perms_of_s(nonhyb, 'LI')
+
+        # if we had no other permutations and found a nonhybrid, add it
         if len(possible) == 0 and db.tree.has_keys_with_prefix(nonhyb):
             ret.append(nonhyb)
             added = True
+
+        # otherwise look through each permutation
         else:
+
+            # go through each permutation
             for p in possible:
+
+                # if this permutation exists as a nonhybrid, return it
                 if db.tree.has_keys_with_prefix(p):
                     ret.append(p)
                     added = True
                     break
+
+            # a nonhybrid was not found, keep the hybrid
             if not added:
                 ret.append(hybalignment)
 
@@ -231,7 +279,8 @@ def replace_ambiguous_hybrids(hybrid_alignments: list, db: Database) -> list:
 #          / SINGLE STRING ALIGNMENT FUNCTIONS
 ########################################################################
 
-def attempt_alignment(spectrum: Spectrum, db: Database, hits: KmerMassesResults, base_kmer_len: int, n=3, ppm_tolerance=20, scoring_alg='ibb') -> list:
+def attempt_alignment(spectrum: Spectrum, db: Database, hits: KmerMassesResults, 
+                        base_kmer_len: int, n=3, ppm_tolerance=20, scoring_alg='ibb') -> list:
     '''
     Given a set of hits in the form of KmerMassesResult (lists of sequences), reduce
     the number of hits and filter out poor scoring sequences. Combine N and C terminus
@@ -263,7 +312,11 @@ def attempt_alignment(spectrum: Spectrum, db: Database, hits: KmerMassesResults,
     a = align_b_y(b_results, y_results, db)
 
     # sort them by their score against the spectrum and save them
-    a = sorted(a, key=lambda x: backbone_score(spectrum, x.replace('-', '').replace('(', '').replace(')', ''), ppm_tolerance), reverse=True)
+    a = sorted(
+        a, 
+        key=lambda x: 
+            backbone_score(spectrum, x.replace('-', '').replace('(', '').replace(')', ''), ppm_tolerance), 
+        reverse=True)
     
     # seperate the hybrids from the non hybrids for later analysis
     nonhyba, hyba = [], []
@@ -282,14 +335,37 @@ def attempt_alignment(spectrum: Spectrum, db: Database, hits: KmerMassesResults,
     alignments = []
     for sequence in nonhyba + updated_hybrids:
         parents = get_parents(sequence, db)
+
+        # if the sequence has the hybrid characters -(), make and add a 
+        # hybridsequencealignment object
         if hyb_alignment_pattern.findall(sequence):
             aa_seq = re.sub(hyb_alignment_pattern, '', sequence)
             b_score, y_score = score_subsequence(spectrum.spectrum, aa_seq)
             bb_score = backbone_score(spectrum, aa_seq, ppm_tolerance)
-            alignments.append(HybridSequenceAlignment(parents[0], parents[1], aa_seq, sequence, b_score, y_score, bb_score))
+            alignments.append(
+                HybridSequenceAlignment(
+                    parents[0], 
+                    parents[1], 
+                    aa_seq, 
+                    sequence, 
+                    b_score, 
+                    y_score, 
+                    bb_score
+                )
+            )
+
+        # if its not a hybrid sequence, make a SequenceAlignment object
         else:
             b_score, y_score = score_subsequence(spectrum.spectrum, sequence)
             bb_score = backbone_score(spectrum, sequence, ppm_tolerance)
-            alignments.append(SequenceAlignment(parents[0], sequence, b_score, y_score, bb_score))
+            alignments.append(
+                SequenceAlignment(
+                    parents[0], 
+                    sequence, 
+                    b_score, 
+                    y_score, 
+                    bb_score
+                )
+            )
 
     return sorted(alignments, key=lambda x: x.total_score, reverse=True)[:n]
