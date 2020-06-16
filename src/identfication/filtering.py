@@ -211,8 +211,6 @@ def result_filtering(
                 ppm_tolerance
             )
             
-            print('new binned y')
-            print(new_binned_y)
             # add these to the running values
             for k, v in new_binned_y.items():
                 base_mer_hashed_y[k] += v
@@ -231,9 +229,9 @@ def result_filtering(
     y_filtered = slope_filtering(y_scores, key=1)
     
     if len(b_filtered) < 5: # default to be able to report some result
-        b_filtered = b_scores[::-1][:5]
+        b_filtered = b_scores[:5]
     if len(y_filtered) < 5:
-        y_filtered = y_scores[::-1][:5]
+        y_filtered = y_scores[:5]
     
     # revese to go from highest to lowest
     for basemerb in b_filtered:
@@ -241,6 +239,19 @@ def result_filtering(
         
     for basemery in y_filtered:
         toscorey += [basemery[0]] + base_mer_hashed_y[basemery[0]]
+
+    # cases where out potential is 0, try the ones with the most hits (on base mer)
+    if len(toscoreb) == 0:
+        base_mer_counts = [(mer, len(base_mer_hashed_b[mer])) for mer in base_mer_hashed_b]
+        base_mer_counts.sort(key=lambda x: x[1], reverse=True)
+        for base_mer, _ in base_mer_counts[:5]:
+            toscoreb += base_mer_hashed_b[base_mer]
+
+    if len(toscorey) == 0:
+        base_mer_counts = [(mer, len(base_mer_hashed_y[mer])) for mer in base_mer_hashed_y]
+        base_mer_counts.sort(key=lambda x: x[1], reverse=True)
+        for base_mer, _ in base_mer_counts[:5]:
+            toscorey += base_mer_hashed_y[base_mer]
     
     # sorted score of all leftover sequences from highest to lowest
     best_b_results = sorted(toscoreb, key=lambda mer: score_alg(spectrum, mer, 'b', ppm_tolerance), reverse=True)

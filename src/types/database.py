@@ -121,7 +121,7 @@ class Database:
         for i, entry in enumerate(fasta.read(fasta_file)):
 
             # take the description without the 'sp' value
-            desc = entry.description.split('|')[1:]
+            desc = entry.description.split('|')[1:] if '|' in entry.description else entry.description
 
             # if the id is in the description, take it
             if len(desc) > 1:

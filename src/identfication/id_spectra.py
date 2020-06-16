@@ -112,7 +112,7 @@ def id_spectrum(
 ) -> Alignments:
     '''
     Run an alignemnt in the form of an Amino Acid sequence with a score to the caller for this spectrum.
-    The top n results are returned 
+    The top n results are returned. If no alignments can be created, None is returned.
 
     Inputs:
         spectrum:           (Spectrum) the spectrum to id
@@ -122,7 +122,7 @@ def id_spectrum(
         ppm_tolerance:      (int) the ppm tolerance to allow when searching. Default=20
         scoring_alg:        (str) the name of the scoring algoirhtm to use. Options are 'bb', 'ion', 'ibb'. Default=bb
     Outputs:
-        Alignments namedtuple 
+        Alignments namedtuple or None
     '''
     # build the fast search hash tables
     bs, bd, ys, yd = search_kmers_hash(spectrum, kmermasses.bs, 20), \
@@ -132,6 +132,10 @@ def id_spectrum(
     
     # put the results into a structrue
     hits = KmerMassesResults(bs, bd, ys, yd)
+
+    # if we get no hits whatsoever, return None
+    if all([len(x) == 0 for x in kmermasses]):
+        return None
         
     # attempt alignments
     a = attempt_alignment(spectrum, db, hits, min_peptide_len, ppm_tolerance=ppm_tolerance, scoring_alg=scoring_alg)
@@ -197,6 +201,10 @@ def id_spectra(
             # align this spectrum
             aligned_spectrum = id_spectrum(spec, db, kmermasses, min_peptide_len, result_count, ppm_tolerance=ppm_tolerance, scoring_alg=scoring_alg)
             
+            # if an alignment cannot be created, continue
+            if aligned_spectrum is None:
+                continue
+
             # save the results in the dictionary for now
             entry_name = '{}_{}'.format(spectrum_file, spec.scan_number)
             results[entry_name] = aligned_spectrum

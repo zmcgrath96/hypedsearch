@@ -40,15 +40,21 @@ def tsv_file(results: dict, output_dir='./') -> None:
     Outputs:
         None
     '''
+    mac = 0
+
     # seperate the hybrids from the nonhybrids
     hybrids, nonhybrids = [], []
     for name, alignment in results.items():
+        if len(alignment.alignments) == 0:
+            mac += 1
+            continue
+
         topalignment = alignment.alignments[0]._asdict()
         topalignment['entry name'] = name
         if 'hybrid_sequence' in topalignment:
             hybrids.append(topalignment)
         else:
-            nonhybrids.append(alignment)
+            nonhybrids.append(topalignment)
 
     # move to pandas dataframe for easy writing
     hybridresults = pd.DataFrame(hybrids)
@@ -62,8 +68,7 @@ def tsv_file(results: dict, output_dir='./') -> None:
     with open(f'{output_dir + SUMMARY_NAME}.tsv', 'w') as nho:
         nho.write(nonhybridresults.to_csv(sep='\t'))
 
-    del nonhybridresults
-    del nonhybrids
+    print(f'Could not make an alignment for {mac}/{len(results)} spectra ({int(100 * mac / len(results))}%)')
 
 def generate(alignments: dict, output_dir='./') -> None:
     '''
