@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<indexedmzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0_idx.xsd">
+<indexedmzML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://psi.hupo.org/ms/mzml">
 <mzML id="testSpectraFileFixed" version="1.1.0" xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd">
 	<cvList count="5">
 		<cv URI="http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" id="MS" />
@@ -5170,7 +5170,26 @@
 				</binaryDataArrayList>
 			<cvParam accession="MS:1000127" name="centroid spectrum" value="" /></spectrum>
 		</spectrumList>
-	<chromatogramList count="1" defaultDataProcessingRef="mzLibProcessing"> <chromatogram dataProcessingRef="mzLibProcessing" defaultArrayLength="1025" id="TIC" index="0"> <cvParam accession="MS:1000235" cvRef="MS" name="total ion current chromatogram" value="" /> <binaryDataArrayList count="2"> <binaryDataArray encodedLength="10936"> <cvParam accession="MS:1000523" cvRef="MS" name="64-bit float" value="" /> <cvParam accession="MS:1000576" cvRef="MS" name="no compression" value="" /> <cvParam accession="MS:1000595" cvRef="MS" name="time array" unitAccession="UO:0000031" unitCvRef="UO" unitName="Minutes" value="" /> <binary>b'AACAPwAAAEAAAEBAAACAQAAAoEAAAMBAAADgQAAAAEEAABBBAAAgQQAAMEEAAEBBAABQQQAAYEEA\nAHBBAACAQQAAiEEAAJBBAACYQQAAoEEAAKhBAACwQQAAuEEAAMBBAADIQQAA0EEAANhBAADgQQAA\n6EEAAPBBAAD4QQAAAEIAAARCAAAIQgAADEIAABBCAAAUQgAAGEIAABxCAAAgQgAAJEIAAChCAAAs\nQgAAMEIAADRCAAA4QgAAPEIAAEBCAABEQgAASEIAAExCAABQQgAAVEIAAFhCAABcQgAAYEIAAGRC\nAABoQgAAbEIAAHBCAAB0QgAAeEIAAHxCAACAQgAAgkIAAIRCAACGQgAAiEIAAIpCAACMQgAAjkIA\nAJBCAACSQgAAlEIAAJZCAACYQgAAmkIAAJxCAACeQgAAoEIAAKJCAACkQgAApkIAAKhCAACqQgAA\nrEIAAK5CAACwQgAAskIAALRCAAC2QgAAuEIAALpCAAC8QgAAvkIAAMBCAADCQgAAxEIAAMZCAADI\nQgAAykIAAMxCAADOQgAA0EIAANJCAADUQgAA1kIAANhCAADaQgAA3EIAAN5CAADgQgAA4kIAAORC\nAADmQgAA6EIAAOpCAADsQgAA7kIAAPBCAADyQgAA9EIAAPZCAAD4QgAA+kI=\n'</binary> </binaryDataArray> <binaryDataArray encodedLength="10936"> <cvParam accession="MS:1000523" cvRef="MS" name="64-bit float" value="" /> <cvParam accession="MS:1000576" cvRef="MS" name="no compression" value="" /> <cvParam accession="MS:1000515" cvRef="MS" name="intensity array" unitAccession="MS:1000131" unitCvRef="MS" unitName="number of counts" value="" /> <binary>b'5aBDScpnL0hqNGVIsXOSScNnGEkCe4BIwwEVSTaEC0gmetpIMohjSnFALEpokNlHgVGkSM1gGUiE\nj65ILlYJSeWe6Et8KmFIALYQSfseU0iy7rRIxBduSCcFu0dBUKRIGoAPSEFCiEiwpktIhmORSJyj\nPUhyO/RI/rXLSeeaJ0iCFohIsG/dSL0opkjNSYxIz/gdSAy+5UgI6INJ5+/YSEakDUmAgYFIhmde\nSCKlvkgY5xFJIAR7SEgy+Eip3hdI5+BmSEfWrkg2jRlIy7sDSW4RE0hnqBhI2GstSIiJFUgmfvxI\nBYuKSMn8HUjhLqtIjD7fSFuatUiyrRBIjd4YSHcomEjaYmBIZ8m2SNPFS0iMXDtJi579SAgdoEgA\n+GpIjr3xR9tSlEgcg71IGi4mSHbvnUgLnTZJufLASKlTWkjqpoBIrI+1SIyWgEmsEilIwLsVSEdZ\n60cu3vZIRBtLSGzwk0jlS9lH3S4cSORW3EhEQjlI2G7QSN9ytkgHo/pH8ho8SeDObUjmmxdImLmC\nSAfZdEmec+hIHEbyR2jGd0dqsc5ImOvdSfoZmUkn2jlJAymMScQKH0kgjF5JIcEWSWrSOUkOeqJI\nJ/ZwSU+sIkmIjZtIqrwgSm177kgsMtxJFlOaSahwvUj4IstI9ic7SE42Xkk=\n'</binary> </binaryDataArray> </binaryDataArrayList> </chromatogram> </chromatogramList></run>
+	<chromatogramList count="1" defaultDataProcessingRef="mzLibProcessing"> 
+		<chromatogram dataProcessingRef="mzLibProcessing" defaultArrayLength="1025" id="TIC" index="0"> 
+			<cvParam accession="MS:1000235" cvRef="MS" name="total ion current chromatogram" value="" /> 
+			<binaryDataArrayList count="2"> 
+				<binaryDataArray encodedLength="10936"> 
+					<cvParam accession="MS:1000523" cvRef="MS" name="64-bit float" value="" /> 
+					<cvParam accession="MS:1000576" cvRef="MS" name="no compression" value="" /> 
+					<cvParam accession="MS:1000595" cvRef="MS" name="time array" unitAccession="UO:0000031" unitCvRef="UO" unitName="Minutes" value="" /> 
+					<binary>AACAPwAAAEAAAEBAAACAQAAAoEAAAMBAAADgQAAAAEEAABBBAAAgQQAAMEEAAEBBAABQQQAAYEEAAHBBAACAQQAAiEEAAJBBAACYQQAAoEEAAKhBAACwQQAAuEEAAMBBAADIQQAA0EEAANhBAADgQQAA6EEAAPBBAAD4QQAAAEIAAARCAAAIQgAADEIAABBCAAAUQgAAGEIAABxCAAAgQgAAJEIAAChCAAAsQgAAMEIAADRCAAA4QgAAPEIAAEBCAABEQgAASEIAAExCAABQQgAAVEIAAFhCAABcQgAAYEIAAGRCAABoQgAAbEIAAHBCAAB0QgAAeEIAAHxCAACAQgAAgkIAAIRCAACGQgAAiEIAAIpCAACMQgAAjkIAAJBCAACSQgAAlEIAAJZCAACYQgAAmkIAAJxCAACeQgAAoEIAAKJCAACkQgAApkIAAKhCAACqQgAArEIAAK5CAACwQgAAskIAALRCAAC2QgAAuEIAALpCAAC8QgAAvkIAAMBCAADCQgAAxEIAAMZCAADIQgAAykIAAMxCAADOQgAA0EIAANJCAADUQgAA1kIAANhCAADaQgAA3EIAAN5CAADgQgAA4kIAAORCAADmQgAA6EIAAOpCAADsQgAA7kIAAPBCAADyQgAA9EIAAPZCAAD4QgAA+kI=</binary> 
+				</binaryDataArray> 
+				<binaryDataArray encodedLength="10936"> 
+					<cvParam accession="MS:1000523" cvRef="MS" name="64-bit float" value="" /> 
+					<cvParam accession="MS:1000576" cvRef="MS" name="no compression" value="" /> 
+					<cvParam accession="MS:1000515" cvRef="MS" name="intensity array" unitAccession="MS:1000131" unitCvRef="MS" unitName="number of counts" value="" /> 
+					<binary>5aBDScpnL0hqNGVIsXOSScNnGEkCe4BIwwEVSTaEC0gmetpIMohjSnFALEpokNlHgVGkSM1gGUiEj65ILlYJSeWe6Et8KmFIALYQSfseU0iy7rRIxBduSCcFu0dBUKRIGoAPSEFCiEiwpktIhmORSJyjPUhyO/RI/rXLSeeaJ0iCFohIsG/dSL0opkjNSYxIz/gdSAy+5UgI6INJ5+/YSEakDUmAgYFIhmdeSCKlvkgY5xFJIAR7SEgy+Eip3hdI5+BmSEfWrkg2jRlIy7sDSW4RE0hnqBhI2GstSIiJFUgmfvxIBYuKSMn8HUjhLqtIjD7fSFuatUiyrRBIjd4YSHcomEjaYmBIZ8m2SNPFS0iMXDtJi579SAgdoEgA+GpIjr3xR9tSlEgcg71IGi4mSHbvnUgLnTZJufLASKlTWkjqpoBIrI+1SIyWgEmsEilIwLsVSEdZ60cu3vZIRBtLSGzwk0jlS9lH3S4cSORW3EhEQjlI2G7QSN9ytkgHo/pH8ho8SeDObUjmmxdImLmCSAfZdEmec+hIHEbyR2jGd0dqsc5ImOvdSfoZmUkn2jlJAymMScQKH0kgjF5JIcEWSWrSOUkOeqJIJ/ZwSU+sIkmIjZtIqrwgSm177kgsMtxJFlOaSahwvUj4IstI9ic7SE42Xkk=</binary> 
+				</binaryDataArray> 
+			</binaryDataArrayList> 
+		</chromatogram> 
+	</chromatogramList>
+</run>
 </mzML>
 <indexList count="1">
 	<index name="spectrum">
@@ -5300,6 +5319,9 @@
 		<offset idRef="spectrum=123">358476</offset>
 		<offset idRef="spectrum=124">361550</offset>
 	</index>
+	<index name="chromatogram">
+      <offset idRef="TIC">5256171</offset>
+    </index>
 </indexList>
 <indexListOffset>365184</indexListOffset>
 <fileChecksum>0</fileChecksum>

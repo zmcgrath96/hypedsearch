@@ -92,8 +92,8 @@ SequenceAlignment:
 '''
 SequenceAlignment = namedtuple(
     'SequenceAlignment', 
-    ['proteins', 'sequence', 'b_score', 'y_score', 'total_score'],
-    defaults=[[], '', 0.0, 0.0, 0.0]
+    ['proteins', 'sequence', 'b_score', 'y_score', 'total_score', 'precursor_distance'],
+    defaults=[[], '', 0.0, 0.0, 0.0, 100]
 )
 
 '''
@@ -113,8 +113,9 @@ HybridSequenceAlignment
 '''
 HybridSequenceAlignment = namedtuple(
     'HybridSequenceAlignment', 
-    ['left_proteins', 'right_proteins', 'sequence', 'hybrid_sequence', 'b_score', 'y_score', 'total_score'],
-    defaults=[[], [], '', '', 0.0, 0.0, 0.0]
+    ['left_proteins', 'right_proteins', 'sequence', 'hybrid_sequence', 
+        'b_score', 'y_score', 'total_score', 'precursor_distance'],
+    defaults=[[], [], '', '', 0.0, 0.0, 0.0, 100]
 )
 
 '''

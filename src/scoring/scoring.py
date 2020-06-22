@@ -100,3 +100,15 @@ def ion_backbone_score(observed: Spectrum, reference: str, ion: str, ppm_toleran
     extrapoints = sum([jc - 1 if jc > 1 else 0 for jc in jcount])
     
     return jcoverage + extrapoints
+
+def precursor_distance(observed_precursor: float, reference_precursor: float) -> float:
+    '''
+    The absolute distance between two precursor masses
+
+    Inputs:
+        observed_precursor:     (float) observed precursor mass
+        reference_precursor:    (float) reference precursor mass
+    Outputs:
+        (float) absolute distance between the two
+    '''
+    return abs(observed_precursor - reference_precursor)

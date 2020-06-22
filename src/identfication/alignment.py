@@ -1,8 +1,9 @@
 from src.utils import insort_by_index, all_perms_of_s
-from src.scoring.scoring import score_subsequence, backbone_score
+from src.scoring.scoring import score_subsequence, backbone_score, precursor_distance
 from src.identfication.filtering import result_filtering
 from src.types.objects import Spectrum, KmerMassesResults, SequenceAlignment, HybridSequenceAlignment
 from src.types.database import Database
+from src.spectra.gen_spectra import gen_spectrum
 
 from collections import defaultdict
 import re 
@@ -346,9 +347,19 @@ def attempt_alignment(
         # if the sequence has the hybrid characters -(), make and add a 
         # hybridsequencealignment object
         if hyb_alignment_pattern.findall(sequence):
+
+            # sequence without the hybrid characters
             aa_seq = re.sub(hyb_alignment_pattern, '', sequence)
+
+            # individual ion scores
             b_score, y_score = score_subsequence(spectrum.spectrum, aa_seq)
+
+            # backbone score
             bb_score = backbone_score(spectrum, aa_seq, ppm_tolerance)
+
+            # precursor distance
+            p_d = precursor_distance(spectrum.precursor_mass, gen_spectrum(aa_seq)['precursor_mass'])
+            
             alignments.append(
                 HybridSequenceAlignment(
                     parents[0], 
@@ -357,22 +368,31 @@ def attempt_alignment(
                     sequence, 
                     b_score, 
                     y_score, 
-                    bb_score
+                    bb_score, 
+                    p_d
                 )
             )
 
         # if its not a hybrid sequence, make a SequenceAlignment object
         else:
+
+            # ion scors
             b_score, y_score = score_subsequence(spectrum.spectrum, sequence)
+
+            # backbone scores
             bb_score = backbone_score(spectrum, sequence, ppm_tolerance)
+
+            # precursor distance
+            p_d = precursor_distance(spectrum.precursor_mass, gen_spectrum(sequence)['precursor_mass'])
             alignments.append(
                 SequenceAlignment(
                     parents[0], 
                     sequence, 
                     b_score, 
                     y_score, 
-                    bb_score
+                    bb_score, 
+                    p_d
                 )
             )
 
-    return sorted(alignments, key=lambda x: x.total_score, reverse=True)[:n]
+    return sorted(alignments, key=lambda x: x.precursor_distance)[:n]

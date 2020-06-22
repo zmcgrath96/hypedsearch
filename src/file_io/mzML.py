@@ -21,20 +21,36 @@ def read(filename: str, peak_filter=50) -> list:
         
         filecontents = mzml.read(filename)
         for content in filecontents:
+
+            # zip the abundance and the m/z values together
+            mass_abundances = zip(list(content['m/z array']), list(content['intensity array']))
             
+            # sort by key 1, the abundance, and take the top peak filter results
+            mass_abundances = sorted(mass_abundances, key=lambda x: x[1], reverse=True)[:peak_filter]
 
-            # sort the spectra 
-            sorted_labeled_spec = sorted([(i, float(spec)) for i, spec in list(enumerate(content['m/z array']))], key=lambda x: x[1])[:peak_filter]
-            sorted_keys = [x[0] for x in sorted_labeled_spec]
-            sorted_spec = [x[1] for x in sorted_labeled_spec]
-            sorted_abundances = [float(content['intensity array'][i]) for i in sorted_keys]
+            # sort them now by the value of m/z
+            mass_abundances.sort(key=lambda x: x[0])
 
+            # seperate them
+            masses = [float(x) for x, _ in mass_abundances]
+            abundances = [float(x) for _, x in mass_abundances]
+
+            # get the precursor
+            precursor = None
+            precursor_list = content['precursorList']['precursor']
+            for p in precursor_list:
+                for selected_ion in p['selectedIonList']['selectedIon']:
+                    if int(selected_ion['charge state']) == 2:
+                        precursor = int(selected_ion['charge state'])
+
+            precursor = precursor if precursor is not None else max(masses)/2
+          
             spectra.append(Spectrum(
-                sorted_spec,
-                sorted_abundances,
+                masses,
+                abundances,
                 int(content['ms level']),
                 int(content['index']),
-                int(max(content['m/z array'])),
+                precursor,
                 filename
             ))
 
