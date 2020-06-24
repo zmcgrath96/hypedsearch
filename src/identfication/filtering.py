@@ -6,6 +6,7 @@ from src.spectra.gen_spectra import gen_spectrum
 from statistics import mean
 from typing import Iterable
 from collections import defaultdict
+from operator import itemgetter
 
 def slope_filtering(a: Iterable, min_window_size=5, mean_filter=1, key=None) -> list:
     '''
@@ -94,7 +95,6 @@ def mean_filtering(a: Iterable, mean_filter=1, key=None) -> list:
         if key is not None else [x for x in a if x >= mean_filter * avg]
 
 def hash_base_kmers(
-    spectrum: Spectrum, 
     hits: list, 
     base_kmer_length: int, 
     ion: str, 
@@ -114,7 +114,6 @@ def hash_base_kmers(
     built left to right.
 
     Inputs:
-        spectrum:           (Spectrum) used for scoring the base sequences
         hits:               (list) string sequences from initial hits
         base_kmer_length:   (int) the length of the base kmer to use for indexing
         ion:                (str) the ion list to use. Options are [b, y]
@@ -141,6 +140,46 @@ def hash_base_kmers(
         binned[base_mer].append(masssequence_hit)
 
     return binned
+
+def overlap_assembler(l: list, ion: str) -> str:
+    '''
+    Take a list of sequences and return the longest sequence that contains
+    the most of the rest of the sequences.
+
+    Example:
+        l: [ABCDEFG, ABCDE, ABCXY, ABCD, ABC]
+
+        ABCDEFG contains [ABCDE, ABCD, ABC] which is the most of any others
+        so ABCDEFG would be returned
+
+    Inputs:
+        l:      (list) the sequences to assemble together   
+        ion:    (str) the ion this is performed for. y goes right to left, b left to right
+    Outputs:
+        (str) the sequence that contains the most of the others. If no
+                sequence can be assembled, None is returned
+    '''
+    # sort longest to shortest
+    l.sort(key=len, reverse=True)
+    
+    # got through each element and count the number of smaller 
+    # sequences it contains
+    assembler = defaultdict(lambda: 0)
+    for i, e in enumerate(l[:-1]):
+        for e2 in l[i+1:]:
+            
+            # get left to right or right to left depending on the ion
+            cmp_str = e[:len(e2)] if ion == 'b' else e[-len(e2):]
+                        
+            if e2 == cmp_str:
+                assembler[e] += 1
+                
+    # return the str if possible, None otherwise
+    try:    
+        return max([(k, v) for k, v in assembler.items()], key=itemgetter(1))[0]
+    except:
+        return None
+
 
 def result_filtering(
     spectrum: Spectrum, 
@@ -200,7 +239,6 @@ def result_filtering(
         if 'b' in hittype:
 
             new_binned_b = hash_base_kmers(
-                spectrum, 
                 hitlist, 
                 base_kmer_length, 
                 'b'
@@ -212,7 +250,6 @@ def result_filtering(
 
         else:
             new_binned_y = hash_base_kmers(
-                spectrum, 
                 hitlist, 
                 base_kmer_length, 
                 'y'
@@ -223,54 +260,85 @@ def result_filtering(
                 base_mer_hashed_y[k] += v
 
     # get rid of any bins that only have 1 hit
-    base_mer_hashed_b = {mer: list(set(values)) \
+    base_mer_hashed_b = {mer: values \
         for mer, values in base_mer_hashed_b.items() \
             if len(list(set(values))) > 1}
-    base_mer_hashed_y = {mer: list(set(values)) \
+
+    base_mer_hashed_y = {mer: values \
         for mer, values in base_mer_hashed_y.items() \
             if len(list(set(values))) > 1}
 
+    print(base_mer_hashed_y)
+    print(base_mer_hashed_b)
     # all of the sequences from b and y hashed kmers that pass filters
     b_seqs, y_seqs = [], []
 
-    # get the overlap score of the sequences from each base kmer
-    for _, kmers_b in base_mer_hashed_b.items():
+    def reduce_sequences(d: dict):
+        seqs = []
+        for k, v in d.items():
+            reduced_seq = overlap_assembler(v, 'b')
+            if reduced_seq is None:
+                continue
+
+            seqs.append(reduced_seq)
+        return seqs
+
+    # reduce to the most overlapping sequences
+    b_seqs = reduce_sequences(base_mer_hashed_b)
+    y_seqs = reduce_sequences(base_mer_hashed_y)
+
+    # score them and take non zero scores
+    b_results = [(x, score_alg(spectrum, x, 'b', ppm_tolerance)) \
+        for x in b_seqs if score_alg(spectrum, x, 'b', ppm_tolerance) > 0]
+    y_results = [(x, score_alg(spectrum, x, 'y', ppm_tolerance)) \
+         for x in y_seqs if score_alg(spectrum, x, 'y', ppm_tolerance) > 0]
+
+    # sort the results by score high to low
+    b_results.sort(key=itemgetter(1), reverse=True)
+    y_results.sort(key=itemgetter(1), reverse=True)
+
+    # take the scores that pass our filter
+    filtered_b_results = slope_filtering(b_results, 20, key=1)
+    filtered_y_results = slope_filtering(y_results, 20, key=1)
+
+    # # get the overlap score of the sequences from each base kmer
+    # for _, kmers_b in base_mer_hashed_b.items():
         
-        # make it a set
-        l = list(set(kmers_b))
+    #     # make it a set
+    #     l = list(set(kmers_b))
 
-        ovscore = overlap_score(l, 'b')
+    #     # if the score is non zero, keep those sequences
+    #     if overlap_score(l, 'b') > 0:
 
-        # if the score is non zero, keep those sequences
-        if overlap_score(l, 'b') > 0:
+    #         # score each one and add it to the list
+    #         for kmer_b in l:
+    #             s = score_alg(spectrum, kmer_b, 'b', ppm_tolerance)
+    #             b_seqs = insort_by_index((kmer_b, s), b_seqs, 1)
 
-            # score each one and add it to the list
-            for kmer_b in l:
-                s = score_alg(spectrum, kmer_b, 'b', ppm_tolerance)
-                b_seqs = insort_by_index((kmer_b, s), b_seqs, 1)
+    # # get the overlap score of the sequences from each base kmer
+    # for _, kmers_y in base_mer_hashed_y.items():
 
-    # get the overlap score of the sequences from each base kmer
-    for _, kmers_y in base_mer_hashed_y.items():
+    #     # make it a set
+    #     l = list(set(kmers_y))
 
-        # make it a set
-        l = list(set(kmers_y))
+    #     # if the score is non zero, keep those sequences
+    #     if overlap_score(l, 'y') > 0:
 
-        ovscore = overlap_score(l, 'y')
+    #         # score each one and add it to the list
+    #         for kmer_y in l:
+    #             s = score_alg(spectrum, kmer_y, 'y', ppm_tolerance)
+    #             y_seqs = insort_by_index((kmer_y, s), y_seqs, 1)
 
-        # if the score is non zero, keep those sequences
-        if overlap_score(l, 'y') > 0:
-
-            # score each one and add it to the list
-            for kmer_y in l:
-                s = score_alg(spectrum, kmer_y, 'y', ppm_tolerance)
-                y_seqs = insort_by_index((kmer_y, s), y_seqs, 1)
+    # use the overlap assembler to reduce the sequences we score
 
     # sort by score
-    b_seqs.sort(key=lambda x: x[1], reverse=True)
-    y_seqs.sort(key=lambda x: x[1], reverse=True)
+    # b_seqs.sort(key=lambda x: x[1], reverse=True)
+    # y_seqs.sort(key=lambda x: x[1], reverse=True)
 
-    # filter out the good ones
-    b_results = [x for x in mean_filtering(b_seqs, mean_filter=2, key=1)]
-    y_results = [x for x in mean_filtering(y_seqs, mean_filter=2, key=1)]
+    # # filter out the good ones
+    # b_results = [x for x in mean_filtering(b_seqs, mean_filter=2, key=1)]
+    # y_results = [x for x in mean_filtering(y_seqs, mean_filter=2, key=1)]
 
-    return ([x for x, _ in b_results], [x for x, _ in y_results])
+    print(filtered_b_results)
+    print(filtered_y_results)
+    return ([x for x, _ in filtered_b_results], [x for x, _ in filtered_y_results])

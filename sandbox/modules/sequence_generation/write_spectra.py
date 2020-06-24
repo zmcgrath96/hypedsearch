@@ -1,4 +1,4 @@
-from pyopenms import MSExperiment, MSSpectrum, MzMLFile, Peak1D, Precursor
+from pyopenms import MSExperiment, MSSpectrum, MzMLFile, Peak1D, Precursor, SourceFile
 import xml.etree.ElementTree as ET
 
 import struct
@@ -28,12 +28,14 @@ def write_mzml(file_name, spectra, title_prefix='Spectrum ', output_dir='./'):
     exp = MSExperiment()
     sp_count = 0
 
+    ids  = {}
+
     tic = []
     for spectrum in spectra:
         spec = MSSpectrum()
         spec.setMSLevel(2)
-        name = str.encode(title_prefix + str(sp_count))
-        spec.setName(name)
+        name = title_prefix + str(sp_count) if 'name' not in spectrum else spectrum['name']
+        ids[sp_count] = name
         sp_count += 1
         if 'abundance' not in spectrum:
             print('oops')
@@ -82,7 +84,10 @@ def write_mzml(file_name, spectra, title_prefix='Spectrum ', output_dir='./'):
     run = mzml.find('{http://psi.hupo.org/ms/mzml}run')
     spectrumList = run.find('{http://psi.hupo.org/ms/mzml}spectrumList')
     print(len(spectrumList))
-    for spectrumElement in spectrumList:
+    for i, spectrumElement in enumerate(spectrumList):
+        
+        # set the id
+        spectrumElement.set('id', ids[i])
         # need to add this
         # <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
         centroidElement = ET.Element('{http://psi.hupo.org/ms/mzml}cvParam', attrib={'name': 'centroid spectrum', 'accession':'MS:1000127', 'value': ''})

@@ -699,7 +699,7 @@ def attempt_alignment(
     alignments = []
 
     # sparse spectrum for xcorr score
-    sparse_observed_spectrum = make_sparse_array(spectrum.spectrum, .02)
+    # sparse_observed_spectrum = make_sparse_array(spectrum.spectrum, .02)
 
     for aligned_pair in attempted:
 
@@ -710,15 +710,6 @@ def attempt_alignment(
         p_d = precursor_distance(spectrum.precursor_mass, alignemnt_spectrum_precursor['precursor_mass'])
         if p_d > precursor_tolerance:
             continue
-
-        # sparse array for xcorr score
-        # sparse_alignment_spectrum = make_sparse_array(
-        #     alignemnt_spectrum_precursor['spectrum'], 
-        #     .02
-        # )
-
-        # xcorr score
-        # xc_score = xcorr(sparse_observed_spectrum, sparse_alignment_spectrum)
 
         # individual ion scores
         b_score = ion_backbone_score(spectrum, aligned_pair[0], 'b', ppm_tolerance)
@@ -760,6 +751,6 @@ def attempt_alignment(
             )
 
     # print(f'Number of alignments that passed the filter: {len(alignments)}')
-    print(sorted(alignments, key=lambda x: x.total_score, reverse=True)[:10])
+    # print(sorted(alignments, key=lambda x: x.total_score, reverse=True)[:10])
 
     return sorted(alignments, key=lambda x: x.total_score, reverse=True)[:n]
