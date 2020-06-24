@@ -1,6 +1,7 @@
 import os, gzip, shutil, copy, math
 from typing import Iterable, Any
 from itertools import product
+import numpy as np
 
 def make_valid_dir_string(dir_path: str) -> str:
     '''
@@ -281,3 +282,32 @@ def ppm_to_da(mass: float, ppm_tolerance: float) -> float:
         float value in Da 
     '''
     return abs((ppm_tolerance / 1000000)*mass)
+
+def make_sparse_array(spectrum: list, width: float, value=50) -> np.ndarray:
+    '''
+    Make a spectrum (a list of floats) into a sparsely populated array for xcorr 
+    calculation. Indices are calculated by
+    
+    idx = int(m/w), m is mass, w is bin width
+    
+    width is the tolerance in Da to allow when calculating scores. All peaks with some value
+    are given a new value of 50.
+    
+    Inputs:
+        spectrum:   (list) float mass values of peaks
+        width:      (float) mass tolerance to accept to make bin width
+    kwargs:
+        value:      (number) value to give peaks at the new index. Default=50
+    Outputs:
+        (np.ndarray) sparesly populated list
+    '''
+    # find the largest mass and make that the length of the array
+    list_size = int(max(spectrum)//width) + 1
+    
+    sparse = np.zeros(list_size)
+    
+    # populate sparse at the index for each mass
+    for m in spectrum:
+        sparse[int(m // width)] = value
+
+    return sparse

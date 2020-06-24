@@ -1,6 +1,7 @@
 from src.types.objects import KmerMassesResults, Spectrum
-from src.scoring.scoring import score_subsequence, backbone_score, ion_backbone_score
-from src.utils import insort_by_index
+from src.scoring.scoring import score_subsequence, backbone_score, ion_backbone_score, xcorr, overlap_score
+from src.utils import insort_by_index, make_sparse_array
+from src.spectra.gen_spectra import gen_spectrum
 
 from statistics import mean
 from typing import Iterable
@@ -63,26 +64,51 @@ def slope_filtering(a: Iterable, min_window_size=5, mean_filter=1, key=None) -> 
 
     return filtered
 
-def hash_and_score_base_kmers(
+def mean_filtering(a: Iterable, mean_filter=1, key=None) -> list:
+    '''
+    Filter out values < the mean value * the mean filter
+
+    Example:
+        a: [10, 9, 8, 7, 6, 5]
+        average: 7.5
+        mean_filter: 1
+
+        output: [10, 9, 8]
+
+    Inputs:
+        a:      (Iterable) values to filter
+    kwargs:
+        mean_filter:    (float) the number of means to accept by our filter. Default=1
+        key:            (any) the way to index a value in the iterable if each entry is an object. Default=None
+    Outputs:
+        (list) values that pass the filter
+    '''
+    if len(a) == 0:
+        return a
+
+    # get the average value
+    avg = mean([x[key] for x in a]) if key is not None else mean(a)
+
+    # return anything above the filter
+    return [x for x in a if x[key] >= mean_filter * avg] \
+        if key is not None else [x for x in a if x >= mean_filter * avg]
+
+def hash_base_kmers(
     spectrum: Spectrum, 
     hits: list, 
     base_kmer_length: int, 
-    scoring_alg: callable, 
     ion: str, 
-    ppm_tolerance: int
-) -> (defaultdict, list):
+) -> defaultdict:
     '''
-    Take a set of initial hits, reduce the hits to lists based on their base kmers, and score the base kmers.
-    Any base k-mer that does not get score > 0 is not added to the list
+    Take a set of initial hits, reduce the hits to lists based on their base kmers.
     Example:
         hits: [MAL, MALWAR, PPST, PPR]
         ion: b
         base_kmer_length: 3
 
         base kmer reduction: {MAL: [MAL, MALWAR], PPS: [PPST], PPR: [PPR]}
-        scored base kmers: [(MAL, 1.1), (PPS, 0.8), (PPR, 0.7)]
 
-        return value: ({MAL: [MAL, MALWAR], PPS: [PPST], PPR: [PPR]}, [(MAL, 1.1), (PPS, 0.8), (PPR, 0.7)])
+        return value: ({MAL: [MAL, MALWAR], PPS: [PPST], PPR: [PPR]}
 
     Ion type determines if base kmers are left to right or right to left. Above example uses b ion, so kmers are
     built left to right.
@@ -91,21 +117,15 @@ def hash_and_score_base_kmers(
         spectrum:           (Spectrum) used for scoring the base sequences
         hits:               (list) string sequences from initial hits
         base_kmer_length:   (int) the length of the base kmer to use for indexing
-        scoring_alg         (callable) function used for scoring. Inputs should be, in order:
-                                    spectrum: Spectrum, reference_sequence: str, ion: str, ppm_tolerance: int
         ion:                (str) the ion list to use. Options are [b, y]
-        ppm_tolerance:      (int) the ppm_tolerance to accept while scoring
     Outputs:
-        (defaultdict, list) basekmer hashed sequences, sequence score tuples list
+        (defaultdict) basekmer hashed sequences,
     '''
     # keep track of bad sequences
     blacklist = {}
 
     # the binned sequences
     binned = defaultdict(list)
-
-    # the list of sequence, score tuples
-    scores = []
 
     # get the base mer based on ion
     get_base_mer = lambda seq: seq[:base_kmer_length] if ion == 'b' else seq[len(seq)-base_kmer_length:]
@@ -118,20 +138,9 @@ def hash_and_score_base_kmers(
         if base_mer in blacklist:
             continue
 
-        # if we've not seen it, try and add it
-        if base_mer not in binned:
-            base_mer_score = scoring_alg(spectrum, base_mer, ion, ppm_tolerance)
-
-            # blacklist for bad scores
-            if not base_mer_score > 0:
-                blacklist[base_mer] = None
-                continue
-
-            # insert in order
-            scores = insort_by_index((base_mer, base_mer_score), scores, 1)
         binned[base_mer].append(masssequence_hit)
 
-    return (binned, scores)
+    return binned
 
 def result_filtering(
     spectrum: Spectrum, 
@@ -162,6 +171,9 @@ def result_filtering(
     # keep track of the sequences that start with the base kmers 
     base_mer_hashed_b = defaultdict(list)
     base_mer_hashed_y = defaultdict(list)
+
+    # make a sparse spectrum array in case xcorr score is used
+    sparse_spectrum = make_sparse_array(spectrum.spectrum, .02)
     
     # scoring algorithm to use
     def score_alg(spectrum, refseq, ion, ppm_tolerance):
@@ -175,86 +187,90 @@ def result_filtering(
             retindex = 0 if ion == 'b' else 1
             return score_subsequence(spectrum.spectrum, refseq, ppm_tolerance=ppm_tolerance)[retindex]
         
+        if 'xcorr' == scoring_alg:
+            refspec = gen_spectrum(refseq, ion=ion)['spectrum']
+            sparse_ref_spec = make_sparse_array(refspec, .02)
+            return xcorr(sparse_spectrum, sparse_ref_spec)
+
         # default to backbone score
         return backbone_score(spectrum, refseq, ppm_tolerance)
-
-    # sorted lists of (basekmers, score) by score
-    b_scores = []
-    y_scores = []
 
     # hash by the base kmer
     for hittype, hitlist in hits._asdict().items():
         if 'b' in hittype:
 
-            new_binned_b, new_b_scores = hash_and_score_base_kmers(
+            new_binned_b = hash_base_kmers(
                 spectrum, 
                 hitlist, 
                 base_kmer_length, 
-                score_alg,
-                'b', 
-                ppm_tolerance
+                'b'
             )
             
             # add these to the running values
             for k, v in new_binned_b.items():
                 base_mer_hashed_b[k] += v
 
-            b_scores += new_b_scores
-
         else:
-            new_binned_y, new_y_scores = hash_and_score_base_kmers(
+            new_binned_y = hash_base_kmers(
                 spectrum, 
                 hitlist, 
                 base_kmer_length, 
-                score_alg,
-                'y', 
-                ppm_tolerance
+                'y'
             )
             
             # add these to the running values
             for k, v in new_binned_y.items():
                 base_mer_hashed_y[k] += v
 
-            y_scores += new_y_scores
+    # get rid of any bins that only have 1 hit
+    base_mer_hashed_b = {mer: list(set(values)) \
+        for mer, values in base_mer_hashed_b.items() \
+            if len(list(set(values))) > 1}
+    base_mer_hashed_y = {mer: list(set(values)) \
+        for mer, values in base_mer_hashed_y.items() \
+            if len(list(set(values))) > 1}
 
-    toscoreb = []
-    toscorey = []
+    # all of the sequences from b and y hashed kmers that pass filters
+    b_seqs, y_seqs = [], []
 
-    # reverse the sorting of score to go from high to low
-    b_scores = b_scores[::-1]
-    y_scores = y_scores[::-1]
-    
-    # mean filtered base kmers by scores
-    b_filtered = slope_filtering(b_scores, key=1)
-    y_filtered = slope_filtering(y_scores, key=1)
-    
-    if len(b_filtered) < 5: # default to be able to report some result
-        b_filtered = b_scores[:5]
-    if len(y_filtered) < 5:
-        y_filtered = y_scores[:5]
-    
-    # revese to go from highest to lowest
-    for basemerb in b_filtered:
-        toscoreb += [basemerb[0]] + base_mer_hashed_b[basemerb[0]]
+    # get the overlap score of the sequences from each base kmer
+    for _, kmers_b in base_mer_hashed_b.items():
         
-    for basemery in y_filtered:
-        toscorey += [basemery[0]] + base_mer_hashed_y[basemery[0]]
+        # make it a set
+        l = list(set(kmers_b))
 
-    # cases where out potential is 0, try the ones with the most hits (on base mer)
-    if len(toscoreb) == 0:
-        base_mer_counts = [(mer, len(base_mer_hashed_b[mer])) for mer in base_mer_hashed_b]
-        base_mer_counts.sort(key=lambda x: x[1], reverse=True)
-        for base_mer, _ in base_mer_counts[:5]:
-            toscoreb += base_mer_hashed_b[base_mer]
+        ovscore = overlap_score(l, 'b')
 
-    if len(toscorey) == 0:
-        base_mer_counts = [(mer, len(base_mer_hashed_y[mer])) for mer in base_mer_hashed_y]
-        base_mer_counts.sort(key=lambda x: x[1], reverse=True)
-        for base_mer, _ in base_mer_counts[:5]:
-            toscorey += base_mer_hashed_y[base_mer]
-    
-    # sorted score of all leftover sequences from highest to lowest
-    best_b_results = sorted(toscoreb, key=lambda mer: score_alg(spectrum, mer, 'b', ppm_tolerance), reverse=True)
-    best_y_results = sorted(toscorey, key=lambda mer: score_alg(spectrum, mer, 'y', ppm_tolerance), reverse=True)
+        # if the score is non zero, keep those sequences
+        if overlap_score(l, 'b') > 0:
 
-    return (best_b_results, best_y_results)
+            # score each one and add it to the list
+            for kmer_b in l:
+                s = score_alg(spectrum, kmer_b, 'b', ppm_tolerance)
+                b_seqs = insort_by_index((kmer_b, s), b_seqs, 1)
+
+    # get the overlap score of the sequences from each base kmer
+    for _, kmers_y in base_mer_hashed_y.items():
+
+        # make it a set
+        l = list(set(kmers_y))
+
+        ovscore = overlap_score(l, 'y')
+
+        # if the score is non zero, keep those sequences
+        if overlap_score(l, 'y') > 0:
+
+            # score each one and add it to the list
+            for kmer_y in l:
+                s = score_alg(spectrum, kmer_y, 'y', ppm_tolerance)
+                y_seqs = insort_by_index((kmer_y, s), y_seqs, 1)
+
+    # sort by score
+    b_seqs.sort(key=lambda x: x[1], reverse=True)
+    y_seqs.sort(key=lambda x: x[1], reverse=True)
+
+    # filter out the good ones
+    b_results = [x for x in mean_filtering(b_seqs, mean_filter=2, key=1)]
+    y_results = [x for x in mean_filtering(y_seqs, mean_filter=2, key=1)]
+
+    return ([x for x, _ in b_results], [x for x, _ in y_results])

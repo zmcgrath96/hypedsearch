@@ -41,7 +41,7 @@ def read(filename: str, peak_filter=50) -> list:
             for p in precursor_list:
                 for selected_ion in p['selectedIonList']['selectedIon']:
                     if int(selected_ion['charge state']) == 2:
-                        precursor = int(selected_ion['charge state'])
+                        precursor = int(selected_ion['selected ion m/z'])
 
             precursor = precursor if precursor is not None else max(masses)/2
           

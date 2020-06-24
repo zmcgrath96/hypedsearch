@@ -3,6 +3,8 @@ from src.spectra import gen_spectra
 from src.types.objects import Spectrum
 from src.utils import ppm_to_da
 
+import numpy as np
+
 def score_subsequence(pepspec: list, subseq: str, ppm_tolerance=20) -> (float, float):
     '''
     Score a mass spectrum to a substring of tagged amino acids
@@ -45,6 +47,9 @@ def backbone_score(observed: Spectrum, reference: str, ppm_tolerance: int) -> in
     Outputs:
         (int) score according the the function described above
     '''
+    if len(reference) < 2:
+        return 0
+
     jcount = [0 for _ in range(len(reference)-1)]
     
     for ion in ['b', 'y']:
@@ -112,3 +117,77 @@ def precursor_distance(observed_precursor: float, reference_precursor: float) ->
         (float) absolute distance between the two
     '''
     return abs(observed_precursor - reference_precursor)
+
+
+def xcorr(observed: np.ndarray, reference: np.ndarray, value=50) -> float:
+    '''
+    An xcorr scoring algorithm 
+    
+    Formula: dot(reference, y'), y' = observed - (sum(-75, 75)observed[i]/150)
+    
+    Inputs should be sparsely populated np arrays. Indexing should observe the formula
+    
+    idx = int(m/w), m is mass, w is bin width (aka tolerance)
+    
+    Inputs:
+        observed:    (np.ndarray) list of peaks normalized to value
+        reference:   (np.ndarray) list of peaks normalized to value
+    kwargs: 
+        value:       (number) value given to the normalized peaks. Default=50
+    Outputs:
+        (float) the score of the formula shown above
+    '''
+    def sum_term(i):
+        min_idx = max(0, i-75)
+        max_idx = min(len(observed) - 1, i + 75)
+        return np.sum(observed[min_idx:max_idx])/(max_idx - min_idx)
+
+    # calculate the y prime term 
+    y_prime = np.asarray([observed[i] - sum_term(i) for i in range(len(observed))])
+        
+    # fill y prime or reference to be the same size. fill with zeros
+    if len(y_prime) < len(reference):
+        y_prime = np.concatenate((y_prime, [0 for _ in range(len(reference) - len(y_prime))]))
+    else:
+        reference = np.concatenate((reference, [0 for _ in range(len(y_prime) - len(reference))]))
+        
+    return np.dot(reference, y_prime)/(sum(reference)*value)
+
+
+def overlap_score(l: list, ion: str) -> float:
+    '''
+    A score based on how well the sequences that make up the list overlap
+
+    Example:   
+        l: [ABC, ABCDE, ABCDLMNO, ABCDEF]
+
+        + 3 for ABC overlapping all of them
+        + 1 for ABCDE overlapping ABCDEF
+        - .5 for ABCDEF not overlapping ABCDLMNO
+        Final score: 3.5
+
+    Inputs:
+        l:      (list) sequences checking for overlap
+        ion:    (str) ion type. If y, strings compared right to left
+    Outputs:
+        (float) score of the overlap
+    '''
+    l.sort(key=lambda x: len(x))
+    
+    score = 0
+    
+    for i, e in enumerate(l[:-1]):
+        
+        # if its y, we want to go from right to left
+        if ion == 'y':
+            e = e[::-1]
+        
+        for j, e2 in enumerate(l[i+1:]):
+            
+            # if its y, we want to go from right to left
+            if ion == 'y':
+                e2 = e2[::-1]
+            
+            score += 1 if e2[:len(e)] == e else -.5
+            
+    return score
