@@ -20,6 +20,8 @@ def read(filename: str, peak_filter=50) -> list:
         spectra = []
         
         filecontents = mzml.read(filename)
+
+        content: dict
         for content in filecontents:
 
             # zip the abundance and the m/z values together
@@ -44,14 +46,18 @@ def read(filename: str, peak_filter=50) -> list:
                         precursor = int(selected_ion['selected ion m/z'])
 
             precursor = precursor if precursor is not None else max(masses)/2
-          
+
+            # get the id
+            id_ = content.get('id', '')
+
             spectra.append(Spectrum(
                 masses,
                 abundances,
                 int(content['ms level']),
                 int(content['index']),
                 precursor,
-                filename
+                filename, 
+                id_
             ))
 
         return spectra

@@ -1,7 +1,9 @@
-import json
 from src.utils import make_dir, make_valid_dir_string
 from src.file_io import JSON
+from src.types.objects import Alignments
+
 import pandas as pd
+import json
 
 SUMMARY_NAME = 'summary'
 HYBRID_PREFIX = 'hybrid_'
@@ -44,6 +46,7 @@ def tsv_file(results: dict, output_dir='./') -> None:
 
     # seperate the hybrids from the nonhybrids
     hybrids, nonhybrids = [], []
+    alignment: Alignments
     for name, alignment in results.items():
         if len(alignment.alignments) == 0:
             mac += 1
@@ -51,6 +54,8 @@ def tsv_file(results: dict, output_dir='./') -> None:
 
         topalignment = alignment.alignments[0]._asdict()
         topalignment['entry name'] = name
+        topalignment['id'] = alignment.spectrum.id
+
         if 'hybrid_sequence' in topalignment:
             hybrids.append(topalignment)
         else:

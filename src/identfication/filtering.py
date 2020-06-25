@@ -3,7 +3,7 @@ from src.scoring.scoring import score_subsequence, backbone_score, ion_backbone_
 from src.utils import insort_by_index, make_sparse_array
 from src.spectra.gen_spectra import gen_spectrum
 
-from statistics import mean
+from statistics import mean, stdev
 from typing import Iterable
 from collections import defaultdict
 from operator import itemgetter
@@ -94,6 +94,28 @@ def mean_filtering(a: Iterable, mean_filter=1, key=None) -> list:
     return [x for x in a if x[key] >= mean_filter * avg] \
         if key is not None else [x for x in a if x >= mean_filter * avg]
 
+def stddev_filtering(a: Iterable, stddevs=1, key=None) -> list:
+    '''
+    Filter out values that fall < stddevs * stddev. Key allows usage of stuctures in the iterable.
+
+    Inputs:
+        a:          (Iterable) values to sort
+    kwargs:
+        stddevs:    (float) the number of standard deviations to use as the filter. Default=1
+        key:        (any) the key to use to access values in elements. If None, it is assumed that
+                            it is an iterable of numbers. Default=None
+    Outputs:
+        (list) the filtered list of values
+    '''
+    # function for getting values
+    get_val = lambda x: x if key is None else (x[key] if type(x) == dict or type(x) == list or type(x) == tuple else getattr(x, key))
+
+    # get the standard deviation
+    stddev = stdev([get_val(e) for e in a])
+
+    # return anything above the filter
+    return [e for e in a if get_val(e) > stddevs * stddev]
+
 def hash_base_kmers(
     hits: list, 
     base_kmer_length: int, 
@@ -176,7 +198,8 @@ def overlap_assembler(l: list, ion: str) -> str:
                 
     # return the str if possible, None otherwise
     try:    
-        return max([(k, v) for k, v in assembler.items()], key=itemgetter(1))[0]
+        max_count = max([(k, v) for k, v in assembler.items()], key=itemgetter(1))
+        return max_count[0] if max_count[1] > 1 else None
     except:
         return None
 
@@ -219,7 +242,7 @@ def result_filtering(
 
         # ion backbone score
         if 'ibb' == scoring_alg:
-            return ion_backbone_score(spectrum, refseq, ion, ppm_tolerance)
+            return ion_backbone_score(spectrum, refseq, ion, ppm_tolerance) * len(refseq) // 2
 
         # ion counting score
         if 'ion' == scoring_alg:
@@ -232,7 +255,7 @@ def result_filtering(
             return xcorr(sparse_spectrum, sparse_ref_spec)
 
         # default to backbone score
-        return backbone_score(spectrum, refseq, ppm_tolerance)
+        return backbone_score(spectrum, refseq, ppm_tolerance) * len(refseq) // 2
 
     # hash by the base kmer
     for hittype, hitlist in hits._asdict().items():
@@ -268,24 +291,37 @@ def result_filtering(
         for mer, values in base_mer_hashed_y.items() \
             if len(list(set(values))) > 1}
 
-    print(base_mer_hashed_y)
-    print(base_mer_hashed_b)
     # all of the sequences from b and y hashed kmers that pass filters
     b_seqs, y_seqs = [], []
 
-    def reduce_sequences(d: dict):
+    def reduce_sequences(d: dict, ion: str):
         seqs = []
+        v: list
         for k, v in d.items():
-            reduced_seq = overlap_assembler(v, 'b')
+       
+            reduced_seq = overlap_assembler(list(set(v)), ion)
+
             if reduced_seq is None:
+                seqs.append(str(k))
                 continue
 
             seqs.append(reduced_seq)
         return seqs
 
+    def reduce_sequences2(d: dict, ion: str):
+        seqs = []
+        v: list
+        for k, v in d.items():
+            reduced_seq = max(
+                [(seq, score_alg(spectrum, seq, ion, ppm_tolerance)) for seq in list(set([str(k)] + v))],
+                key=itemgetter(1)
+            )[0]
+            seqs.append(reduced_seq)
+        return seqs
+
     # reduce to the most overlapping sequences
-    b_seqs = reduce_sequences(base_mer_hashed_b)
-    y_seqs = reduce_sequences(base_mer_hashed_y)
+    b_seqs = reduce_sequences2(base_mer_hashed_b, 'b')
+    y_seqs = reduce_sequences2(base_mer_hashed_y, 'y')
 
     # score them and take non zero scores
     b_results = [(x, score_alg(spectrum, x, 'b', ppm_tolerance)) \
@@ -297,48 +333,71 @@ def result_filtering(
     b_results.sort(key=itemgetter(1), reverse=True)
     y_results.sort(key=itemgetter(1), reverse=True)
 
+    # print('b results before filtering')
+    # print(b_results)
+    # print('y results before filtering')
+    # print(y_results)
+
     # take the scores that pass our filter
-    filtered_b_results = slope_filtering(b_results, 20, key=1)
-    filtered_y_results = slope_filtering(y_results, 20, key=1)
-
-    # # get the overlap score of the sequences from each base kmer
-    # for _, kmers_b in base_mer_hashed_b.items():
+    def filter_scores(l: list) -> list:
+        filtered = [
+            stddev_filtering(l, stddevs=3, key=1),
+            mean_filtering(l, 3, key=1),
+            slope_filtering(l, key=1)
+        ]
         
-    #     # make it a set
-    #     l = list(set(kmers_b))
+        nonzero = [x for x in filtered if len(x) > 0]
+        if len(nonzero) == 0:
+            return []
+        
+        return min(nonzero, key=len)
 
-    #     # if the score is non zero, keep those sequences
-    #     if overlap_score(l, 'b') > 0:
 
-    #         # score each one and add it to the list
-    #         for kmer_b in l:
-    #             s = score_alg(spectrum, kmer_b, 'b', ppm_tolerance)
-    #             b_seqs = insort_by_index((kmer_b, s), b_seqs, 1)
+    filtered_b_results = filter_scores(b_results)
+    filtered_y_results = filter_scores(y_results)
 
-    # # get the overlap score of the sequences from each base kmer
-    # for _, kmers_y in base_mer_hashed_y.items():
+    # if we have nothing, take the top 5 scores
+    if len(filtered_b_results) == 0:
 
-    #     # make it a set
-    #     l = list(set(kmers_y))
+        top_scores = []
+        
+        # b results is sorted, so go through and just get the top 5
+        for b_res in b_results:
+            
+            # get the score and see if its in the list
+            if b_res[1] not in top_scores and len(top_scores) < 5:
+                top_scores.append(b_res[1])
+            
+            # if the list is at 5, break
+            elif b_res[1] not in top_scores and len(top_scores) >= 5:
+                break
 
-    #     # if the score is non zero, keep those sequences
-    #     if overlap_score(l, 'y') > 0:
+            # add it to the list otherwise
+            filtered_b_results.append(b_res)
 
-    #         # score each one and add it to the list
-    #         for kmer_y in l:
-    #             s = score_alg(spectrum, kmer_y, 'y', ppm_tolerance)
-    #             y_seqs = insort_by_index((kmer_y, s), y_seqs, 1)
+    # if we have nothing, take the top 5 scores
+    if len(filtered_y_results) == 0:
 
-    # use the overlap assembler to reduce the sequences we score
+        top_scores = []
+        
+        # b results is sorted, so go through and just get the top 5
+        for y_res in y_results:
+            
+            # get the score and see if its in the list
+            if y_res[1] not in top_scores and len(top_scores) < 5:
+                top_scores.append(y_res[1])
+            
+            # if the list is at 5, break
+            elif y_res[1] not in top_scores and len(top_scores) >= 5:
+                break
 
-    # sort by score
-    # b_seqs.sort(key=lambda x: x[1], reverse=True)
-    # y_seqs.sort(key=lambda x: x[1], reverse=True)
+            # add it to the list otherwise
+            filtered_y_results.append(y_res)
 
-    # # filter out the good ones
-    # b_results = [x for x in mean_filtering(b_seqs, mean_filter=2, key=1)]
-    # y_results = [x for x in mean_filtering(y_seqs, mean_filter=2, key=1)]
+    # print('b results after filtering')
+    # print(filtered_b_results)
+    # print('y results after filtering')
+    # print(filtered_y_results)
 
-    print(filtered_b_results)
-    print(filtered_y_results)
-    return ([x for x, _ in filtered_b_results], [x for x, _ in filtered_y_results])
+
+    return ([x for x, _ in filtered_b_results], [x for x, _ in y_results])

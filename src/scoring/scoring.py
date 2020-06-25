@@ -65,6 +65,8 @@ def backbone_score(observed: Spectrum, reference: str, ppm_tolerance: int) -> in
     jcoverage = int(100 * sum([1 if jc > 0 else 0 for jc in jcount]) / len(jcount))
     extrapoints = sum([jc - 1 if jc > 1 else 0 for jc in jcount])
     
+    # make it a function of the number of observed peaks matched
+    jcoverage /= len(observed.spectrum)
     return jcoverage + extrapoints
 
 
@@ -104,6 +106,8 @@ def ion_backbone_score(observed: Spectrum, reference: str, ion: str, ppm_toleran
     jcoverage = int(100 * sum([1 if jc > 0 else 0 for jc in jcount]) / len(jcount))
     extrapoints = sum([jc - 1 if jc > 1 else 0 for jc in jcount])
     
+    # make it a fuction of the number of observed peaks matched
+    jcoverage /= len(observed.spectrum)
     return jcoverage + extrapoints
 
 def precursor_distance(observed_precursor: float, reference_precursor: float) -> float:

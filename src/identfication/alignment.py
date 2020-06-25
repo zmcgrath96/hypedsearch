@@ -255,8 +255,18 @@ def align_b_y(b_results: list, y_results: list, db: Database) -> list:
     # try and create an alignment from each b and y sequence
     spec_alignments = []
     for b_seq in b_results:
+
+        # add just the b sequence as the possible alignment
+        spec_alignments.append((b_seq, None))
+
+        # get all the b proteins
         bproteins = [id_ for id_ in db.tree.values(b_seq)]
         for y_seq in y_results:
+
+            # add just the y sequence as the possible alignment
+            spec_alignments.append((y_seq, None))
+
+            # ge the y proteins
             yproteins = [id_ for id_  in db.tree.values(y_seq)]
             
             # the sequence is from the same protein, try and overlap it
@@ -333,8 +343,6 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
 
     # get the parents of the sequence(s) and add or subtract amino acids
     parents = get_parents(sequence, db)
-
-    clean_seq = sequence.replace('-', '')
 
     # if its hybrid, we should fill it in in all possible ways
     if hyb_alignment_pattern.findall(sequence):
@@ -698,9 +706,6 @@ def attempt_alignment(
     # and HybridSequenceAlignments
     alignments = []
 
-    # sparse spectrum for xcorr score
-    # sparse_observed_spectrum = make_sparse_array(spectrum.spectrum, .02)
-
     for aligned_pair in attempted:
 
         # get the alignment spectrum 
@@ -716,8 +721,7 @@ def attempt_alignment(
         y_score = ion_backbone_score(spectrum, aligned_pair[0], 'y', ppm_tolerance)
 
         # backbone score
-        # bb_score = backbone_score(spectrum, aligned_pair[0], ppm_tolerance)
-        t_score = sum(score_subsequence(spectrum.spectrum, aligned_pair[0], ppm_tolerance)) * 10
+        bb_score = backbone_score(spectrum, aligned_pair[0], ppm_tolerance)
 
         # get the parent proteins of the sequence
         parents = get_parents(aligned_pair[0] if aligned_pair[1] is None else aligned_pair[1], db)
@@ -732,7 +736,7 @@ def attempt_alignment(
                     aligned_pair[1], 
                     b_score, 
                     y_score, 
-                    t_score, 
+                    bb_score, 
                     p_d
                 )
             )
@@ -745,7 +749,7 @@ def attempt_alignment(
                     aligned_pair[0], 
                     b_score, 
                     y_score, 
-                    t_score, 
+                    bb_score, 
                     p_d
                 )
             )

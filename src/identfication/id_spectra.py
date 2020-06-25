@@ -191,7 +191,7 @@ def id_spectra(
         verbose and print('Analyzing spectra file {}/{}[{}%]\n'.format(i + 1, len(spectra_files), int(float(i)/float(len(spectra_files)) * 100)))
 
         # load the spectra into memory
-        spectra = mzML.read(spectrum_file)
+        spectra = mzML.read(spectrum_file, peak_filter=25)
 
         # go through each spectrum in the mzml file
         for j, spec in enumerate(spectra):
