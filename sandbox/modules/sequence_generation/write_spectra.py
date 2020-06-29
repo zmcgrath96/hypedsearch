@@ -98,10 +98,10 @@ def write_mzml(file_name, spectra, title_prefix='Spectrum ', output_dir='./'):
             spectrumList.remove(spectrumElement)
             
         # add the range. Not good for MSConvert for whatever reason
-        # scanListEl = spectrumElement.find('{http://psi.hupo.org/ms/mzml}scanList')
-        # scanEl = scanListEl.find('{http://psi.hupo.org/ms/mzml}scan')[0]
-        # scanWindowListElement = ET.fromstring('<scanWindowList count="1"> <scanWindow> <cvParam cvRef="MS" accession="MS:1000501" value="0" name="scan window lower limit" unitAccession="MS:1000040" unitName="m/z" unitCvRef="MS" /> <cvParam cvRef="MS" accession="MS:1000500" value="10000" name="scan window upper limit" unitAccession="MS:1000040" unitName="m/z" unitCvRef="MS" /> </scanWindow></scanWindowList>')
-        # scanEl.append(scanWindowListElement)
+        scanListEl = spectrumElement.find('{http://psi.hupo.org/ms/mzml}scanList')
+        scanEl = scanListEl.find('{http://psi.hupo.org/ms/mzml}scan')[0]
+        scanWindowListElement = ET.fromstring('<scanWindowList count="1"> <scanWindow> <cvParam cvRef="MS" accession="MS:1000501" value="0" name="scan window lower limit" unitAccession="MS:1000040" unitName="m/z" unitCvRef="MS" /> <cvParam cvRef="MS" accession="MS:1000500" value="10000" name="scan window upper limit" unitAccession="MS:1000040" unitName="m/z" unitCvRef="MS" /> </scanWindow></scanWindowList>')
+        scanEl.append(scanWindowListElement)
         
         spectrumElement.append(centroidElement)
 

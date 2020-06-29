@@ -1,12 +1,14 @@
 from src.utils import insort_by_index, all_perms_of_s, make_sparse_array
-from src.scoring.scoring import score_subsequence, backbone_score, precursor_distance, xcorr, ion_backbone_score
-from src.identfication.filtering import result_filtering
+from src.scoring.scoring import score_subsequence, backbone_score, precursor_distance, xcorr, ion_backbone_score, intensity_ion_backbone_score, intensity_backbone_score
+from src.identfication.filtering import result_filtering, mean_filtering
 from src.types.objects import Spectrum, KmerMassesResults, SequenceAlignment, HybridSequenceAlignment
 from src.types.database import Database
 from src.spectra.gen_spectra import gen_spectrum
 
 from collections import defaultdict
 import re 
+from operator import itemgetter
+from more_itertools import flatten
 
 hyb_alignment_pattern = re.compile(r'[-\(\)]')
 
@@ -252,19 +254,15 @@ def align_b_y(b_results: list, y_results: list, db: Database) -> list:
         (list) tuples of aligned sequences. First entry is the nonhybrid, second (if hybrid)
                 has the hybrid characters -(). If not hybrid, it is None
     '''
-    # try and create an alignment from each b and y sequence
-    spec_alignments = []
-    for b_seq in b_results:
+    # try and create an alignment from each b and y sequence. Add all of the individual ones to start off with
+    spec_alignments = [(seq, None) for seq in b_results + y_results]
 
-        # add just the b sequence as the possible alignment
-        spec_alignments.append((b_seq, None))
+    for b_seq in b_results:
 
         # get all the b proteins
         bproteins = [id_ for id_ in db.tree.values(b_seq)]
-        for y_seq in y_results:
 
-            # add just the y sequence as the possible alignment
-            spec_alignments.append((y_seq, None))
+        for y_seq in y_results:
 
             # ge the y proteins
             yproteins = [id_ for id_  in db.tree.values(y_seq)]
@@ -326,7 +324,7 @@ def __get_surrounding_amino_acids(parent_sequence: str, sequence: str, count: in
 
     return flanking_pairs
 
-def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3) -> str:
+def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3) -> list:
     '''
     Try and add amino acids to get the closest precursor mass
 
@@ -337,7 +335,7 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
     kwargs:
         gap:        (int) the number of additions allowed. Default=3
     Outputs:
-        (str) the sequence with the closest precursor mass
+        (list) the sequence(s) with the closest precursor mass
     '''
     filled_in  = []
 
@@ -353,21 +351,27 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
 
                 # if the () are in the sequence, only add left and right of the sequence, don't
                 # touch the overlap
-                if '(' in sequence: 
+                if '(' in sequence or ')' in sequence: 
+
+                    # get the left and right proteins
                     l_p_s = db.get_entry_by_name(l_p).sequence
                     r_p_s = db.get_entry_by_name(r_p).sequence
 
+                    # separate the left and the right sequences
+                    left_seq = sequence[:sequence.index(')')].replace('(', '')
+                    right_seq = sequence[sequence.index('(')+1:].replace(')', '')
+
                     # get the sequence until ) and get the leftmost amino acids
                     left_aas = [x[0] for x in __get_surrounding_amino_acids(
-                        sequence[:sequence.index(')')].replace('(', ''),
                         l_p_s,
+                        left_seq,
                         gap
                     )]
 
                     # get the sequence after ( and get the rightmost amino acids
                     right_aas = [x[0] for x in __get_surrounding_amino_acids(
-                        sequence[sequence.index('(')+1:].replace(')', ''),
                         r_p_s,
+                        right_seq,
                         gap
                     )]
 
@@ -376,8 +380,8 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
                         for r_aa in right_aas:
 
                             # go through all possible combinations of the flanking pairs
-                            for i in range(gap):
-                                for j in range(gap - i):
+                            for i in range(gap + 1):
+                                for j in range(gap - i + 1):
 
                                     # get the new sequence and its precursor mass. Add it to filled in list
                                     new_seq = l_aa[gap-i:] + sequence + r_aa[:j]
@@ -408,10 +412,10 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
                         for right_pair in right_flanking_pairs:
 
                             # go through all lengths and contributions
-                            for i in range(gap):
-                                for j in range(gap - i):
-                                    for k in range(max(gap - i - j, 0)):
-                                        for n in range(max(gap - i - j - k, 0)):
+                            for i in range(gap + 1):
+                                for j in range(gap - i + 1):
+                                    for k in range(max(gap - i - j + 1, 0)):
+                                        for n in range(max(gap - i - j - k + 1, 0)):
 
                                             # leftmost addition
                                             ll = left_pair[0][gap-i:]
@@ -442,19 +446,21 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
             for flanking_pair in __get_surrounding_amino_acids(p_seq, sequence, gap):
 
                 # go through all possible combinations of the flanking pairs
-                for i in range(gap):
-                    for j in range(gap - i):
+                for i in range(gap + 1):
+                    for j in range(gap - i + 1):
 
                 
                         # get the new sequence and its precursor mass. Add it to filled in list
                         new_seq = flanking_pair[0][gap-i:] + sequence + flanking_pair[1][:j]
+
                         new_prec = gen_spectrum(new_seq)['precursor_mass']
                         filled_in.append((new_seq, abs(new_prec - spectrum.precursor_mass)))
                     
-    # return the one with the closest precursor
-    return sorted(filled_in, key=lambda x: x[1])[0][0] if len(filled_in) > 1 else sequence
+    # return the one(s) with the closest precursor
+    closest_precursor = min(filled_in, key=itemgetter(1))[1]
+    return [x[0] for x in filled_in if x[1] == closest_precursor]
 
-def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3) -> str:
+def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3) -> list:
     '''
     Remove up to gap number of amino acids to try and match precursor mass
 
@@ -464,37 +470,50 @@ def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3) -> str:
     kwargs:
         gap:        (int) the total number of free amino acids to try
     Outputs:
-        (str) the sequence with the closest precursor mass
+        (list) the sequence(s) with the closest precursor mass
     '''
     attempted = []
 
     # remove left and right first
-    for i in range(gap):
-        for j in range(gap - i):
+    for i in range(gap + 1):
+        for j in range(gap - i + 1):
 
              # if appended hybrid, removed the insides too
             if '-' in sequence:
-                for k in range(gap - i - j):
-                    for n in range(gap - i -j - k):
-                        left_seq = sequence.split('-')[0]
-                        right_seq = sequence.split('-')[1]
 
+                # split at the junction site
+                left_seq = sequence.split('-')[0]
+                right_seq = sequence.split('-')[1]
+
+                for k in range(gap - i - j + 1):
+                    for n in range(gap - i -j - k + 1):
+                        
+                        # create a new one by subtracting amino acids from each side
                         new_seq = left_seq[i:-j] if j >0 else left_seq [i:] \
                             + '-' + right_seq[k:-n] if n > 0 else right_seq[k:]
+
+                        # find the new precursor mass
                         new_prec = gen_spectrum(new_seq.replace('-', ''))['precursor_mass']
                         attempted.append((new_seq, abs(new_prec - spectrum.precursor_mass)))
 
             else:
+                
+                # take off the trailing (right) or leading (left) amino acids
                 new_seq = sequence[i:-j] if j > 0 else sequence[i:]
-                clean_seq = new_seq.replace('(', '').replace(')', '')
+
+                # if it s a hybrid with an ambiguous area, only subtract from the outside
+                clean_seq = new_seq.replace('(', '').replace(')', '') \
+                            if '(' in new_seq or ')' in new_seq else new_seq
+
                 new_prec = gen_spectrum(clean_seq)['precursor_mass']
                 attempted.append((new_seq, abs(new_prec - spectrum.precursor_mass)))
 
-    return sorted(attempted, key=lambda x: x[1])[0][0] if len(attempted) > 1 else sequence
+    closest_precursor = min(attempted, key=itemgetter(1))[1]
+    return [x[0] for x in attempted if x[1] == closest_precursor]
 
 
 
-def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3) -> str:
+def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3) -> list:
     '''
     Try and fill in the gaps of an alignment. This is primarily focused on 
     filling in the gaps left by the difference in precursor mass. If we find that
@@ -507,7 +526,7 @@ def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
     kwargs:
         gap:        (int) the number of amino acids to accept. Default=3
     Outputs:
-        (str) sequence that may have filled in the gap
+        (list) sequence(s) that may have filled in the gap
     '''
     # the max mass for an amino acid (doubly charged)
     max_mass = 93.04
@@ -524,17 +543,16 @@ def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
     # if there are too many missing, or not enough to add any, return 
     if gap * max_mass < abs(spectrum.precursor_mass - theory_precrusor) \
         or abs(spectrum.precursor_mass - theory_precrusor) < min_mass:
-        return sequence
+        return [sequence]
 
     # add amino acids
     if spectrum.precursor_mass > theory_precrusor:
-
         return __add_amino_acids(spectrum, sequence, db, gap)
-
 
     # subtract amino acids:
     else:
         return __remove_amino_acids(spectrum, sequence, gap)
+
 
 def get_parents(seq: str, db: Database) -> (list, list):
     '''
@@ -569,9 +587,12 @@ def get_parents(seq: str, db: Database) -> (list, list):
 
         # split by the () and make sure each side has the ambiguous area
         else:
-            left = seq[:seq.index(')')].replace('(', '')
-            right = seq[seq.index('(')+1:].replace(')', '')
-            return (get_sources(left), get_sources(right))
+            try:
+                left = seq[:seq.index(')')].replace('(', '')
+                right = seq[seq.index('(')+1:].replace(')', '')
+                return (get_sources(left), get_sources(right))
+            except:
+                return ([], [])
 
     # otherwise just look up the one for the full sequence
     return (get_sources(seq), None)
@@ -672,11 +693,19 @@ def attempt_alignment(
     '''
 
     # narrow down the potential alignments
+    import time 
+
+    st = time.time()
     b_results, y_results = result_filtering(spectrum, hits, base_kmer_len, scoring_alg=scoring_alg)
+    print(f'\nFiltering time took {time.time() - st} resulting in {len(b_results)} b sequences and {len(y_results)} y sequences')
 
     # align our b an y sequences
+    st = time.time()
     a = align_b_y(b_results, y_results, db)
-    
+    print(f'First alignment round took {time.time() - st} time resulting in {len(a)} alignments')
+
+    a = [x[0] for x in  \
+        mean_filtering([(seq, intensity_backbone_score(spectrum, seq[0], ppm_tolerance) * len(seq) // 2) for seq in a], 2, key=1)]
     # seperate the hybrids from the non hybrids for later analysis
     nonhyba, hyba = [], []
     for aligned in a:
@@ -688,13 +717,17 @@ def attempt_alignment(
     
     # replace any hybrid alignments that are seen that can be explained by non 
     # hybrid sequences
+    st = time.time()
     updated_hybrids = [] if len(hyba) == 0 else replace_ambiguous_hybrids(hyba, db)
+    print(f'Getting rid of ambiguous time took {time.time() - st}')
 
     # try and fill in the gaps that are in any alignments
-    closer_precursors = [
-        fill_in_precursor(spectrum, x[0] if x[1] is None else x[1], db, 3) \
+    st = time.time()
+    closer_precursors = list(flatten([
+        fill_in_precursor(spectrum, x[0] if x[1] is None else x[1], db, gap=4) \
             for x in nonhyba + updated_hybrids
-    ]
+    ]))
+    print(f'Filling in precursor took {time.time() - st} for {len(updated_hybrids + nonhyba)} sequences')
 
     # make tuples again
     attempted = [
@@ -705,7 +738,7 @@ def attempt_alignment(
     # Make alignments into the namedtuple types SpectrumAlignments
     # and HybridSequenceAlignments
     alignments = []
-
+    st = time.time()
     for aligned_pair in attempted:
 
         # get the alignment spectrum 
@@ -717,8 +750,8 @@ def attempt_alignment(
             continue
 
         # individual ion scores
-        b_score = ion_backbone_score(spectrum, aligned_pair[0], 'b', ppm_tolerance)
-        y_score = ion_backbone_score(spectrum, aligned_pair[0], 'y', ppm_tolerance)
+        b_score = intensity_ion_backbone_score(spectrum, aligned_pair[0], 'b', ppm_tolerance)
+        y_score = intensity_ion_backbone_score(spectrum, aligned_pair[0], 'y', ppm_tolerance)
 
         # backbone score
         bb_score = backbone_score(spectrum, aligned_pair[0], ppm_tolerance)
@@ -753,6 +786,7 @@ def attempt_alignment(
                     p_d
                 )
             )
+    print(f'Time to make into objects took {time.time() - st}')
 
     # print(f'Number of alignments that passed the filter: {len(alignments)}')
     # print(sorted(alignments, key=lambda x: x.total_score, reverse=True)[:10])

@@ -3,3 +3,4 @@ numpy
 pyteomics
 pandas
 datrie
+more_itertools

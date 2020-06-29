@@ -1,5 +1,5 @@
 from src.types.objects import KmerMassesResults, Spectrum
-from src.scoring.scoring import score_subsequence, backbone_score, ion_backbone_score, xcorr, overlap_score
+from src.scoring.scoring import score_subsequence, backbone_score, ion_backbone_score, intensity_ion_backbone_score, xcorr
 from src.utils import insort_by_index, make_sparse_array
 from src.spectra.gen_spectra import gen_spectrum
 
@@ -254,6 +254,9 @@ def result_filtering(
             sparse_ref_spec = make_sparse_array(refspec, .02)
             return xcorr(sparse_spectrum, sparse_ref_spec)
 
+        if 'iibb' == scoring_alg:
+            return intensity_ion_backbone_score(spectrum, refseq, ion, ppm_tolerance) * len(refseq) // 2
+
         # default to backbone score
         return backbone_score(spectrum, refseq, ppm_tolerance) * len(refseq) // 2
 
@@ -340,9 +343,12 @@ def result_filtering(
 
     # take the scores that pass our filter
     def filter_scores(l: list) -> list:
+        if len(l) < 2:
+            return l
+
         filtered = [
-            stddev_filtering(l, stddevs=3, key=1),
-            mean_filtering(l, 3, key=1),
+            stddev_filtering(l, stddevs=2, key=1),
+            mean_filtering(l, mean_filter=2, key=1),
             slope_filtering(l, key=1)
         ]
         
@@ -398,6 +404,9 @@ def result_filtering(
     # print(filtered_b_results)
     # print('y results after filtering')
     # print(filtered_y_results)
+
+    # print(f'{len(filtered_b_results)} b sequences left after filtering')
+    # print(f'{len(filtered_y_results)} y sequences left after filtering')
 
 
     return ([x for x, _ in filtered_b_results], [x for x, _ in y_results])

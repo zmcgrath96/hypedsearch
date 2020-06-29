@@ -138,7 +138,15 @@ def id_spectrum(
         return None
         
     # attempt alignments
-    a = attempt_alignment(spectrum, db, hits, min_peptide_len, ppm_tolerance=ppm_tolerance, scoring_alg=scoring_alg)
+    a = attempt_alignment(
+        spectrum, 
+        db, 
+        hits, 
+        min_peptide_len, 
+        ppm_tolerance=ppm_tolerance, 
+        scoring_alg=scoring_alg, 
+        precursor_tolerance=3
+    )
     
     # return the alignments in a structure
     return Alignments(spectrum, a)

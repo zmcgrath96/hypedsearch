@@ -18,8 +18,8 @@ Spectrum:
 '''
 Spectrum = namedtuple(
     'Spectrum', 
-    ['spectrum', 'abundance', 'ms_level', 'scan_number', 'precursor_mass', 'file_name', 'id'],
-    defaults=[[], [], 0, -1, 0, '', '']
+    ['spectrum', 'abundance', 'total_intensity', 'ms_level', 'scan_number', 'precursor_mass', 'file_name', 'id'],
+    defaults=[[], [], 0, 0, -1, 0, '', '']
 )
 
 '''

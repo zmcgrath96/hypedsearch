@@ -37,14 +37,22 @@ def read(filename: str, peak_filter=50) -> list:
             masses = [float(x) for x, _ in mass_abundances]
             abundances = [float(x) for _, x in mass_abundances]
 
+            # get the total intensity
+            ti = sum(abundances)
+
             # get the precursor
             precursor = None
             precursor_list = content['precursorList']['precursor']
             for p in precursor_list:
                 for selected_ion in p['selectedIonList']['selectedIon']:
-                    if int(selected_ion['charge state']) == 2:
-                        precursor = int(selected_ion['selected ion m/z'])
+                    charge_state = int(selected_ion['charge state'])
 
+                    # we want to make the precursor the doubly charged
+                    # find the factor to take it to 2
+                    multiplier = charge_state / 2
+
+                    precursor = float(selected_ion['selected ion m/z']) * multiplier
+                
             precursor = precursor if precursor is not None else max(masses)/2
 
             # get the id
@@ -53,6 +61,7 @@ def read(filename: str, peak_filter=50) -> list:
             spectra.append(Spectrum(
                 masses,
                 abundances,
+                ti,
                 int(content['ms level']),
                 int(content['index']),
                 precursor,
