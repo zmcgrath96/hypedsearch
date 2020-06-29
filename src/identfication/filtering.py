@@ -242,7 +242,7 @@ def result_filtering(
 
         # ion backbone score
         if 'ibb' == scoring_alg:
-            return ion_backbone_score(spectrum, refseq, ion, ppm_tolerance) * len(refseq) // 2
+            return ion_backbone_score(spectrum, refseq, ion, ppm_tolerance)
 
         # ion counting score
         if 'ion' == scoring_alg:
@@ -255,10 +255,10 @@ def result_filtering(
             return xcorr(sparse_spectrum, sparse_ref_spec)
 
         if 'iibb' == scoring_alg:
-            return intensity_ion_backbone_score(spectrum, refseq, ion, ppm_tolerance) * len(refseq) // 2
+            return intensity_ion_backbone_score(spectrum, refseq, ion, ppm_tolerance) 
 
         # default to backbone score
-        return backbone_score(spectrum, refseq, ppm_tolerance) * len(refseq) // 2
+        return backbone_score(spectrum, refseq, ppm_tolerance)
 
     # hash by the base kmer
     for hittype, hitlist in hits._asdict().items():
@@ -323,8 +323,8 @@ def result_filtering(
         return seqs
 
     # reduce to the most overlapping sequences
-    b_seqs = reduce_sequences2(base_mer_hashed_b, 'b')
-    y_seqs = reduce_sequences2(base_mer_hashed_y, 'y')
+    b_seqs = reduce_sequences(base_mer_hashed_b, 'b')
+    y_seqs = reduce_sequences(base_mer_hashed_y, 'y')
 
     # score them and take non zero scores
     b_results = [(x, score_alg(spectrum, x, 'b', ppm_tolerance)) \
@@ -336,11 +336,6 @@ def result_filtering(
     b_results.sort(key=itemgetter(1), reverse=True)
     y_results.sort(key=itemgetter(1), reverse=True)
 
-    # print('b results before filtering')
-    # print(b_results)
-    # print('y results before filtering')
-    # print(y_results)
-
     # take the scores that pass our filter
     def filter_scores(l: list) -> list:
         if len(l) < 2:
@@ -349,7 +344,7 @@ def result_filtering(
         filtered = [
             stddev_filtering(l, stddevs=2, key=1),
             mean_filtering(l, mean_filter=2, key=1),
-            slope_filtering(l, key=1)
+            slope_filtering(l, mean_filter=2, key=1)
         ]
         
         nonzero = [x for x in filtered if len(x) > 0]
@@ -361,6 +356,9 @@ def result_filtering(
 
     filtered_b_results = filter_scores(b_results)
     filtered_y_results = filter_scores(y_results)
+
+    # print(f'B results:\n{filtered_b_results}')
+    # print(f'Y results:\n{filtered_y_results}')
 
     # if we have nothing, take the top 5 scores
     if len(filtered_b_results) == 0:
@@ -400,13 +398,4 @@ def result_filtering(
             # add it to the list otherwise
             filtered_y_results.append(y_res)
 
-    # print('b results after filtering')
-    # print(filtered_b_results)
-    # print('y results after filtering')
-    # print(filtered_y_results)
-
-    # print(f'{len(filtered_b_results)} b sequences left after filtering')
-    # print(f'{len(filtered_y_results)} y sequences left after filtering')
-
-
-    return ([x for x, _ in filtered_b_results], [x for x, _ in y_results])
+    return ([x for x, _ in filtered_b_results], [x for x, _ in filtered_y_results])

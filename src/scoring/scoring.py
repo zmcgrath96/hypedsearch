@@ -63,11 +63,10 @@ def backbone_score(observed: Spectrum, reference: str, ppm_tolerance: int) -> in
                     jcount[i] += 1
     
     jcoverage = int(100 * sum([1 if jc > 0 else 0 for jc in jcount]) / len(jcount))
-    extrapoints = sum([jc - 1 if jc > 1 else 0 for jc in jcount])
+    # extrapoints = sum([jc - 1 if jc > 1 else 0 for jc in jcount])
     
     # make it a function of the number of observed peaks matched
-    jcoverage /= len(observed.spectrum)
-    return jcoverage + extrapoints
+    return jcoverage# + extrapoints
 
 def intensity_backbone_score(observed: Spectrum, reference: str, ppm_tolerance: int) -> int:
     '''
@@ -126,11 +125,11 @@ def intensity_backbone_score(observed: Spectrum, reference: str, ppm_tolerance: 
                     ided_abundances += sum([observed.abundance[idx] for idx in peak_hits])
     
     jcoverage = sum([1 if jc > 0 else 0 for jc in jcount])
-    extrapoints = sum([jc - 1 if jc > 1 else 0 for jc in jcount]) // 3
+    #extrapoints = sum([jc - 1 if jc > 1 else 0 for jc in jcount]) // 3
     
     # make it a function of the number of observed peaks matched
-    jcoverage /= len(observed.spectrum)
-    return (jcoverage + extrapoints) * (ided_abundances / observed.total_intensity)
+    #jcoverage /= len(observed.spectrum)
+    return jcoverage #+ extrapoints) * (ided_abundances / observed.total_intensity)
 
 
 def ion_backbone_score(observed: Spectrum, reference: str, ion: str, ppm_tolerance: int) -> float:
@@ -169,11 +168,9 @@ def ion_backbone_score(observed: Spectrum, reference: str, ion: str, ppm_toleran
                 jcount[i] += 1
 
     jcoverage = int(100 * sum([1 if jc > 0 else 0 for jc in jcount]) / len(jcount))
-    extrapoints = sum([jc - 1 if jc > 1 else 0 for jc in jcount])
+    #extrapoints = sum([jc - 1 if jc > 1 else 0 for jc in jcount])
     
-    # make it a fuction of the number of observed peaks matched
-    jcoverage /= len(observed.spectrum)
-    return jcoverage + extrapoints
+    return jcoverage #+ extrapoints
 
 def intensity_ion_backbone_score(observed: Spectrum, reference: str, ion: str, ppm_tolerance: int) -> float:
     '''
@@ -238,9 +235,9 @@ def intensity_ion_backbone_score(observed: Spectrum, reference: str, ion: str, p
     jcoverage = sum([1 if jc > 0 else 0 for jc in jcount])
 
     # if an entry has more than 1, we give it extra points
-    extrapoints = sum([jc - 1 if jc > 1 else 0 for jc in jcount]) // 3
+    #extrapoints = sum([jc - 1 if jc > 1 else 0 for jc in jcount]) // 3
     
-    return (jcoverage + extrapoints) * (ided_abundances / observed.total_intensity)
+    return jcoverage# + extrapoints) * (ided_abundances / observed.total_intensity)
 
 def precursor_distance(observed_precursor: float, reference_precursor: float) -> float:
     '''

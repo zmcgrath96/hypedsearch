@@ -40,7 +40,8 @@ def main(args: object) -> None:
         'max_peptide_len': args.max_peptide_len,
         'tolerance': args.tolerance,
         'verbose': stringtobool(args.verbose), 
-        'scoring_alg': args.scoring_alg
+        'scoring_alg': args.scoring_alg, 
+        'DEBUG': False
     }
     runner.run(arguments)
 

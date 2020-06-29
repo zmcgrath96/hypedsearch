@@ -665,7 +665,8 @@ def attempt_alignment(
     n=3, 
     ppm_tolerance=20, 
     precursor_tolerance=1,
-    scoring_alg='ibb'
+    scoring_alg='ibb', 
+    DEBUG=False
     ) -> list:
     '''
     Given a set of hits in the form of KmerMassesResult (lists of sequences), reduce
@@ -697,15 +698,16 @@ def attempt_alignment(
 
     st = time.time()
     b_results, y_results = result_filtering(spectrum, hits, base_kmer_len, scoring_alg=scoring_alg)
-    print(f'\nFiltering time took {time.time() - st} resulting in {len(b_results)} b sequences and {len(y_results)} y sequences')
-
+    DEBUG and print(f'\nFiltering time took {time.time() - st} resulting in {len(b_results)} b sequences and {len(y_results)} y sequences')
+  
     # align our b an y sequences
     st = time.time()
     a = align_b_y(b_results, y_results, db)
-    print(f'First alignment round took {time.time() - st} time resulting in {len(a)} alignments')
 
-    a = [x[0] for x in  \
-        mean_filtering([(seq, intensity_backbone_score(spectrum, seq[0], ppm_tolerance) * len(seq) // 2) for seq in a], 2, key=1)]
+
+    DEBUG and print(f'First alignment round took {time.time() - st} time resulting in {len(a)} alignments')
+
+
     # seperate the hybrids from the non hybrids for later analysis
     nonhyba, hyba = [], []
     for aligned in a:
@@ -719,7 +721,7 @@ def attempt_alignment(
     # hybrid sequences
     st = time.time()
     updated_hybrids = [] if len(hyba) == 0 else replace_ambiguous_hybrids(hyba, db)
-    print(f'Getting rid of ambiguous time took {time.time() - st}')
+    DEBUG and print(f'Getting rid of ambiguous time took {time.time() - st}')
 
     # try and fill in the gaps that are in any alignments
     st = time.time()
@@ -727,7 +729,7 @@ def attempt_alignment(
         fill_in_precursor(spectrum, x[0] if x[1] is None else x[1], db, gap=4) \
             for x in nonhyba + updated_hybrids
     ]))
-    print(f'Filling in precursor took {time.time() - st} for {len(updated_hybrids + nonhyba)} sequences')
+    DEBUG and print(f'Filling in precursor took {time.time() - st} for {len(updated_hybrids + nonhyba)} sequences')
 
     # make tuples again
     attempted = [
@@ -756,6 +758,12 @@ def attempt_alignment(
         # backbone score
         bb_score = backbone_score(spectrum, aligned_pair[0], ppm_tolerance)
 
+        # sum of the ion scores
+        t_score = sum(score_subsequence(spectrum.spectrum, aligned_pair[0], ppm_tolerance))
+
+        # backbone intensity
+        bbi = intensity_backbone_score(spectrum, aligned_pair[0], ppm_tolerance)
+
         # get the parent proteins of the sequence
         parents = get_parents(aligned_pair[0] if aligned_pair[1] is None else aligned_pair[1], db)
 
@@ -769,7 +777,7 @@ def attempt_alignment(
                     aligned_pair[1], 
                     b_score, 
                     y_score, 
-                    bb_score, 
+                    t_score, 
                     p_d
                 )
             )
@@ -782,13 +790,20 @@ def attempt_alignment(
                     aligned_pair[0], 
                     b_score, 
                     y_score, 
-                    bb_score, 
+                    t_score, 
                     p_d
                 )
             )
-    print(f'Time to make into objects took {time.time() - st}')
+    DEBUG and print(f'Time to make into objects took {time.time() - st}')
 
+    tracker = {}
+    set_alignments = []
+    for a in alignments:
+        if a.sequence in tracker: 
+            continue
+        tracker[a.sequence] = True
+        set_alignments.append(a)
     # print(f'Number of alignments that passed the filter: {len(alignments)}')
     # print(sorted(alignments, key=lambda x: x.total_score, reverse=True)[:10])
 
-    return sorted(alignments, key=lambda x: x.total_score, reverse=True)[:n]
+    return sorted(set_alignments, key=lambda x: x.total_score, reverse=True)[:n]
