@@ -17,15 +17,18 @@ def run(args: dict) -> None:
 
     Inputs:
         args:   object arguments from main. Should be validated in main. Attributes of args:
-            spectra_folder:     (str) full path the the directory containing all spectra files
-            database_file:      (str) full path to the .fasta database file
-            output_dir:         (str) full path the the directory to save output to
-            min_peptide_len:    (int) minimum peptide length to consider
-            max_peptide_len:    (int) maximum peptide length to consider
-            tolerance:          (float) the ppm tolerance to allow in search
-            verbose:            (bool) extra printing
-            scoring_alg:        (str) scoring algorithm to use
-            DEBUG:              (bool) debuging print messages. Default=False
+            spectra_folder:             (str) full path the the directory containing all spectra files
+            database_file:              (str) full path to the .fasta database file
+            output_dir:                 (str) full path the the directory to save output to
+            min_peptide_len:            (int) minimum peptide length to consider
+            max_peptide_len:            (int) maximum peptide length to consider
+            tolerance:                  (float) the ppm tolerance to allow in search
+            peak_filter:                (int) the number of peaks to filter by 
+            relative_abundance_filter:  (float) the percentage of the total abundance a peak must
+                                            be to pass the filter
+            verbose:                    (bool) extra printing
+            scoring_alg:                (str) scoring algorithm to use
+            DEBUG:                      (bool) debuging print messages. Default=False
     Outputs:
         None
     '''
@@ -43,6 +46,8 @@ def run(args: dict) -> None:
         min_peptide_len=args['min_peptide_len'], 
         max_peptide_len=args['max_peptide_len'], 
         ppm_tolerance=args['tolerance'], 
+        peak_filter=args['peak_filter'],
+        relative_abundance_filter=args['relative_abundance_filter'],
         verbose=True, 
         scoring_alg=args['scoring_alg'], 
         DEBUG=args['DEBUG']

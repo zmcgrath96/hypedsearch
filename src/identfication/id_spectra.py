@@ -168,6 +168,8 @@ def id_spectra(
     min_peptide_len=5, 
     max_peptide_len=20, 
     result_count=3, 
+    peak_filter=0, 
+    relative_abundance_filter=0.0,
     ppm_tolerance=20, 
     scoring_alg='ibb', 
     DEBUG=False
@@ -210,7 +212,7 @@ def id_spectra(
         verbose and print('Analyzing spectra file {}/{}[{}%]\n'.format(i + 1, len(spectra_files), int(float(i)/float(len(spectra_files)) * 100)))
 
         # load the spectra into memory
-        spectra = mzML.read(spectrum_file, peak_filter=25)
+        spectra = mzML.read(spectrum_file, peak_filter=peak_filter, relative_abundance_filter=relative_abundance_filter)
 
         # go through each spectrum in the mzml file
         for j, spec in enumerate(spectra):
