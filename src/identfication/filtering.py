@@ -322,6 +322,9 @@ def result_filtering(
             seqs.append(reduced_seq)
         return seqs
 
+    # print(f'Base mer hashed b:\n{base_mer_hashed_b}')
+    # print(f'Base mer hashed y:\n{base_mer_hashed_y}')
+
     # reduce to the most overlapping sequences
     b_seqs = reduce_sequences(base_mer_hashed_b, 'b')
     y_seqs = reduce_sequences(base_mer_hashed_y, 'y')
@@ -335,6 +338,9 @@ def result_filtering(
     # sort the results by score high to low
     b_results.sort(key=itemgetter(1), reverse=True)
     y_results.sort(key=itemgetter(1), reverse=True)
+
+    # print(f'B results before filtering:\n{b_results}')
+    # print(f'Y results before filtering:\n{y_results}')
 
     # take the scores that pass our filter
     def filter_scores(l: list) -> list:
@@ -356,9 +362,6 @@ def result_filtering(
 
     filtered_b_results = filter_scores(b_results)
     filtered_y_results = filter_scores(y_results)
-
-    # print(f'B results:\n{filtered_b_results}')
-    # print(f'Y results:\n{filtered_y_results}')
 
     # if we have nothing, take the top 5 scores
     if len(filtered_b_results) == 0:

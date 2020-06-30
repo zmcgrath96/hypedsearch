@@ -9,6 +9,7 @@ from collections import defaultdict
 import re 
 from operator import itemgetter
 from more_itertools import flatten
+import math
 
 hyb_alignment_pattern = re.compile(r'[-\(\)]')
 
@@ -545,13 +546,16 @@ def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
         or abs(spectrum.precursor_mass - theory_precrusor) < min_mass:
         return [sequence]
 
+    # determine HOW many amino acids we could be off
+    num_off = min(math.ceil(abs(spectrum.precursor_mass - theory_precrusor) / max_mass) + 1, gap)
+
     # add amino acids
     if spectrum.precursor_mass > theory_precrusor:
-        return __add_amino_acids(spectrum, sequence, db, gap)
+        return __add_amino_acids(spectrum, sequence, db, num_off)
 
     # subtract amino acids:
     else:
-        return __remove_amino_acids(spectrum, sequence, gap)
+        return __remove_amino_acids(spectrum, sequence, num_off)
 
 
 def get_parents(seq: str, db: Database) -> (list, list):

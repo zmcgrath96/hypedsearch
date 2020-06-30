@@ -78,6 +78,12 @@ def build_kmermasses(
             # iterate from min to max and take left to right for b, right to left for y
             subseq_b = kmer[:i]
             subseq_y = kmer[len(kmer)-i:]
+
+            if subseq_y == 'NFEANTTIGRIRFH':
+                print(f'ADDING Y+ MASS {kmer_spec_y_s[i]} AND Y++ MASS {kmer_spec_y_d[i]}')
+
+            if 'NFEANTTIGRIRFH' in subseq_y:
+                print(f'NFEANTTIGRIRFH in sequence {subseq_y}')
             
             # check to see if we've seen this kmer as a b sequence before
             if 'b' not in kmer_tracker[subseq_b]:
@@ -125,7 +131,7 @@ def id_spectrum(
     Outputs:
         Alignments namedtuple or None
     '''
-    # build the fast search hash tables
+    # search the mass tables
     bs, bd, ys, yd = search_kmers_hash(spectrum, kmermasses.bs, 20), \
                     search_kmers_hash(spectrum, kmermasses.bd, 20), \
                     search_kmers_hash(spectrum, kmermasses.ys, 20), \
