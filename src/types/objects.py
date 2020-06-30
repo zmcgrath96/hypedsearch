@@ -5,6 +5,22 @@ Named tuples for lighter-weight object like interaction
 '''
 
 '''
+DatabaseEntry: 
+    Holds a protein's information 
+
+    Properties:
+        name:           (str) name of the protein
+        sequence:       (str) Amino acids describing the protein
+        id:             (any) identifier of the protein
+        readable_name:  (str) (optional) the easier to read human readable name of the protein
+'''
+DatabaseEntry = namedtuple(
+    'DatabaseEntry',
+    ['name', 'sequence', 'id', 'readable_name'],
+    defaults=['', '', '', '']
+)
+
+'''
 Spectrum:
     Holds information regarding an MS or MS/MS spectrum
 

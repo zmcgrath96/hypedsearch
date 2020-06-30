@@ -2,7 +2,7 @@ from src.file_io import mzML
 from src.identfication.search import search_kmers_hash
 from src.identfication.alignment import attempt_alignment
 from src.types.database import Database
-from src.types.objects import Spectrum, MassSequence, KmerMasses, KmerMassesResults, Alignments
+from src.types.objects import Spectrum, MassSequence, KmerMasses, KmerMassesResults, Alignments, DatabaseEntry
 from src.scoring import mass_comparisons
 from src.spectra.gen_spectra import gen_spectrum
 
@@ -47,60 +47,62 @@ def build_kmermasses(
     # keep track of what kmers we've seen to avoid re-analyzing and 
     # inserting kmers we've seen before
     kmer_tracker = defaultdict(str)
+
+    prot_entry: DatabaseEntry
     
-    verbose and print(f'Indexing database for k={max_peptide_len}...')
-    
-    # set the kmer size the the max peptide length
-    database.set_max_len(max_peptide_len)
+    for i, prot_entry in enumerate(database):
 
-    # index in order to get all of the possible max length kmers
-    database.index()
+        verbose and print(f'Looking at protein {i + 1}/{len(database)}\r', end='')
 
-    verbose and print('Done')
-    
-    # database metadata keys are the max length kmers found in the database
-    mdl = len(database.metadata.keys())
-    
-    for i, kmer in enumerate(list(database.metadata.keys())):
-        if len(kmer) < min_peptide_len: 
-            continue
+        # go through the kmers for the b sequences
+        for j in range(len(prot_entry.sequence) - min_peptide_len):
 
-        verbose and print(f'Looking at kmer {i + 1}/{mdl}\r', end='')
-        
-        # generate singly and doubly b and y ion spectra
-        kmer_spec_b_s = gen_spectrum(kmer, ion='b', charge=1)['spectrum']
-        kmer_spec_b_d = gen_spectrum(kmer, ion='b', charge=2)['spectrum']
-        kmer_spec_y_s = gen_spectrum(kmer, ion='y', charge=1)['spectrum']
-        kmer_spec_y_d = gen_spectrum(kmer, ion='y', charge=2)['spectrum']
-        
-        for i in range(min_peptide_len, len(kmer)+1):
+            # make a kmer sequence. Do the max (to generate the kmer spec once) then 
+            # just iterate through it
+            kmer_len = max_peptide_len if j + max_peptide_len <= len(prot_entry.sequence) \
+                else len(prot_entry.sequence) - j
+            kmer = prot_entry.sequence[j:j+kmer_len]
 
-            # iterate from min to max and take left to right for b, right to left for y
-            subseq_b = kmer[:i]
-            subseq_y = kmer[len(kmer)-i:]
+            # generate the singly and doubly b spectra
+            kmer_spec_b_s = gen_spectrum(kmer, ion='b', charge=1)['spectrum']
+            kmer_spec_b_d = gen_spectrum(kmer, ion='b', charge=2)['spectrum']
 
-            if subseq_y == 'NFEANTTIGRIRFH':
-                print(f'ADDING Y+ MASS {kmer_spec_y_s[i]} AND Y++ MASS {kmer_spec_y_d[i]}')
+            # iterate through the spectra and add the entry to the table
+            for k in range(min_peptide_len, kmer_len):
 
-            if 'NFEANTTIGRIRFH' in subseq_y:
-                print(f'NFEANTTIGRIRFH in sequence {subseq_y}')
-            
-            # check to see if we've seen this kmer as a b sequence before
-            if 'b' not in kmer_tracker[subseq_b]:
-                kmer_tracker[subseq_b] += 'b'
-        
-                # add singly and doubly entry for this sequence to the dictionary respectively
-                bs[math.floor(kmer_spec_b_s[i-1])].append(MassSequence(kmer_spec_b_s[i-1], subseq_b))
-                bd[math.floor(kmer_spec_b_d[i-1])].append(MassSequence(kmer_spec_b_d[i-1], subseq_b))
-            
-            # check to see if we've seen this kmer as a y sequence before
-            if 'y' not in kmer_tracker[subseq_y]:
-                kmer_tracker[subseq_y] += 'y'
-            
-                # add singly and doubly entry for this sequence to the dictionary respectively
-                ys[math.floor(kmer_spec_y_s[i-1])].append(MassSequence(kmer_spec_y_s[i-1], subseq_y))
-                yd[math.floor(kmer_spec_y_d[i-1])].append(MassSequence(kmer_spec_y_d[i-1], subseq_y))
-        
+                if 'b' in kmer_tracker[kmer[:k]]:
+                    continue
+
+                kmer_tracker[kmer[:k]] += 'b'
+
+                bs[math.floor(kmer_spec_b_s[k-1])].append(MassSequence(kmer_spec_b_s[k-1], kmer[:k]))
+                bd[math.floor(kmer_spec_b_d[k-1])].append(MassSequence(kmer_spec_b_d[k-1], kmer[:k]))
+             
+        # go through the kmers for the b sequences
+        for j in range(len(prot_entry.sequence) - min_peptide_len):
+
+            # make a kmer sequence. Do the max (to generate the kmer spec once) then 
+            # just iterate through it
+            kmer_len = max_peptide_len if j + max_peptide_len <= len(prot_entry.sequence) \
+                else len(prot_entry.sequence) - j
+
+            kmer = prot_entry.sequence[-j - kmer_len: -j] if j != 0 else prot_entry.sequence[-kmer_len:]
+
+            # generate the singly and doubly b spectra
+            kmer_spec_y_s = gen_spectrum(kmer, ion='y', charge=1)['spectrum']
+            kmer_spec_y_d = gen_spectrum(kmer, ion='y', charge=2)['spectrum']
+
+            # iterate through the spectra and add the entry to the tayle
+            for k in range(min_peptide_len, kmer_len):
+
+                if 'y' in kmer_tracker[kmer[-k:]]:
+                    continue
+
+                kmer_tracker[kmer[-k:]] += 'y'
+
+                ys[math.floor(kmer_spec_y_s[k-1])].append(MassSequence(kmer_spec_y_s[k-1], kmer[-k:]))
+                yd[math.floor(kmer_spec_y_d[k-1])].append(MassSequence(kmer_spec_y_d[k-1], kmer[-k:]))
+ 
     return KmerMasses(bs, bd, ys, yd)
 
 ###################################################################################

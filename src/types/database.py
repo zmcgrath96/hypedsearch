@@ -1,50 +1,9 @@
 from datrie import Trie
 import string
-from src.types.objects import KmerMetaData
+from src.types.objects import KmerMetaData, DatabaseEntry
 from collections import defaultdict
 from pyteomics import fasta
-
-class Entry:
-    '''
-    Class to contain protein entry information
-    '''
-    def __init__(self, name: str, sequence: str, readable_name='', id='', kmer=3):
-        '''
-        init
-
-        Inputs:
-            name:       string name of the protein
-            sequence:   string the amino acid sequence of the protein
-        kwargs:
-            readable_name:  string the easy to read name of the protein
-            id:             id of the protein from the source
-            kmer:           int the size of kmer to use for indexing
-        '''
-        self.name: str = name
-        self.sequence: str = sequence
-        self.readable_name: str = readable_name
-        self.id: str = id
-        self.kmers: list = None
-        self.k: int = None
-
-    ##################### Setters #####################
-    def set_kmer_len(self, k: int) -> None:
-        self.k = k
-
-    ##################### Public Methods #####################
-    def index(self) -> list:
-        '''
-        Index a protein by generating pairs from the protein of 
-        (kmer, start_position, end_position (inclusive))
-        
-        Outputs:
-            list of tuples in the form (kmer, start_position, end_position)
-        '''
-        kmers = [(self.sequence[i:i+self.k], i, i + self.k - 1) \
-                    for i in range(len(self.sequence) + self.k - 1)]
-        self.kmers = kmers
-        return self.kmers
-
+    
 class Database: 
     '''
     Database
@@ -79,6 +38,15 @@ class Database:
         self.metadata: dict = None
         self.verbose: bool = verbose
         self.tree: Trie = self.__build_tree()
+
+    ##################### Overloaded operators ################
+
+    def __iter__(self):
+        for _, entry in self.proteins.items():
+            yield entry
+
+    def __len__(self):
+        return len(self.proteins)
     
     ##################### Private Methods #####################
     def __build_tree(self) -> Trie:
@@ -112,7 +80,7 @@ class Database:
             dictionary of Entry class keyed by the protein name 
         '''
         prots = {}
-        e: Entry
+        e: DatabaseEntry
 
         # split the name on the OS value if it exists
         get_name = lambda name: name[:name.index('OS=')-1] if 'OS=' in name else name
@@ -137,7 +105,7 @@ class Database:
             seq = entry.sequence
 
             # make the entry and add it to prots
-            e = Entry(name, seq, name, id_)
+            e = DatabaseEntry(name, seq, id_, name)
             prots[name] = e
 
         return prots
@@ -153,36 +121,8 @@ class Database:
             None
         '''
         self.max_len = k
-
-    def index(self) -> None:
-        '''
-        Create an indexing of a database by the kmer size. The indexing information 
-        is saved in the self.metadata attribute as Kmer namedtuple instances
-
-        Inputs:
-            None
-        Outputs: 
-            None
-        '''
-        kmers = defaultdict(list)
-        e: Entry
-
-        for name, e in self.proteins.items():
-            
-            # index the entry and add it to my index
-            e.set_kmer_len(self.max_len)
-            mers = e.index()
-
-            # add the kmer with protein, starting and ending position into kmers dict
-            for mer, start_pos, end_pos in mers:
-                pairing = KmerMetaData(name, start_pos, end_pos)
-                kmers[mer].append(pairing)
-
-        # set my metadata and entries
-        self.verbose and print('{} unique kmers'.format(len(kmers.keys())))
-        self.metadata = kmers
         
-    def get_entry_by_name(self, name: str) -> Entry:
+    def get_entry_by_name(self, name: str) -> DatabaseEntry:
         '''
         Get a protein entry from the database
 
@@ -191,7 +131,7 @@ class Database:
         Outputs:
             Entry class of the protein. Empty Entry if not found
         '''
-        return self.proteins.get(name, Entry('', ''))
+        return self.proteins.get(name, DatabaseEntry())
 
     def add_entry(
         self, 
@@ -215,17 +155,8 @@ class Database:
         if protein_name in self.proteins:
             return False
 
-        e = Entry(protein_name, protein_sequnece, human_readable_name, protein_id, self.min_len)
+        e = DatabaseEntry(protein_name, protein_sequnece, protein_id, human_readable_name)
         self.proteins[protein_name] = e 
-
-        if self.metadata:
-            # we need to index this bad boi
-            mers = e.index()
-            for mer, start_pos, end_pos in mers:
-
-                # if we haven't found this kmer before, add it
-                pairing = (protein_name, start_pos, end_pos)
-                self.metadata[mer].append(pairing)
 
         # add it to the tree
         if not self.tree:
