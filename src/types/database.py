@@ -1,4 +1,4 @@
-from datrie import Trie
+from suffix_tree import Tree
 import string
 from src.types.objects import KmerMetaData, DatabaseEntry
 from collections import defaultdict
@@ -37,7 +37,7 @@ class Database:
         self.max_len: int = max_len
         self.metadata: dict = None
         self.verbose: bool = verbose
-        self.tree: Trie = self.__build_tree()
+        self.tree: Tree = self.__build_tree()
 
     ##################### Overloaded operators ################
 
@@ -49,21 +49,21 @@ class Database:
         return len(self.proteins)
     
     ##################### Private Methods #####################
-    def __build_tree(self) -> Trie:
+    def __build_tree(self) -> Tree:
         '''
-        Add a prefix tree to the database
+        Add a suffix tree to the database
         '''
-        t = Trie(string.ascii_uppercase)
+        t = Tree()
         plen = len(self.proteins)
         i = 0
-        for key, value in self.proteins.items():
+
+        value: DatabaseEntry
+        for _, value in self.proteins.items():
             self.verbose and print(f'Adding protein {i + 1}/{plen} to tree\r', end='')
             i += 1
 
-            # add each subsequence to the tree
-            for j in range(len(value.sequence) - self.min_len):
-                subseqlen = self.max_len if j + self.max_len < len(value.sequence) - 1 else len(value.sequence) - j
-                t[value.sequence[j:j+subseqlen]] = key
+            # add it to the tree
+            t.add(value.name, value.sequence)
     
         return t
 
@@ -162,9 +162,6 @@ class Database:
         if not self.tree:
             self.tree = self.__build_tree()
 
-        else:
-            for i in range(len(protein_sequnece) - self.min_len):
-                subseqlen = self.max_len if i + self.max_len < len(protein_sequnece) -1 else len(protein_sequnece) - i
-                self.tree[protein_sequnece[i:i+subseqlen]] = protein_name
+        self.tree.add(protein_name, protein_sequnece)
 
         return True

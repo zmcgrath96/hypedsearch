@@ -261,12 +261,12 @@ def align_b_y(b_results: list, y_results: list, db: Database) -> list:
     for b_seq in b_results:
 
         # get all the b proteins
-        bproteins = [id_ for id_ in db.tree.values(b_seq)]
+        bproteins = [id_ for id_, _ in db.tree.find_all(b_seq)]
 
         for y_seq in y_results:
 
             # ge the y proteins
-            yproteins = [id_ for id_  in db.tree.values(y_seq)]
+            yproteins = [id_ for id_, _ in db.tree.find_all(y_seq)]
             
             # the sequence is from the same protein, try and overlap it
             if any([x in yproteins for x in bproteins]):
@@ -578,7 +578,7 @@ def get_parents(seq: str, db: Database) -> (list, list):
     Outputs:
         (list, list) lists of parents
     '''
-    get_sources = lambda s: [x for x in db.tree.values(s)]
+    get_sources = lambda s: [x for x, _ in db.tree.find_all(s)]
 
     # If the sequence is hybrid, split it to find each parent
     if hyb_alignment_pattern.findall(seq):
@@ -635,7 +635,7 @@ def replace_ambiguous_hybrids(hybrid_alignments: list, db: Database) -> list:
         possible = all_perms_of_s(nonhyb, 'LI')
 
         # if we had no other permutations and found a nonhybrid, add it
-        if len(possible) == 0 and db.tree.has_keys_with_prefix(nonhyb):
+        if len(possible) == 0 and db.tree.find(nonhyb):
             ret.append((nonhyb, None))
             added = True
 
@@ -646,7 +646,7 @@ def replace_ambiguous_hybrids(hybrid_alignments: list, db: Database) -> list:
             for p in possible:
 
                 # if this permutation exists as a nonhybrid, return it
-                if db.tree.has_keys_with_prefix(p):
+                if db.tree.find(p):
                     ret.append((p, None))
                     added = True
                     break
