@@ -239,6 +239,4 @@ def optimized_compare_masses(observed: list, reference: list, ppm_tolerance=20, 
             streak = 0
             last = False
     
-    # score += max_streak
-    # score /= float(len(observed))
-    return score 
+    return score

@@ -46,7 +46,9 @@ def write_mzml(file_name, spectra, title_prefix='Spectrum ', output_dir='./'):
         spec.set_peaks([spectrum['spectrum'], i])
         spec.setMSLevel(2)
         prec = Precursor()
-        prec.setCharge(2)
+        # check to see if a precursor charge was provided
+        pc = 2 if 'precursor_charge' not in spectrum else spectrum['precursor_charge']
+        prec.setCharge(pc)
         prec.setMZ(spectrum['precursor_mass'])
         spec.setPrecursors([prec])
         spec.sortByPosition()
