@@ -301,12 +301,26 @@ def result_filtering(
         seqs = []
         v: list
         for k, v in d.items():
-       
+            
+            # find take the sequence that has the greatest buildup 
             reduced_seq = overlap_assembler(list(set(v)), ion)
 
+            # if it can't be found, take the highest scoring one
             if reduced_seq is None:
-                seqs.append(str(k))
-                continue
+
+                # pair the scores with the seqeunces
+                score_pairs = [(seq, sum(score_subsequence(spectrum.spectrum, seq, ppm_tolerance))) \
+                    for seq in list(set([str(k)] + v))]
+
+                # get the highest score
+                max_score = max(score_pairs, key=itemgetter(1))[1]
+
+                # if theres more than 1 top score, make it k, otherwise the max score
+                if [x[1] for x in score_pairs].count(max_score) > 1:
+                    reduced_seq = str(k)
+
+                else:
+                    reduced_seq = [x[0] for x in score_pairs if x[1] == max_score][0]
 
             seqs.append(reduced_seq)
         return seqs
@@ -362,6 +376,9 @@ def result_filtering(
 
     filtered_b_results = filter_scores(b_results)
     filtered_y_results = filter_scores(y_results)
+
+    # print(f'B results after filtering:\n{filtered_b_results}')
+    # print(f'Y results after filtering:\n{filtered_y_results}')
 
     # if we have nothing, take the top 5 scores
     if len(filtered_b_results) == 0:

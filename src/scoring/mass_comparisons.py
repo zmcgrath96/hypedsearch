@@ -1,6 +1,7 @@
 from src.spectra.gen_spectra import calc_masses
-from bisect import bisect
 from src.utils import ppm_to_da
+
+from bisect import bisect
 
 def cmp_spectra_spectra__JAN_2020(spec: list, reference: list) -> float:
     '''
@@ -182,7 +183,7 @@ def compare_sequence_sequence_ion_type(spectra: str, reference: str, ion: str) -
     reference_ions , _= calc_masses(reference, ion=ion)
     return compare_masses(spectra_ions, reference_ions)
 
-def optimized_compare_masses(observed: list, reference: list, ppm_tolerance=20, needs_sorted=False) -> float:
+def optimized_compare_masses__MAY(observed: list, reference: list, ppm_tolerance=20, needs_sorted=False) -> float:
     '''
     CREATED MAY 19 2020
     Score two spectra against eachother. Simple additive scoring with bonuses for streaks
@@ -238,5 +239,41 @@ def optimized_compare_masses(observed: list, reference: list, ppm_tolerance=20, 
         else:
             streak = 0
             last = False
+    
+    score += max_streak
+    return score
+
+
+def optimized_compare_masses(observed: list, reference: list, ppm_tolerance=20, needs_sorted=False) -> float:
+    '''
+    CREATED JULY 1 2020
+    Score two spectra against eachother. Simple additive scoring of ions found divided by the reference
+
+    Inputs:
+        observed:       (list of floats) spectrum being scored
+        reference:      (list of floats) reference spectrum to score observed againsts
+    kwargs:
+        ppm_tolerance:  (float) the mass error tolerance allowed. Default=20
+        needs_sorted:   (bool) the observed mass needs to be sorted before binary search. Default=False
+    Outputs:
+        score:      float score 
+    '''
+    if len(observed) == 0 or len(reference) == 0:
+        return 0.0
+
+    if needs_sorted:
+        observed.sort()
+        
+    def boundaries(mass):
+        tol = ppm_to_da(mass, ppm_tolerance)
+        return [mass - tol, mass + tol]
+                
+    # calculate the boundaries for each of the reference masses for binary search
+    observed_boundaries = []
+    for obs in observed:
+        observed_boundaries += boundaries(obs)
+        
+    # local variables for score
+    score = sum([1 for ref in reference if bisect(observed_boundaries, ref) % 2])
     
     return score

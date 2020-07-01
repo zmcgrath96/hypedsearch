@@ -708,9 +708,7 @@ def attempt_alignment(
     st = time.time()
     a = align_b_y(b_results, y_results, db)
 
-
     DEBUG and print(f'First alignment round took {time.time() - st} time resulting in {len(a)} alignments')
-
 
     # seperate the hybrids from the non hybrids for later analysis
     nonhyba, hyba = [], []
