@@ -4,7 +4,7 @@ from src.identfication.alignment import attempt_alignment
 from src.types.database import Database
 from src.types.objects import Spectrum, MassSequence, KmerMasses, KmerMassesResults, Alignments, DatabaseEntry
 from src.scoring import mass_comparisons
-from src.spectra.gen_spectra import gen_spectrum
+from src.sequence.gen_spectra import gen_spectrum
 
 from collections import defaultdict
 import math 

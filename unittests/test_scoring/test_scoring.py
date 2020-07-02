@@ -1,6 +1,6 @@
 import unittest
 from src.scoring import scoring
-from src.spectra.gen_spectra import gen_spectrum
+from src.sequence.gen_spectra import gen_spectrum
 from src.types.objects import Spectrum
 
 class test_scoring(unittest.TestCase):

@@ -7,7 +7,7 @@ module_path = os.path.abspath(os.path.join('../..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
     
-from src.spectra.gen_spectra import gen_spectrum
+from src.sequence.gen_spectra import gen_spectrum
 from random import randint, uniform
 from collections import namedtuple
 import numpy as np

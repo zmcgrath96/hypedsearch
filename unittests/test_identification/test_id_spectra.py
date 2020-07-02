@@ -1,7 +1,7 @@
 import unittest
 from src.identfication import id_spectra
 from src.types.database import Database
-from src.spectra.gen_spectra import gen_spectrum
+from src.sequence.gen_spectra import gen_spectrum
 import math
 
 class test_id_spectra(unittest.TestCase):

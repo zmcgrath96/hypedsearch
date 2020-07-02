@@ -1,7 +1,7 @@
 import unittest
 from src.identfication import search
 from src.types.objects import Spectrum, MassSequence
-from src.spectra.gen_spectra import gen_spectrum
+from src.sequence.gen_spectra import gen_spectrum
 from collections import defaultdict
 import math
 

@@ -3,7 +3,7 @@ from src.scoring.scoring import score_subsequence, backbone_score, precursor_dis
 from src.identfication.filtering import result_filtering, mean_filtering
 from src.types.objects import Spectrum, KmerMassesResults, SequenceAlignment, HybridSequenceAlignment
 from src.types.database import Database
-from src.spectra.gen_spectra import gen_spectrum
+from src.sequence.gen_spectra import gen_spectrum
 
 from collections import defaultdict
 import re 

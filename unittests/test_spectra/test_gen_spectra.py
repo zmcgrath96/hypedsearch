@@ -1,5 +1,5 @@
 import unittest
-from src.spectra import gen_spectra
+from src.sequence import gen_spectra
 class test_gen_spectra(unittest.TestCase):
     def setUp(self):
         # No U because its not a part of the primary 20

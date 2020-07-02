@@ -1,7 +1,7 @@
 from src.types.objects import KmerMassesResults, Spectrum
 from src.scoring.scoring import score_subsequence, backbone_score, ion_backbone_score, intensity_ion_backbone_score, xcorr
 from src.utils import insort_by_index, make_sparse_array
-from src.spectra.gen_spectra import gen_spectrum
+from src.sequence.gen_spectra import gen_spectrum
 
 from statistics import mean, stdev
 from typing import Iterable

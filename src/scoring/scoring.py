@@ -1,5 +1,5 @@
 from src.scoring import mass_comparisons
-from src.spectra import gen_spectra
+from src.sequence import gen_spectra
 from src.types.objects import Spectrum
 from src.utils import ppm_to_da
 

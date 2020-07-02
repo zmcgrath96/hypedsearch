@@ -1,7 +1,7 @@
 import unittest
 from src.identfication import filtering
 from src.types.objects import Spectrum
-from src.spectra.gen_spectra import gen_spectrum
+from src.sequence.gen_spectra import gen_spectrum
 from collections import namedtuple
 
 class test_filtering(unittest.TestCase):

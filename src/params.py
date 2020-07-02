@@ -11,6 +11,11 @@ OUTPUT_DIRECTORY = '/Users/zacharymcgrath/Desktop/Experiment output/filtered_NOD
 MIN_PEPTIDE_LEN = 3
 # maximum length peptide to look for
 MAX_PEPTIDE_LEN = 30
+# the digest performed on the sample. Current options: [tryptic]
+# leave blank if you would like to perform digest-free search
+DIGEST = 'tyrptic'
+# the number of digest sites that could have been missed
+MISSED_CLEAVAGES = 2
 # tolerance (in ppm) to allow when matching m/z peaks
 PPM_TOLERANCE = 20
 # tolerance (in Da) to allow when matching precursor masses
