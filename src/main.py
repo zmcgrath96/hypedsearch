@@ -8,7 +8,7 @@ Description:
 Main file for hypedsearch. Handles input parameters and flow of the program
 '''
 import argparse
-from src import utils, runner
+from src import utils, runner, params
 import sys
 
 def stringtobool(s: str) -> bool:
@@ -17,43 +17,66 @@ def stringtobool(s: str) -> bool:
         return False
     return True
 
+def set_args(args) -> dict:
+
+    # check if we use the params file or the user arguments
+    use_params = stringtobool(args.params)
+
+    spectra_folder = args.spectra_folder if not use_params else params.SPECTRA_FOLDER
+    database_file = args.database_file if not use_params else params.DATABASE_FILE
+    output_dir = args.output_dir if not use_params else params.OUTPUT_DIRECTORY
+    min_peptide_len = args.min_peptide_len if not use_params else params.MIN_PEPTIDE_LEN
+    max_peptide_len = args.max_peptide_len if not use_params else params.MAX_PEPTIDE_LEN
+    ppm_tolerance = args.tolerance if not use_params else params.PPM_TOLERANCE
+    precursor_tolerance = args.precursor_tolerance if not use_params else params.PRECURSOR_TOLERANCE
+    verbose = stringtobool(args.verbose) if not use_params else params.VERBOSE
+    scoring_alg = args.scoring_alg if not use_params else params.SCORING_ALG
+    peak_filter = args.peak_filter if not use_params else params.PEAK_FILTER
+    relative_abundance_filter = args.rel_abund_filter if not use_params else params.RELATIVE_ABUNDANCE_FILTER
+    debug = params.DEBUG
+
+    ############## Argument checking ################
+    if not utils.is_dir(spectra_folder):
+        print(f'Error: {spectra_folder} is not a real path. Path to directory with spectra files is necessary.')
+        sys.exit(0)
+    if not utils.is_fasta(database_file) or not utils.is_file(database_file):
+        print(f'Error: {database_file} is not a valid .fasta file. .fasta file needed.')
+        sys.exit(0)
+
+    # make the output directory
+    output_dir = utils.make_valid_dir_string(output_dir)
+    utils.make_dir(output_dir)
+
+    return {
+        'spectra_folder': spectra_folder,
+        'database_file': database_file,
+        'output_dir': output_dir,
+        'min_peptide_len': min_peptide_len,
+        'max_peptide_len': max_peptide_len,
+        'tolerance': ppm_tolerance,
+        'precursor_tolerance': precursor_tolerance,
+        'verbose': verbose, 
+        'scoring_alg': scoring_alg, 
+        'peak_filter': peak_filter, 
+        'relative_abundance_filter': relative_abundance_filter,
+        'DEBUG': debug
+    }
 
 ##############################################################
 
 def main(args: object) -> None:
-    ############## Argument checking ################
-    if not utils.is_dir(args.spectra_folder):
-        print('Error: {} is not a real path. Path to directory with spectra files is necessary.')
-        sys.exit(0)
-    if not utils.is_fasta(args.database_file) or not utils.is_file(args.database_file):
-        print('Error: {} is not a valid .fasta file. .fasta file needed.')
-        sys.exit(0)
+    # get the arguments 
+    arguments = set_args(args)
 
-    output_dir = utils.make_valid_dir_string(args.save_dir)
-    utils.make_dir(output_dir)
-    ###################  Run  #######################
-    arguments = {
-        'spectra_folder': args.spectra_folder,
-        'database_file': args.database_file,
-        'output_dir': output_dir,
-        'min_peptide_len': args.min_peptide_len,
-        'max_peptide_len': args.max_peptide_len,
-        'tolerance': args.tolerance,
-        'precursor_tolerance': args.precursor_tolerance,
-        'verbose': stringtobool(args.verbose), 
-        'scoring_alg': args.scoring_alg, 
-        'peak_filter': args.peak_filter, 
-        'relative_abundance_filter': args.rel_abund_filter,
-        'DEBUG': False
-    }
     runner.run(arguments)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Tool for identifying proteins, both hybrid and non hybrid from MS/MS data')
 
-    parser.add_argument('spectra_folder', type=str, metavar='SF', help='Path to folder containing spectra files.')
-    parser.add_argument('database_file', type=str, metavar='DB', help='Path to .fasta file containing proteins')
-    parser.add_argument('--output-dir', dest='save_dir', type=str, default='~/', help='Directory to save all figures. Default=~/')
+    parser.add_argument('--spectra_folder', dest='spectra_folder', type=str, default='./', help='Path to folder containing spectra files.')
+    parser.add_argument('--database_file', dest='database_file', type=str, default='./', help='Path to .fasta file containing proteins')
+    parser.add_argument('--output-dir', dest='output_dir', type=str, default='~/', help='Directory to save all figures. Default=~/')
+    parser.add_argument('--params', dest='params', type=bool, default=False, help='Use the params.py file adjacent to main.py instead of using command line arguments. Default=False')
     parser.add_argument('--min-peptide-len', dest='min_peptide_len', type=int, default=5, help='Minimum peptide length to consider. Default=5')
     parser.add_argument('--max-peptide-len', dest='max_peptide_len', type=int, default=20, help='Maximum peptide length to consider. Default=20')
     parser.add_argument('--tolerance', dest='tolerance', type=int, default=20, help='ppm tolerance to allow in search. Deafult=20')
