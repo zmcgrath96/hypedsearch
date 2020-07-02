@@ -23,6 +23,7 @@ def run(args: dict) -> None:
             min_peptide_len:            (int) minimum peptide length to consider
             max_peptide_len:            (int) maximum peptide length to consider
             tolerance:                  (float) the ppm tolerance to allow in search
+            precursor_tolerance:        (float) the tolerance (in Da) to allow when matching precursors
             peak_filter:                (int) the number of peaks to filter by 
             relative_abundance_filter:  (float) the percentage of the total abundance a peak must
                                             be to pass the filter
@@ -46,6 +47,7 @@ def run(args: dict) -> None:
         min_peptide_len=args['min_peptide_len'], 
         max_peptide_len=args['max_peptide_len'], 
         ppm_tolerance=args['tolerance'], 
+        precursor_tolerance=args['precursor_tolerance'],
         peak_filter=args['peak_filter'],
         relative_abundance_filter=args['relative_abundance_filter'],
         verbose=True, 

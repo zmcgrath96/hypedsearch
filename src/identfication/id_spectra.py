@@ -116,6 +116,7 @@ def id_spectrum(
     min_peptide_len: int, 
     n=3, 
     ppm_tolerance=20, 
+    precursor_tolerance=1,
     scoring_alg='ibb', 
     DEBUG=False
 ) -> Alignments:
@@ -124,12 +125,13 @@ def id_spectrum(
     The top n results are returned. If no alignments can be created, None is returned.
 
     Inputs:
-        spectrum:           (Spectrum) the spectrum to id
-        kmermasses:         (KmerMasses) hash tables with al the necessary dictionaries
+        spectrum:               (Spectrum) the spectrum to id
+        kmermasses:             (KmerMasses) hash tables with al the necessary dictionaries
     kwargs:
-        n:                  (int) number of alignments to return for each spectrum. Default=3
-        ppm_tolerance:      (int) the ppm tolerance to allow when searching. Default=20
-        scoring_alg:        (str) the name of the scoring algoirhtm to use. Options are 'bb', 'ion', 'ibb'. Default=bb
+        n:                      (int) number of alignments to return for each spectrum. Default=3
+        ppm_tolerance:          (int) the ppm tolerance to allow when searching. Default=20
+        precursor_tolerance:    (float) the tolerance to allow when matching precusor masses. Default=1
+        scoring_alg:            (str) the name of the scoring algoirhtm to use. Options are 'bb', 'ion', 'ibb'. Default=bb
     Outputs:
         Alignments namedtuple or None
     '''
@@ -154,7 +156,7 @@ def id_spectrum(
         min_peptide_len, 
         ppm_tolerance=ppm_tolerance, 
         scoring_alg=scoring_alg, 
-        precursor_tolerance=3, 
+        precursor_tolerance=precursor_tolerance, 
         DEBUG=DEBUG
     )
     
@@ -171,6 +173,7 @@ def id_spectra(
     peak_filter=0, 
     relative_abundance_filter=0.0,
     ppm_tolerance=20, 
+    precursor_tolerance=1, 
     scoring_alg='ibb', 
     DEBUG=False
 ) -> dict:
@@ -179,14 +182,15 @@ def id_spectra(
     Amino Acids that best describes the spectrum
 
     Inputs:
-        spectra_files:      (list of strings) of file names of spectra
-        database_file:      (string) full path to a .fasta database
+        spectra_files:          (list of strings) of file names of spectra
+        database_file:          (string) full path to a .fasta database
     kwargs: 
-        verbose:            (bool) whether or not to print messages. Default=True
-        min_peptide_len:    (int) minimum length sequence to consider for alignment. Default=5
-        max_peptide_len:    (int) maximum length sequence to consider for alignemtn. Default=20
-        ppm_tolerance:      (int) tolerance for ppm to include in search. Default=20
-        scoring_alg:        (str) the scoring algorithm to use. Either 'bb' or 'ion'. Default=bb
+        verbose:                (bool) whether or not to print messages. Default=True
+        min_peptide_len:        (int) minimum length sequence to consider for alignment. Default=5
+        max_peptide_len:        (int) maximum length sequence to consider for alignemtn. Default=20
+        ppm_tolerance:          (int) tolerance for ppm to include in search. Default=20
+        precursor_tolerance:    (float) the tolerance to allow when matching precusor masses. Default=1
+        scoring_alg:            (str) the scoring algorithm to use. Either 'bb' or 'ion'. Default=bb
     Outputs:
         dict containing the results. 
         All information is keyed by the spectrum file name with scan number appended 
@@ -220,7 +224,17 @@ def id_spectra(
             verbose and print('Analyzing spectrum {}/{}[{}%]\r'.format(j + 1, len(spectra), int(float(j)/float(len(spectra)) * 100)), end='')            
             
             # align this spectrum
-            aligned_spectrum = id_spectrum(spec, db, kmermasses, min_peptide_len, result_count, ppm_tolerance=ppm_tolerance, scoring_alg=scoring_alg, DEBUG=DEBUG)
+            aligned_spectrum = id_spectrum(
+                spec,
+                 db,
+                 kmermasses,
+                 min_peptide_len,
+                 result_count,
+                 ppm_tolerance=ppm_tolerance,
+                 precursor_tolerance=precursor_tolerance,
+                 scoring_alg=scoring_alg,
+                DEBUG=DEBUG
+            )
             
             # if an alignment cannot be created, continue
             if aligned_spectrum is None:

@@ -325,7 +325,7 @@ def __get_surrounding_amino_acids(parent_sequence: str, sequence: str, count: in
 
     return flanking_pairs
 
-def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3) -> list:
+def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, tolerance=1) -> list:
     '''
     Try and add amino acids to get the closest precursor mass
 
@@ -335,6 +335,7 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
         db:         (Database) holds the protein sequences
     kwargs:
         gap:        (int) the number of additions allowed. Default=3
+        tolerance:  (float) the mass (in Da) tolerance to accept in a precursor distance. Default=1
     Outputs:
         (list) the sequence(s) with the closest precursor mass
     '''
@@ -389,7 +390,12 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
                                     new_prec = gen_spectrum(
                                         new_seq.replace('(', '').replace(')', '')
                                     )['precursor_mass']
-                                    filled_in.append((new_seq, abs(new_prec - spectrum.precursor_mass)))
+
+                                    # get the precursor distance, and if it is close enough, keep it
+                                    p_d = precursor_distance(spectrum.precursor_mass, new_prec)
+
+                                    if p_d <= tolerance:
+                                                            filled_in.append(new_seq)
 
                 # try all flanking of left right middle amino acids
                 else:
@@ -433,7 +439,12 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
                                             # get the new sequnce and precursor
                                             new_seq = ll + left_seq + lc + '-' + rc + right_seq + rr
                                             new_prec = gen_spectrum(new_seq.replace('-', ''))['precursor_mass']
-                                            filled_in.append((new_seq, abs(new_prec - spectrum.precursor_mass)))
+
+                                            # get the precursor distance, and if it is close enough, keep it
+                                            p_d = precursor_distance(spectrum.precursor_mass, new_prec)
+
+                                            if p_d <= tolerance:
+                                                                            filled_in.append(new_seq)
         
 
     # if its nonhybrid, try left and right side
@@ -450,18 +461,20 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
                 for i in range(gap + 1):
                     for j in range(gap - i + 1):
 
-                
                         # get the new sequence and its precursor mass. Add it to filled in list
                         new_seq = flanking_pair[0][gap-i:] + sequence + flanking_pair[1][:j]
 
                         new_prec = gen_spectrum(new_seq)['precursor_mass']
-                        filled_in.append((new_seq, abs(new_prec - spectrum.precursor_mass)))
-                    
-    # return the one(s) with the closest precursor
-    closest_precursor = min(filled_in, key=itemgetter(1))[1]
-    return [x[0] for x in filled_in if x[1] == closest_precursor]
 
-def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3) -> list:
+                        # get the precursor distance, and if it is close enough, keep it
+                        p_d = precursor_distance(spectrum.precursor_mass, new_prec)
+
+                        if p_d <= tolerance:
+                                    filled_in.append(new_seq)
+                    
+    return filled_in
+
+def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3, tolerance=1) -> list:
     '''
     Remove up to gap number of amino acids to try and match precursor mass
 
@@ -469,7 +482,9 @@ def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3) -> list:
         spectrum:   (Spectrum) the aligned spectrum
         sequence:   (str) the attempted string alignment
     kwargs:
-        gap:        (int) the total number of free amino acids to try
+        gap:        (int) the total number of free amino acids to try. Default=3
+        tolerance:  (float) the number (in Da) to allow as the tolerance for acceptable 
+                            precursor masses. Default=1
     Outputs:
         (list) the sequence(s) with the closest precursor mass
     '''
@@ -495,7 +510,12 @@ def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3) -> list:
 
                         # find the new precursor mass
                         new_prec = gen_spectrum(new_seq.replace('-', ''))['precursor_mass']
-                        attempted.append((new_seq, abs(new_prec - spectrum.precursor_mass)))
+
+                        # get the precursor distance, and if it falls within the tolerance, keep it
+                        p_d = precursor_distance(spectrum.precursor_mass, new_prec)
+                        
+                        if p_d <= tolerance:
+                                    attempted.append(new_seq)
 
             else:
                 
@@ -507,14 +527,18 @@ def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3) -> list:
                             if '(' in new_seq or ')' in new_seq else new_seq
 
                 new_prec = gen_spectrum(clean_seq)['precursor_mass']
-                attempted.append((new_seq, abs(new_prec - spectrum.precursor_mass)))
 
-    closest_precursor = min(attempted, key=itemgetter(1))[1]
-    return [x[0] for x in attempted if x[1] == closest_precursor]
+                # get the precursor distance, and if it is close enough, keep it
+                p_d = precursor_distance(spectrum.precursor_mass, new_prec)
+
+                if p_d <= tolerance:
+                    attempted.append(new_seq)
+
+    return attempted 
 
 
 
-def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3) -> list:
+def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3, tolerance=1) -> list:
     '''
     Try and fill in the gaps of an alignment. This is primarily focused on 
     filling in the gaps left by the difference in precursor mass. If we find that
@@ -526,6 +550,7 @@ def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
         db:         (Database) the database with string sequences
     kwargs:
         gap:        (int) the number of amino acids to accept. Default=3
+        tolerance:  (float) the mass (in Da) to accept as error in matching precursors. Default=1
     Outputs:
         (list) sequence(s) that may have filled in the gap
     '''
@@ -541,21 +566,36 @@ def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3) ->
     # get the theoretical precursor mass
     theory_precrusor = gen_spectrum(clean_seq)['precursor_mass']
 
-    # if there are too many missing, or not enough to add any, return 
-    if gap * max_mass < abs(spectrum.precursor_mass - theory_precrusor) \
-        or abs(spectrum.precursor_mass - theory_precrusor) < min_mass:
-        return [sequence]
+    # get the precursor distance 
+    p_d = precursor_distance(spectrum.precursor_mass, theory_precrusor)
+
+    # if there are too many to add or subtract, return None
+    if gap * max_mass < p_d:
+        return [None]
+
+    # if we can't add or subtract because our mass is too close, check to see if it
+    # falls within our tolerance
+    if p_d < min_mass:
+
+        # if we are within the tolerance, return the sequence
+        if p_d <= tolerance:
+            return [sequence]
+
+        # otherwise return none
+        return [None]
 
     # determine HOW many amino acids we could be off
-    num_off = min(math.ceil(abs(spectrum.precursor_mass - theory_precrusor) / max_mass) + 1, gap)
+    num_off = min(math.ceil(p_d / max_mass) + 1, gap)
 
     # add amino acids
     if spectrum.precursor_mass > theory_precrusor:
-        return __add_amino_acids(spectrum, sequence, db, num_off)
+
+        return __add_amino_acids(spectrum, sequence, db, num_off, tolerance)
 
     # subtract amino acids:
     else:
-        return __remove_amino_acids(spectrum, sequence, num_off)
+
+        return __remove_amino_acids(spectrum, sequence, num_off, tolerance)
 
 
 def get_parents(seq: str, db: Database) -> (list, list):
@@ -727,31 +767,48 @@ def attempt_alignment(
 
     # try and fill in the gaps that are in any alignments
     st = time.time()
-    closer_precursors = list(flatten([
-        fill_in_precursor(spectrum, x[0] if x[1] is None else x[1], db, gap=4) \
-            for x in nonhyba + updated_hybrids
-    ]))
+    precursor_matches = []
+
+    for sequence_pairs in nonhyba + updated_hybrids:
+        
+        # take the sequence. If hybrid, take the hybrid, otherwise the non hybrid
+        sequence = sequence_pairs[0] if sequence_pairs[1] is None else sequence_pairs[1]
+
+        # add the closer precursors to the list
+        p_ms = [
+            x for x in \
+            fill_in_precursor(spectrum, sequence, db, gap=4, tolerance=precursor_tolerance) \
+            if x is not None
+        ]
+
+        precursor_matches += p_ms
+
+  
     DEBUG and print(f'Filling in precursor took {time.time() - st} for {len(updated_hybrids + nonhyba)} sequences')
 
     # make tuples again
-    attempted = [
-        (x.replace('(', '').replace(')', '').replace('-', ''), x) if hyb_alignment_pattern.findall(x) \
-            else (x, None) for x in closer_precursors
-        ]
+    sequence_alignments = []
 
+    for precursor_match in precursor_matches:
+        
+        # add the tuple (non hybrid seq, hybrid seq) to the list
+        non_hyb_seq = precursor_match.replace('(', '').replace(')', '').replace('-', '')
+        hybrid_seq = None if not hyb_alignment_pattern.findall(precursor_match) else precursor_match
+
+        sequence_alignments.append((non_hyb_seq, hybrid_seq))
+
+ 
     # Make alignments into the namedtuple types SpectrumAlignments
     # and HybridSequenceAlignments
     alignments = []
     st = time.time()
-    for aligned_pair in attempted:
+    for aligned_pair in sequence_alignments:
 
         # get the alignment spectrum 
         alignemnt_spectrum_precursor = gen_spectrum(aligned_pair[0])
 
         # get the precursor distance. If its too big, continue
         p_d = precursor_distance(spectrum.precursor_mass, alignemnt_spectrum_precursor['precursor_mass'])
-        if p_d > precursor_tolerance:
-            continue
 
         # individual ion scores
         b_score = intensity_ion_backbone_score(spectrum, aligned_pair[0], 'b', ppm_tolerance)
