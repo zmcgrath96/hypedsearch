@@ -112,16 +112,10 @@ def id_spectra(
         and the values are list of SequenceAligment objects
     '''
 
-    # load the database into memory
+    # load the datbase into memory
     verbose and print('Loading database...')
-    db = Database(database_file, {}, min_peptide_len, max_peptide_len, verbose)
-    db = database.read_fasta(db, database_file)
+    db = database.build_or_load_db(Database(database_file, {}, min_peptide_len, max_peptide_len, verbose))
     verbose and print('\nDone.')
-
-    # build the kmermasses namedtuple object once for fast search
-    verbose and print('Building hashes for kmers...')
-    db = database.build(db)
-    verbose and print(f'\nDone.')
 
     # keep track of the results
     results = {}

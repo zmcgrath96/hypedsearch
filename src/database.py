@@ -1,6 +1,6 @@
 
 from src.objects import DatabaseEntry, KmerMasses, MassSequence, Spectrum, Database
-from src.utils import ppm_to_da
+from src.utils import ppm_to_da, make_dir, is_file
 from src.sequence.gen_spectra import gen_spectrum
 
 from collections import defaultdict
@@ -9,7 +9,101 @@ from suffix_tree import Tree
 
 import string
 import math
+import pickle
 
+def __make_db_file(db: Database) -> str:
+    '''
+    Make the name and directories to save the datbase into. The subdirectories
+    are made, but no file is made. The structure is as follows:
+
+        databases/<fasta_file_name>/f<min len>t<max len>.db
+
+    If no fasta file is made, then "noname" is used as the intermediate folder name
+
+    Inputs:
+        db:     (Databse) the database for which the file name is made for
+    Outputs:
+        (str) the name of the file (full path) for which the database is saved
+    '''
+    # make the database directory
+    db_file = './databases/'
+    make_dir(db_file)
+
+    # make the intermediate folder
+    db_file += db.fasta_file.split('/')[-1].replace('.fasta', '') + '/' \
+        if db.fasta_file is not None and db.fasta_file != '' else 'noname/'
+    make_dir(db_file)
+
+    # add the f t clause
+    db_file += f'f{db.min_len}t{db.max_len}.db'
+
+    return db_file
+
+
+def saved_db_exists(db: Database) -> bool:
+    '''
+    Check to see if a saved database exists
+
+    Inputs:
+        db:     (Database) the namedtuple with fasta file and min, max lens set to see if exists
+    Outputs:
+        (bool) True if the database exists, false otherwise
+    '''
+    db_file = __make_db_file(db)
+    
+    # if noname is the middle directory, return false
+    if 'noname' in db_file:
+        return False
+
+    print(f'{db_file} file exists: {is_file(db_file)}')
+    # return if the file exists
+    return is_file(db_file)
+
+
+def save_db(db: Database) -> bool:
+    '''
+    Pickle and dump the database to use again later. 
+
+    Inputs:
+        db:     (Database) the database to save
+    Outputs:
+        (bool) True if the database could be saved successfuly, False otherwise
+    '''
+    db_file = __make_db_file(db)
+
+    # try:
+    print(f'Saving to: {db_file}')
+    db = db._replace(tree=bytearray(db.tree))
+    pickle.dump(db, open(db_file, 'wb'), )
+    # except:
+    #     return False
+
+    return True
+
+
+def build_or_load_db(db: Database) -> Database:
+    '''
+    Load the database if it exists, otherwise build it
+
+    Inputs:
+        db:     (Database) the database tuple to store the new database into
+    Outputs:
+        (Database) the updated database
+    '''
+    if False:#saved_db_exists(db):
+        print('Loading saved database...')
+        db = pickle.load(open(__make_db_file(db), 'rb'))
+        print('Done')
+
+    else: 
+        db = read_fasta(db, db.fasta_file)
+        db = build(db)
+
+        # # save it 
+        # if not save_db(db):
+        #     print('WARNING: Could not save built database to file')
+
+    return db
 
 def read_fasta(db: Database, fasta_file: str, is_uniprot=False) -> dict:
     '''
@@ -26,6 +120,8 @@ def read_fasta(db: Database, fasta_file: str, is_uniprot=False) -> dict:
     prots = {}
     e: DatabaseEntry
     db = db._replace(fasta_file=fasta_file)
+
+    db.verbose and print('Loading fasta file into memory...')
 
     # split the name on the OS value if it exists
     get_name = lambda name: name[:name.index('OS=')-1] if 'OS=' in name else name
@@ -54,6 +150,9 @@ def read_fasta(db: Database, fasta_file: str, is_uniprot=False) -> dict:
         prots[name] = e
 
     db = db._replace(proteins=prots)
+
+    db.verbose and print('Done')
+
     return db
 
 
