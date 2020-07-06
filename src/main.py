@@ -27,8 +27,8 @@ def set_args(args) -> dict:
     output_dir = args.output_dir if not use_params else params.OUTPUT_DIRECTORY
     min_peptide_len = args.min_peptide_len if not use_params else params.MIN_PEPTIDE_LEN
     max_peptide_len = args.max_peptide_len if not use_params else params.MAX_PEPTIDE_LEN
-    digest = args.digest if not use_params else params.DIGEST
-    missed_cleavages = args.missed_cleavages if not use_params else params.MISSED_CLEAVAGES
+    # digest = args.digest if not use_params else params.DIGEST
+    # missed_cleavages = args.missed_cleavages if not use_params else params.MISSED_CLEAVAGES
     ppm_tolerance = args.tolerance if not use_params else params.PPM_TOLERANCE
     precursor_tolerance = args.precursor_tolerance if not use_params else params.PRECURSOR_TOLERANCE
     verbose = stringtobool(args.verbose) if not use_params else params.VERBOSE
@@ -81,13 +81,13 @@ if __name__ == '__main__':
     parser.add_argument('--params', dest='params', type=bool, default=False, help='Use the params.py file adjacent to main.py instead of using command line arguments. Default=False')
     parser.add_argument('--min-peptide-len', dest='min_peptide_len', type=int, default=5, help='Minimum peptide length to consider. Default=5')
     parser.add_argument('--max-peptide-len', dest='max_peptide_len', type=int, default=20, help='Maximum peptide length to consider. Default=20')
-    parser.add_argument('--digest', dest='digest', type=str, default='', help='The digest performed on the sample. Supported digests are [tryptic]. Leave blank if you want a digest free run. Default=""')
-    parser.add_argument('--missed-cleavages', dest='missed_cleavages', type=int, default=0, help='The number of digest sites that could be missed. Default=0')
+    # parser.add_argument('--digest', dest='digest', type=str, default='', help='The digest performed on the sample. Supported digests are [tryptic]. Leave blank if you want a digest free run. Default=""')
+    # parser.add_argument('--missed-cleavages', dest='missed_cleavages', type=int, default=0, help='The number of digest sites that could be missed. Default=0')
     parser.add_argument('--tolerance', dest='tolerance', type=int, default=20, help='ppm tolerance to allow in search. Deafult=20')
     parser.add_argument('--precursor-tolerance', dest='precursor_tolerance', type=float, default=1, help='The mass (in Da) tolerance to accept when matching precursor masses. Default=1')
     parser.add_argument('--peak-filter', dest='peak_filter', type=int, default=0, help='The number of peaks to take from a spectrum. The most abundant peaks will be taken. Leave blank if you want no filter or to use relative abundance filter. Defualt=0')
     parser.add_argument('--abundance_filter', dest='rel_abund_filter', type=float, default=0.0, help='Take only peaks from a spectrum where the abundance of the peak is >= the percentage give. Leave blank if you want no filter or to use peak filter. Default=0.0')
-    parser.add_argument('--score', dest='scoring_alg', type=str, default='ibb', help='Scoring algorithm to use. Options are [bb, ion, ibb] for backbone, ion, and ion backbone respectively. Default=bb')
+    parser.add_argument('--score', dest='scoring_alg', type=str, default='ibb', help='Scoring algorithm to use. Options are [bb, ion, ibb, iip] for backbone, ion, and ion backbone respectively. Default=bb')
     parser.add_argument('--verbose', dest='verbose', type=bool, default=True, help='Extra printing to console during run. Default=True')
     args = parser.parse_args()
     main(args)

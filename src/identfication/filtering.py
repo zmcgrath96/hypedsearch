@@ -1,5 +1,5 @@
 from src.types.objects import KmerMassesResults, Spectrum
-from src.scoring.scoring import score_subsequence, backbone_score, ion_backbone_score, intensity_ion_backbone_score, xcorr
+from src.scoring.scoring import score_subsequence, backbone_score, ion_backbone_score, intensity_ion_backbone_score, xcorr, ion_intensity_percentage
 from src.utils import insort_by_index, make_sparse_array
 from src.sequence.gen_spectra import gen_spectrum
 
@@ -257,6 +257,13 @@ def result_filtering(
         if 'iibb' == scoring_alg:
             return intensity_ion_backbone_score(spectrum, refseq, ion, ppm_tolerance) 
 
+        if 'iip' == scoring_alg:
+            return ion_intensity_percentage(spectrum, refseq, ppm_tolerance, ion)
+
+        if 'hybrid' == scoring_alg:
+            retindex = 0 if ion == 'b' else 1
+            return ion_intensity_percentage(spectrum, refseq, ppm_tolerance, ion) // 8 + score_subsequence(spectrum.spectrum, refseq, ppm_tolerance=ppm_tolerance)[retindex]
+
         # default to backbone score
         return backbone_score(spectrum, refseq, ppm_tolerance)
 
@@ -353,8 +360,8 @@ def result_filtering(
     b_results.sort(key=itemgetter(1), reverse=True)
     y_results.sort(key=itemgetter(1), reverse=True)
 
-    # print(f'B results before filtering:\n{b_results}')
-    # print(f'Y results before filtering:\n{y_results}')
+    print(f'B results before filtering:\n{b_results}')
+    print(f'Y results before filtering:\n{y_results}')
 
     # take the scores that pass our filter
     def filter_scores(l: list) -> list:

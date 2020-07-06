@@ -4,6 +4,7 @@ from src.types.objects import Spectrum
 from src.utils import ppm_to_da
 
 import numpy as np
+from bisect import bisect
 
 def score_subsequence(pepspec: list, subseq: str, ppm_tolerance=20) -> (float, float):
     '''
@@ -238,6 +239,44 @@ def intensity_ion_backbone_score(observed: Spectrum, reference: str, ion: str, p
     #extrapoints = sum([jc - 1 if jc > 1 else 0 for jc in jcount]) // 3
     
     return jcoverage# + extrapoints) * (ided_abundances / observed.total_intensity)
+
+def ion_intensity_percentage(observed: Spectrum, reference: str, ppm_tolerance: int, ion: str) -> int:
+    '''
+    The percentage the matched m/z values make up of the overall intensity. For example,
+    if 4 peaks are matched between the observed and reference and those peaks make up 10% of the
+    total intensity, 10 is returned. Spectrum m/z values should be sorted low to high with the intensity
+    values indexed in the same order as the m/z values
+
+    Inputs:
+        observed:       (Spectrum) observed spectrum
+        reference:      (str) the reference sequence
+        ppm_tolerance:  (int) the tolerance (in ppm) to allow when matching peaks
+    Output:
+        (int) rounded percentage value
+    '''
+    if len(reference) == 0:
+        return 0
+
+    # generate the spectrum for the reference sequence
+    refspec = gen_spectra.gen_spectrum(reference, ion=ion)['spectrum']
+        
+    def boundaries(mass):
+        tol = ppm_to_da(mass, ppm_tolerance)
+        return [mass - tol, mass + tol]
+                
+    # calculate the boundaries for each of the reference masses for binary search
+    reference_boundaries = []
+    for mz in refspec:
+        reference_boundaries += boundaries(mz)
+        
+    # get all indices where the observed gets a hit
+    idxes = [i for i, mz in enumerate(observed.spectrum) if bisect(reference_boundaries, mz) % 2]
+
+    # take the intensities at idxes and sum them
+    score = int( 100 * sum([observed.abundance[i] for i in idxes]) / observed.total_intensity)
+    
+    return score
+
 
 def precursor_distance(observed_precursor: float, reference_precursor: float) -> float:
     '''

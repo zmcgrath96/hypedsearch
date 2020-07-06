@@ -14,10 +14,19 @@ from bisect import bisect
 #                   PRE-SEARCH DATABASE FUNCTIONS
 ###################################################################################
 
+# def get_all_max_len_kmers(protein: str, missed_cleavages: int, min_len: int, max_len: int) -> list:
+#     '''
+#     Get all of the longest possible kmers from a protein string. If it is a digest, we call
+#     the digest function on the protein. Otherwise, we yeild all possible sequences
+#     that are max_len until we 
+#     '''
+
 def build_kmermasses(
     database: Database, 
     min_peptide_len: int, 
     max_peptide_len: int, 
+    # missed_cleavages: int,
+    # digest: str,
     verbose=False
 ) -> KmerMasses:
     '''

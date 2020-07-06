@@ -1,5 +1,5 @@
 from src.utils import insort_by_index, all_perms_of_s, make_sparse_array
-from src.scoring.scoring import score_subsequence, backbone_score, precursor_distance, xcorr, ion_backbone_score, intensity_ion_backbone_score, intensity_backbone_score
+from src.scoring.scoring import score_subsequence, backbone_score, precursor_distance, xcorr, ion_backbone_score, intensity_ion_backbone_score, intensity_backbone_score, ion_intensity_percentage
 from src.identfication.filtering import result_filtering, mean_filtering
 from src.types.objects import Spectrum, KmerMassesResults, SequenceAlignment, HybridSequenceAlignment
 from src.types.database import Database
@@ -818,7 +818,13 @@ def attempt_alignment(
         bb_score = backbone_score(spectrum, aligned_pair[0], ppm_tolerance)
 
         # sum of the ion scores
-        t_score = sum(score_subsequence(spectrum.spectrum, aligned_pair[0], ppm_tolerance))
+        sion = sum(score_subsequence(spectrum.spectrum, aligned_pair[0], ppm_tolerance))
+
+        # the ion intensity
+        iip_score = ion_intensity_percentage(spectrum, aligned_pair[0], ppm_tolerance, '')
+
+
+        t_score = bb_score // 8 + iip_score
 
         # backbone intensity
         bbi = intensity_backbone_score(spectrum, aligned_pair[0], ppm_tolerance)
