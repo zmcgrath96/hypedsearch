@@ -57,9 +57,29 @@ def __saved_db_exists(db: Database) -> bool:
     if 'noname' in db_file:
         return False
 
-    print(f'{db_file} file exists: {is_file(db_file)}')
     # return if the file exists
     return is_file(db_file)
+
+
+def __save_db(db: Database) -> bool:
+    '''
+    Pickle and dump the database to use again later. 
+
+    Inputs:
+        db:     (Database) the database to save
+    Outputs:
+        (bool) True if the database could be saved successfuly, False otherwise
+    '''
+    db_file = __make_db_file(db)
+
+    try:
+        print(f'Saving to: {db_file}')
+        pickle.dump(db, open(db_file, 'wb'))
+    except:
+        return False
+
+    return True
+    
 
 def __read_fasta(db: Database, fasta_file: str) -> dict:
     '''
@@ -111,93 +131,13 @@ def __read_fasta(db: Database, fasta_file: str) -> dict:
 
     return db
 
-########################## /Private Functions ##########################
 
-########################## Public Functions ##########################
-
-def save_db(db: Database) -> bool:
-    '''
-    Pickle and dump the database to use again later. 
-
-    Inputs:
-        db:     (Database) the database to save
-    Outputs:
-        (bool) True if the database could be saved successfuly, False otherwise
-    '''
-    db_file = __make_db_file(db)
-
-    # try:
-    print(f'Saving to: {db_file}')
-    db = db._replace(tree=bytearray(db.tree))
-    pickle.dump(db, open(db_file, 'wb'), )
-    # except:
-    #     return False
-
-    return True
-
-
-def build_or_load_db(db: Database) -> Database:
-    '''
-    Load the database if it exists, otherwise build it
-
-    Inputs:
-        db:     (Database) the database tuple to store the new database into
-    Outputs:
-        (Database) the updated database
-    '''
-    if False:#saved_db_exists(db):
-        print('Loading saved database...')
-        db = pickle.load(open(__make_db_file(db), 'rb'))
-        print('Done')
-
-    else: 
-        db = __read_fasta(db, db.fasta_file)
-        db = build(db)
-
-        # # save it 
-        # if not save_db(db):
-        #     print('WARNING: Could not save built database to file')
-
-    return db
-
-
-def get_proteins_with_subsequence(db: Database, subsequence: str) -> list:
-    '''
-    Find all proteins that have the subsequence provided
-
-    Inputs:
-        db:             (Database) the database with all of the proteins
-        subsequence:    (str) the subsequence to look for
-    Outputs:
-        (list) names of the proteins that contain the subsequence
-    '''
-    return list(db.proteins[db.proteins['sequence'].str.contains(subsequence)]['name'])
-
-
-def get_entry_by_name(db: Database, name: str) -> dict:
-    '''
-    Get a protein entry from the database
-
-    Inputs: 
-        db:         (Database) the database to search
-        name:       (str) name of the protein to get
-    Outputs:
-        (dict) Entry of the protein. Empty Entry if not found
-    '''
-    res = db.proteins[db.proteins['name'] == name].to_dict('r')
-
-    if len(res):
-        return res[0]
-    return None
-
-
-def build(
+def __build(
     db: Database
 ) -> Database:
     '''
     Build the database. In order to build, the fasta file should have been read and the database should
-    contain the proteins dictionary. Call "read_fasta" first. This function builds the internal 
-    KmerMasses object and the internal Tree 
+    contain the proteins dictionary. Call "read_fasta" first. This function builds pandas dataframes 
     
     Inputs: 
         db:         (Database) the database to build internal structures for
@@ -231,6 +171,8 @@ def build(
         f['sequence'] = s
         return f
 
+    db.verbose and print(f'Finding all subsequences in range {db.min_len} to {db.max_len}')
+
     # for each protein sequence:
     #   1. break it down to all the subsequences via breakdown function (list output)
     #   2. make it a dataframe (DataFrame output)
@@ -242,6 +184,9 @@ def build(
         .explode('sequence')    \
         .drop_duplicates('sequence')
 
+    db.verbose and print('Done.')
+    db.verbose and print(f'Indexing the masses for {len(a)} subsequences...')
+
     # for each of the subsequences that we created in a, spectrify it 
     # which creates a bs, bd, ys, yd column for each subsequence
     b = pd.DataFrame(list(a['sequence'].apply(spectrify)))
@@ -249,7 +194,68 @@ def build(
     # update db kmer_masses to be the dataframe
     db = db._replace(kmer_masses=b)
 
+    db.verbose and print('Done.')
+
     return db
+
+########################## /Private Functions ##########################
+
+########################## Public Functions ##########################
+
+
+def build_or_load_db(db: Database) -> Database:
+    '''
+    Load the database if it exists, otherwise build it
+
+    Inputs:
+        db:     (Database) the database tuple to store the new database into
+    Outputs:
+        (Database) the updated database
+    '''
+    if __saved_db_exists(db):
+        print('Loading saved database...')
+        db = pickle.load(open(__make_db_file(db), 'rb'))
+        print('Done')
+
+    else: 
+        db = __read_fasta(db, db.fasta_file)
+        db = __build(db)
+
+        # save it 
+        if not __save_db(db):
+            print('WARNING: Could not save built database to file')
+
+    return db
+
+
+def get_proteins_with_subsequence(db: Database, subsequence: str) -> list:
+    '''
+    Find all proteins that have the subsequence provided
+
+    Inputs:
+        db:             (Database) the database with all of the proteins
+        subsequence:    (str) the subsequence to look for
+    Outputs:
+        (list) names of the proteins that contain the subsequence
+    '''
+    return list(db.proteins[db.proteins['sequence'].str.contains(subsequence)]['name'])
+
+
+def get_entry_by_name(db: Database, name: str) -> dict:
+    '''
+    Get a protein entry from the database
+
+    Inputs: 
+        db:         (Database) the database to search
+        name:       (str) name of the protein to get
+    Outputs:
+        (dict) Entry of the protein. Empty Entry if not found
+    '''
+    res = db.proteins[db.proteins['name'] == name].to_dict('r')
+
+    if len(res):
+        return res[0]
+    return None
 
 
 def search(db: Database, observed: Spectrum, kmers: str, tolerance: float) -> list:

@@ -100,7 +100,7 @@ def id_spectra(
     # load the datbase into memory
     verbose and print('Loading database...')
     db = database.build_or_load_db(Database(database_file, min_peptide_len, max_peptide_len, verbose))
-    verbose and print('\nDone.')
+    verbose and print('Done.')
 
     # keep track of the results
     results = {}

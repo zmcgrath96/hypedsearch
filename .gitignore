@@ -1,8 +1,8 @@
 *.DS_Store
 *.pyc
 *pycache*
-*.fastax
 *.fasta
 /testing framework/data*
 /testing framework/data/testing_output/*
 *.vscode
+*databases*
