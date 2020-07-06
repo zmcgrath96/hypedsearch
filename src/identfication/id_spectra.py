@@ -1,7 +1,7 @@
 from src.file_io import mzML
 from src.identfication.alignment import attempt_alignment
 from src import database
-from src.objects import Spectrum, MassSequence, KmerMasses, KmerMassesResults, Alignments, DatabaseEntry, Database
+from src.objects import Spectrum, MassSequence, KmerMassesResults, Alignments, Database
 from src.scoring import mass_comparisons
 from src.sequence.gen_spectra import gen_spectrum
 
@@ -9,21 +9,6 @@ from collections import defaultdict
 import math 
 from bisect import bisect
 
-###################################################################################
-#                   PRE-SEARCH DATABASE FUNCTIONS
-###################################################################################
-
-# def get_all_max_len_kmers(protein: str, missed_cleavages: int, min_len: int, max_len: int) -> list:
-#     '''
-#     Get all of the longest possible kmers from a protein string. If it is a digest, we call
-#     the digest function on the protein. Otherwise, we yeild all possible sequences
-#     that are max_len until we 
-#     '''
-
-
-###################################################################################
-#                   /PRE-SEARCH DATABASE FUNCTIONS
-###################################################################################
 
 def id_spectrum(
     spectrum: Spectrum, 
@@ -114,7 +99,7 @@ def id_spectra(
 
     # load the datbase into memory
     verbose and print('Loading database...')
-    db = database.build_or_load_db(Database(database_file, {}, min_peptide_len, max_peptide_len, verbose))
+    db = database.build_or_load_db(Database(database_file, min_peptide_len, max_peptide_len, verbose))
     verbose and print('\nDone.')
 
     # keep track of the results

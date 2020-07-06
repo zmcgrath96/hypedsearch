@@ -1,15 +1,17 @@
 
-from src.objects import DatabaseEntry, KmerMasses, MassSequence, Spectrum, Database
+from src.objects import MassSequence, Spectrum, Database
 from src.utils import ppm_to_da, make_dir, is_file
-from src.sequence.gen_spectra import gen_spectrum
+from src.sequence.gen_spectra import max_mass
 
 from collections import defaultdict
 from pyteomics import fasta
-from suffix_tree import Tree
 
+import pandas as pd
 import string
 import math
 import pickle
+
+########################## Private Functions ##########################
 
 def __make_db_file(db: Database) -> str:
     '''
@@ -40,7 +42,7 @@ def __make_db_file(db: Database) -> str:
     return db_file
 
 
-def saved_db_exists(db: Database) -> bool:
+def __saved_db_exists(db: Database) -> bool:
     '''
     Check to see if a saved database exists
 
@@ -59,6 +61,59 @@ def saved_db_exists(db: Database) -> bool:
     # return if the file exists
     return is_file(db_file)
 
+def __read_fasta(db: Database, fasta_file: str) -> dict:
+    '''
+    Read proteins into memory from fasta file
+    
+    Inputs:
+        db:         (Database) object to insert proteins into
+        fasta_file: (str) path to fasta file
+    Outputs:
+        (Database) updated with the proteins
+    '''
+    prots = []
+    db = db._replace(fasta_file=fasta_file)
+
+    db.verbose and print('Loading fasta file into memory...')
+
+    # split the name on the OS value if it exists
+    get_name = lambda name: name[:name.index('OS=')-1] if 'OS=' in name else name
+
+    # go through each entry in the fasta and put it in memory
+    for i, entry in enumerate(fasta.read(fasta_file)):
+
+        # take the description without the 'sp' value
+        desc = entry.description.split('|')[1:] if '|' in entry.description else entry.description
+
+        # if the id is in the description, take it
+        if len(desc) > 1:
+            id_ = desc[0]
+            name = get_name(desc[1])
+            
+        # make the id just the number
+        else:
+            id_ = i
+            name = get_name(desc[0])
+            
+        # get the sequence
+        seq = entry.sequence
+
+        # make the entry and add it to prots
+        prots.append({'name': name, 'id': id_, 'sequence': seq})
+
+    # throw it into a pandas dataframe
+    proteins = pd.DataFrame(prots)
+
+    # update db's proteins attribute
+    db = db._replace(proteins=proteins)
+
+    db.verbose and print('Done')
+
+    return db
+
+########################## /Private Functions ##########################
+
+########################## Public Functions ##########################
 
 def save_db(db: Database) -> bool:
     '''
@@ -96,7 +151,7 @@ def build_or_load_db(db: Database) -> Database:
         print('Done')
 
     else: 
-        db = read_fasta(db, db.fasta_file)
+        db = __read_fasta(db, db.fasta_file)
         db = build(db)
 
         # # save it 
@@ -105,58 +160,21 @@ def build_or_load_db(db: Database) -> Database:
 
     return db
 
-def read_fasta(db: Database, fasta_file: str, is_uniprot=False) -> dict:
+
+def get_proteins_with_subsequence(db: Database, subsequence: str) -> list:
     '''
-    Read proteins into memory from fasta file
-    
+    Find all proteins that have the subsequence provided
+
     Inputs:
-        db:         (Database) object to insert proteins into
-        fasta_file: (str) path to fasta file
-    kwargs:
-        is_uniprot: (bool) adds attribute 'human_readable_name' to dictionary if True. Default=False
+        db:             (Database) the database with all of the proteins
+        subsequence:    (str) the subsequence to look for
     Outputs:
-        (Database) updated with the proteins
+        (list) names of the proteins that contain the subsequence
     '''
-    prots = {}
-    e: DatabaseEntry
-    db = db._replace(fasta_file=fasta_file)
-
-    db.verbose and print('Loading fasta file into memory...')
-
-    # split the name on the OS value if it exists
-    get_name = lambda name: name[:name.index('OS=')-1] if 'OS=' in name else name
-
-    # go through each entry in the fasta and put it in memory
-    for i, entry in enumerate(fasta.read(fasta_file)):
-
-        # take the description without the 'sp' value
-        desc = entry.description.split('|')[1:] if '|' in entry.description else entry.description
-
-        # if the id is in the description, take it
-        if len(desc) > 1:
-            id_ = desc[0]
-            name = get_name(desc[1])
-            
-        # make the id just the number
-        else:
-            id_ = i
-            name = get_name(desc[0])
-            
-        # get the sequence
-        seq = entry.sequence
-
-        # make the entry and add it to prots
-        e = DatabaseEntry(name, seq, id_, name)
-        prots[name] = e
-
-    db = db._replace(proteins=prots)
-
-    db.verbose and print('Done')
-
-    return db
+    return list(db.proteins[db.proteins['sequence'].str.contains(subsequence)]['name'])
 
 
-def get_entry_by_name(db: Database, name: str) -> DatabaseEntry:
+def get_entry_by_name(db: Database, name: str) -> dict:
     '''
     Get a protein entry from the database
 
@@ -164,50 +182,18 @@ def get_entry_by_name(db: Database, name: str) -> DatabaseEntry:
         db:         (Database) the database to search
         name:       (str) name of the protein to get
     Outputs:
-        (DatbaseEntry) Entry of the protein. Empty Entry if not found
+        (dict) Entry of the protein. Empty Entry if not found
     '''
-    return db.proteins.get(name, DatabaseEntry())
+    res = db.proteins[db.proteins['name'] == name].to_dict('r')
 
-
-def add_entry(
-    db: Database, 
-    protein_name: str, 
-    protein_sequnece: str, 
-    protein_id='', 
-    human_readable_name=''
-) -> Database:
-    '''
-    Add an entry to the database. If it cannot be added to the database, False is returned
-
-    Inputs:
-        db:                 (Database) the database to add entries to
-        protein_name:       (str) name of the protein being added
-        protein_sequence:   (str) string of amino acids describing the protein
-    kwargs:
-        protein_id:         (str) identifier of the protein. Default=''
-        human_readable_name:(str) name that is easy for people to read. Default=''
-    Outputs:
-        (Database) the updated database
-    '''
-    if protein_name in db.proteins:
-        return db
-
-    e = DatabaseEntry(protein_name, protein_sequnece, protein_id, human_readable_name)
-    db.proteins[protein_name] = e 
-
-    # add it to the tree
-    if not db.tree:
-        db = db._replace(tree=Tree())
-        db.tree = Tree()
-
-    db.tree.add(protein_name, protein_sequnece)
-
-    return db
+    if len(res):
+        return res[0]
+    return None
 
 
 def build(
     db: Database
-) -> KmerMasses:
+) -> Database:
     '''
     Build the database. In order to build, the fasta file should have been read and the database should
     contain the proteins dictionary. Call "read_fasta" first. This function builds the internal 
@@ -218,77 +204,51 @@ def build(
     Outputs:
         (Database) updated databse
     '''
-    db = db._replace(tree=Tree())
 
-    # defaultdicts to hash integer value of masses into 
-    bs = defaultdict(list)
-    bd = defaultdict(list)
-    ys = defaultdict(list)
-    yd = defaultdict(list)
-    
-    # keep track of what kmers we've seen to avoid re-analyzing and 
-    # inserting kmers we've seen before
-    kmer_tracker = defaultdict(str)
-    
-    for i, prot_name in enumerate(db.proteins):
+    # breakdown a sequence s into all its possible subsequences from min to max len
+    def breakdown(s: str) -> list:
+        kmers = []
 
-        db.verbose and print(f'Looking at protein {i + 1}/{len(db.proteins)}\r', end='')
-
-        prot_entry: DatabaseEntry = db.proteins[prot_name]
-
-        # add the protein to the tree
-        db.tree.add(prot_entry.name, prot_entry.sequence)
-
-        # go through the kmers for the b sequences
-        for j in range(len(prot_entry.sequence) - db.min_len):
+        # go through each starting position of the sequence
+        for j in range(len(s) - db.min_len):
 
             # make a kmer sequence. Do the max (to generate the kmer spec once) then 
             # just iterate through it
-            kmer_len = db.max_len if j + db.max_len <= len(prot_entry.sequence) \
-                else len(prot_entry.sequence) - j
-            kmer = prot_entry.sequence[j:j+kmer_len]
+            kmer_len = db.max_len if j + db.max_len <= len(s) else len(s) - j
 
-            # generate the singly and doubly b spectra
-            kmer_spec_b_s = gen_spectrum(kmer, ion='b', charge=1)['spectrum']
-            kmer_spec_b_d = gen_spectrum(kmer, ion='b', charge=2)['spectrum']
-
-            # iterate through the spectra and add the entry to the table
             for k in range(db.min_len, kmer_len):
-
-                if 'b' in kmer_tracker[kmer[:k]]:
-                    continue
-
-                kmer_tracker[kmer[:k]] += 'b'
-
-                bs[math.floor(kmer_spec_b_s[k-1])].append(MassSequence(kmer_spec_b_s[k-1], kmer[:k]))
-                bd[math.floor(kmer_spec_b_d[k-1])].append(MassSequence(kmer_spec_b_d[k-1], kmer[:k]))
+                kmers.append(s[j:j+k])
             
-        # go through the kmers for the b sequences
-        for j in range(len(prot_entry.sequence) - db.min_len):
+        return kmers
 
-            # make a kmer sequence. Do the max (to generate the kmer spec once) then 
-            # just iterate through it
-            kmer_len = db.max_len if j + db.max_len <= len(prot_entry.sequence) \
-                else len(prot_entry.sequence) - j
+    # get the singly and doubly b and y masses for this subsequence
+    def spectrify(s: str) -> dict:
+        f = {}
+        f['bs'] = max_mass(s, 'b', 1)
+        f['bd'] = max_mass(s, 'b', 2)
+        f['ys'] = max_mass(s, 'y', 1)
+        f['yd'] = max_mass(s, 'y', 2)
+        f['sequence'] = s
+        return f
 
-            kmer = prot_entry.sequence[-j - kmer_len: -j] if j != 0 else prot_entry.sequence[-kmer_len:]
+    # for each protein sequence:
+    #   1. break it down to all the subsequences via breakdown function (list output)
+    #   2. make it a dataframe (DataFrame output)
+    #   3. make each column's list entry (that is a list) into its own row (DataFrame output)
+    #   4. remove any duplicates
+    a = db.proteins['sequence']    \
+        .apply(breakdown)       \
+        .to_frame()             \
+        .explode('sequence')    \
+        .drop_duplicates('sequence')
 
-            # generate the singly and doubly b spectra
-            kmer_spec_y_s = gen_spectrum(kmer, ion='y', charge=1)['spectrum']
-            kmer_spec_y_d = gen_spectrum(kmer, ion='y', charge=2)['spectrum']
+    # for each of the subsequences that we created in a, spectrify it 
+    # which creates a bs, bd, ys, yd column for each subsequence
+    b = pd.DataFrame(list(a['sequence'].apply(spectrify)))
 
-            # iterate through the spectra and add the entry to the tayle
-            for k in range(db.min_len, kmer_len):
+    # update db kmer_masses to be the dataframe
+    db = db._replace(kmer_masses=b)
 
-                if 'y' in kmer_tracker[kmer[-k:]]:
-                    continue
-
-                kmer_tracker[kmer[-k:]] += 'y'
-
-                ys[math.floor(kmer_spec_y_s[k-1])].append(MassSequence(kmer_spec_y_s[k-1], kmer[-k:]))
-                yd[math.floor(kmer_spec_y_d[k-1])].append(MassSequence(kmer_spec_y_d[k-1], kmer[-k:]))
-
-    db = db._replace(kmer_masses=KmerMasses(bs, bd, ys, yd))
     return db
 
 
@@ -304,28 +264,19 @@ def search(db: Database, observed: Spectrum, kmers: str, tolerance: float) -> li
     Outputs:
         list of MassSequence for all masses that were in the acceptable range of an observed mass
     '''
-    # get the dictionary to search
-    kmer_dict = db.kmer_masses.bs if kmers == 'bs' else (db.kmer_masses.bd if kmers == 'bd' \
-                else (db.kmer_masses.ys if kmers == 'ys' else db.kmer_masses.yd))
-
-    # go through each mass in the observed and get any mass in the tolerance
+    
+    bounds = []
     hits = []
-    for mass in observed.spectrum:
 
-        # get the tolerance in Da
-        tol = ppm_to_da(mass, tolerance)
+    # get all of the bounds of a spectrum
+    for mz in observed.spectrum:
+        tol = ppm_to_da(mz, tolerance)
+        bounds.append((mz - tol, mz + tol))
 
-        # get upper and lower bound keys and masses
-        lb_mass = mass - tol
-        ub_mass = mass + tol
-        lb_mass_key = math.floor(lb_mass)
-        ub_mass_key = math.floor(ub_mass)
-
-        # go through all the values in thelower bound key and collect hits that are in our tolerance
-        hits += [x.sequence for x in kmer_dict[lb_mass_key] if lb_mass <= x.mass <= ub_mass]
-
-        # if our upper bound key is different, also search the upper bound key
-        if lb_mass_key != ub_mass_key:
-            hits += [x.sequence for x in kmer_dict[ub_mass_key] if lb_mass <= x.mass <= ub_mass]
+    # go through each bound pair and search the dataframe
+    for b in bounds:
+        hits += list(db.kmer_masses[db.kmer_masses[kmers].between(b[0], b[1])]['sequence'])
             
     return hits
+
+########################## /Public Functions ##########################

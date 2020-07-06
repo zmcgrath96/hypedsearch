@@ -93,6 +93,38 @@ def calc_masses(sequence: str, charge=None, ion=None) -> (list, float):
         
     return masses, pre_mz
 
+def max_mass(seqeunce: str, ion: str, charge: int) -> float:
+    '''
+    Calculate the maximum mass of a sequence of an ion type and charge
+
+    Inputs:
+        sequence:   (str) the sequence to generate the max mass for
+        ion:        (str) the ion type for which we calculate the mass. Options: 'b', 'y'
+        charge:     (int) the charge to calculate the mass for. Options: 1, 2
+    Outputs:
+        (float) the maximum mass
+    '''
+    # all y ions
+    if ion == 'y':
+        total = SINGLY_CHARGED_Y_BASE if charge == 1 else DOUBLY_CHARGED_Y_BASE
+        total += sum([AMINO_ACIDS[aa] for aa in seqeunce])
+
+        # divide by 2 if doubly charged
+        if charge == 2:
+            total /= 2
+        return total
+
+    # otherwise do the b
+    total = SINGLY_CHARGED_B_BASE if charge == 1 else DOUBLY_CHARGED_B_BASE
+    total += sum([AMINO_ACIDS[aa] for aa in seqeunce])
+
+    # divide by 2 if doubly
+    if charge == 2:
+        total /= 2
+    
+    return total
+
+
 def gen_spectrum(sequence: str, charge=None, ion=None) -> list:
     '''
     Generate a spectrum for a single sequence. Includes singly and doubly charged masses

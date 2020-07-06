@@ -360,8 +360,8 @@ def result_filtering(
     b_results.sort(key=itemgetter(1), reverse=True)
     y_results.sort(key=itemgetter(1), reverse=True)
 
-    print(f'B results before filtering:\n{b_results}')
-    print(f'Y results before filtering:\n{y_results}')
+    # print(f'B results before filtering:\n{b_results}')
+    # print(f'Y results before filtering:\n{y_results}')
 
     # take the scores that pass our filter
     def filter_scores(l: list) -> list:

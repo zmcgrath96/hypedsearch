@@ -5,37 +5,6 @@ Named tuples for lighter-weight object like interaction
 '''
 
 '''
-DatabaseEntry: 
-    Holds a protein's information 
-
-    Properties:
-        name:           (str) name of the protein
-        sequence:       (str) Amino acids describing the protein
-        id:             (any) identifier of the protein
-        readable_name:  (str) (optional) the easier to read human readable name of the protein
-'''
-DatabaseEntry = namedtuple(
-    'DatabaseEntry',
-    ['name', 'sequence', 'id', 'readable_name'],
-    defaults=['', '', '', '']
-)
-
-'''
-KmerMasses:
-    Holds mass dictionaries for b+, b++, y+, y++ ions. The keys to the
-    dictionaries are the integer values of masses and the values
-    ares lists of MassSequence types
-
-    Properties:
-        (bs, bd, ys, yd):   (list) MassSequence pairs with masses who's integer values are the keys
-'''
-KmerMasses = namedtuple(
-    'KmerMasses', 
-    ['bs', 'bd', 'ys', 'yd'],
-    defaults=[{}, {}, {}, {}]
-)
-
-'''
 KmerMassesResults:
     Holds the hits from a hash on the entries of KmerMassesResults.
 
@@ -51,11 +20,19 @@ KmerMassesResults = namedtuple(
 '''
 Database:
     Holds proteins, fasta file, protein tree, and kmer masses 
+
+    Properties:
+        fasta_file:     (str) the name of the input fasta file
+        min_len:        (int) the minimum length peptide to consider
+        max_len:        (int) the maximum length peptide to consider
+        verbose:        (bool) extra printing
+        proteins:       (DataFrame) the store for database information
+        kmer_masses:    (DataFrame) the store for kmers and their masses
 '''
 Database = namedtuple(
     'Database', 
-    ['fasta_file', 'proteins', 'min_len', 'max_len', 'verbose', 'tree', 'kmer_masses'], 
-    defaults=['', {}, 0, 0, True, None, KmerMasses()]
+    ['fasta_file', 'min_len', 'max_len', 'verbose', 'proteins', 'kmer_masses'], 
+    defaults=['', 0, 0, True, None, None]
 )
 
 '''

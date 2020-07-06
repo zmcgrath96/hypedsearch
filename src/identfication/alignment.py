@@ -261,24 +261,24 @@ def align_b_y(b_results: list, y_results: list, db: Database) -> list:
     for b_seq in b_results:
 
         # get all the b proteins
-        bproteins = [id_ for id_, _ in db.tree.find_all(b_seq)]
+        b_proteins = database.get_proteins_with_subsequence(db, b_seq)
 
         for y_seq in y_results:
 
             # ge the y proteins
-            yproteins = [id_ for id_, _ in db.tree.find_all(y_seq)]
+            y_proteins = database.get_proteins_with_subsequence(db, y_seq)
             
             # the sequence is from the same protein, try and overlap it
-            if any([x in yproteins for x in bproteins]):
+            if any([x in y_proteins for x in b_proteins]):
 
                 # get each protein they have in common
-                shared_prots = [x for x in yproteins if x in bproteins]
+                shared_prots = [x for x in y_proteins if x in b_proteins]
                 
                 # try each of them 
                 for sp in shared_prots:
 
                     # get the sequence from the entry for alignment
-                    prot_seq = database.get_entry_by_name(db, sp).sequence
+                    prot_seq = database.get_entry_by_name(db, sp)['sequence']
 
                     # try all same protein alignments
                     spec_alignments.append(
@@ -356,8 +356,8 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
                 if '(' in sequence or ')' in sequence: 
 
                     # get the left and right proteins
-                    l_p_s = database.get_entry_by_name(db, l_p).sequence
-                    r_p_s = database.get_entry_by_name(db, r_p).sequence
+                    l_p_s = database.get_entry_by_name(db, l_p)['sequence']
+                    r_p_s = database.get_entry_by_name(db, r_p)['sequence']
 
                     # separate the left and the right sequences
                     left_seq = sequence[:sequence.index(')')].replace('(', '')
@@ -403,13 +403,13 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
                     right_seq = sequence.split('-')[1]
 
                     left_flanking_pairs = __get_surrounding_amino_acids(
-                        database.get_entry_by_name(db, l_p).sequence, 
+                        database.get_entry_by_name(db, l_p)['sequence'],
                         left_seq, 
                         gap
                     )
 
                     right_flanking_pairs = __get_surrounding_amino_acids(
-                        database.get_entry_by_name(db, r_p).sequence,
+                        database.get_entry_by_name(db, r_p)['sequence'],
                         right_seq, 
                         gap
                     )
@@ -452,7 +452,7 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
         for p in parents[0]:
 
             # get the parent sequence
-            p_seq = database.get_entry_by_name(db, p).sequence
+            p_seq = database.get_entry_by_name(db, p)['sequence']
 
             # get the flanking amino acid pairs
             for flanking_pair in __get_surrounding_amino_acids(p_seq, sequence, gap):
@@ -618,7 +618,7 @@ def get_parents(seq: str, db: Database) -> (list, list):
     Outputs:
         (list, list) lists of parents
     '''
-    get_sources = lambda s: [x for x, _ in db.tree.find_all(s)]
+    get_sources = lambda s: database.get_proteins_with_subsequence(db, s)
 
     # If the sequence is hybrid, split it to find each parent
     if hyb_alignment_pattern.findall(seq):
@@ -675,7 +675,7 @@ def replace_ambiguous_hybrids(hybrid_alignments: list, db: Database) -> list:
         possible = all_perms_of_s(nonhyb, 'LI')
 
         # if we had no other permutations and found a nonhybrid, add it
-        if len(possible) == 0 and db.tree.find(nonhyb):
+        if len(possible) == 0 and len(database.get_proteins_with_subsequence(db, nonhyb)):
             ret.append((nonhyb, None))
             added = True
 
@@ -686,7 +686,7 @@ def replace_ambiguous_hybrids(hybrid_alignments: list, db: Database) -> list:
             for p in possible:
 
                 # if this permutation exists as a nonhybrid, return it
-                if db.tree.find(p):
+                if len(database.get_proteins_with_subsequence(db, p)):
                     ret.append((p, None))
                     added = True
                     break
@@ -724,7 +724,7 @@ def attempt_alignment(
 
     Inputs:
         spectrum:               (Spectrum) spectrum to align
-        db:                     (Database) Holds the tree and protein entries
+        db:                     (Database) Holds protein entries
         hits:                   (KmerMassesResults) hits from the hashing on a KmerMasses object
         base_kmer_len:          (int) minimum length kmer length used for filtering results
     kwargs:
