@@ -1,8 +1,8 @@
 from src.utils import insort_by_index, all_perms_of_s, make_sparse_array
 from src.scoring.scoring import score_subsequence, backbone_score, precursor_distance, xcorr, ion_backbone_score, intensity_ion_backbone_score, intensity_backbone_score, ion_intensity_percentage
 from src.identfication.filtering import result_filtering, mean_filtering
-from src.types.objects import Spectrum, KmerMassesResults, SequenceAlignment, HybridSequenceAlignment
-from src.types.database import Database
+from src.objects import Spectrum, KmerMassesResults, SequenceAlignment, HybridSequenceAlignment, Database
+from src import database
 from src.sequence.gen_spectra import gen_spectrum
 
 from collections import defaultdict
@@ -278,7 +278,7 @@ def align_b_y(b_results: list, y_results: list, db: Database) -> list:
                 for sp in shared_prots:
 
                     # get the sequence from the entry for alignment
-                    prot_seq = db.get_entry_by_name(sp).sequence
+                    prot_seq = database.get_entry_by_name(db, sp).sequence
 
                     # try all same protein alignments
                     spec_alignments.append(
@@ -356,8 +356,8 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
                 if '(' in sequence or ')' in sequence: 
 
                     # get the left and right proteins
-                    l_p_s = db.get_entry_by_name(l_p).sequence
-                    r_p_s = db.get_entry_by_name(r_p).sequence
+                    l_p_s = database.get_entry_by_name(db, l_p).sequence
+                    r_p_s = database.get_entry_by_name(db, r_p).sequence
 
                     # separate the left and the right sequences
                     left_seq = sequence[:sequence.index(')')].replace('(', '')
@@ -403,13 +403,13 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
                     right_seq = sequence.split('-')[1]
 
                     left_flanking_pairs = __get_surrounding_amino_acids(
-                        db.get_entry_by_name(l_p).sequence, 
+                        database.get_entry_by_name(db, l_p).sequence, 
                         left_seq, 
                         gap
                     )
 
                     right_flanking_pairs = __get_surrounding_amino_acids(
-                        db.get_entry_by_name(r_p).sequence,
+                        database.get_entry_by_name(db, r_p).sequence,
                         right_seq, 
                         gap
                     )
@@ -452,7 +452,7 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
         for p in parents[0]:
 
             # get the parent sequence
-            p_seq = db.get_entry_by_name(p).sequence
+            p_seq = database.get_entry_by_name(db, p).sequence
 
             # get the flanking amino acid pairs
             for flanking_pair in __get_surrounding_amino_acids(p_seq, sequence, gap):

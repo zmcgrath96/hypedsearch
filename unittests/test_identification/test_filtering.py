@@ -1,6 +1,6 @@
 import unittest
 from src.identfication import filtering
-from src.types.objects import Spectrum
+from src.objects import Spectrum
 from src.sequence.gen_spectra import gen_spectrum
 from collections import namedtuple
 

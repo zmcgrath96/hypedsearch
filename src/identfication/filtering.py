@@ -1,4 +1,4 @@
-from src.types.objects import KmerMassesResults, Spectrum
+from src.objects import KmerMassesResults, Spectrum
 from src.scoring.scoring import score_subsequence, backbone_score, ion_backbone_score, intensity_ion_backbone_score, xcorr, ion_intensity_percentage
 from src.utils import insort_by_index, make_sparse_array
 from src.sequence.gen_spectra import gen_spectrum

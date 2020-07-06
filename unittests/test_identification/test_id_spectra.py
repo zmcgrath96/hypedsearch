@@ -1,6 +1,6 @@
 import unittest
 from src.identfication import id_spectra
-from src.types.database import Database
+from src.database import Database
 from src.sequence.gen_spectra import gen_spectrum
 import math
 

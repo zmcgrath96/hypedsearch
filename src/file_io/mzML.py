@@ -1,5 +1,5 @@
 from src.utils import file_exists
-from src.types.objects import Spectrum
+from src.objects import Spectrum
 from pyteomics import mzml
 
 def relative_abundance_filtering(masses: list, abundances: list, percentage: float) -> (list, list):

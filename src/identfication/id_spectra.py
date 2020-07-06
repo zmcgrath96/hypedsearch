@@ -1,7 +1,7 @@
 from src.file_io import mzML
 from src.identfication.alignment import attempt_alignment
-from src.types.database import Database
-from src.types.objects import Spectrum, MassSequence, KmerMasses, KmerMassesResults, Alignments, DatabaseEntry
+from src import database
+from src.objects import Spectrum, MassSequence, KmerMasses, KmerMassesResults, Alignments, DatabaseEntry, Database
 from src.scoring import mass_comparisons
 from src.sequence.gen_spectra import gen_spectrum
 
@@ -51,10 +51,10 @@ def id_spectrum(
         Alignments namedtuple or None
     '''
     # search the mass tables
-    bs, bd, ys, yd = db.search(spectrum, 'bs', 20), \
-                    db.search(spectrum, 'bd', 20), \
-                    db.search(spectrum, 'ys', 20), \
-                    db.search(spectrum, 'yd', 20)
+    bs, bd, ys, yd = database.search(db, spectrum, 'bs', 20), \
+                    database.search(db, spectrum, 'bd', 20), \
+                    database.search(db, spectrum, 'ys', 20), \
+                    database.search(db, spectrum, 'yd', 20)
     
     # put the results into a structrue
     hits = KmerMassesResults(bs, bd, ys, yd)
@@ -114,12 +114,13 @@ def id_spectra(
 
     # load the database into memory
     verbose and print('Loading database...')
-    db = Database(database_file,min_len=min_peptide_len, max_len=max_peptide_len , verbose=verbose)
+    db = Database(database_file, {}, min_peptide_len, max_peptide_len, verbose)
+    db = database.read_fasta(db, database_file)
     verbose and print('\nDone.')
 
     # build the kmermasses namedtuple object once for fast search
     verbose and print('Building hashes for kmers...')
-    db.build(min_peptide_len, max_peptide_len, verbose=verbose)
+    db = database.build(db)
     verbose and print(f'\nDone.')
 
     # keep track of the results

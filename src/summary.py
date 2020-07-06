@@ -1,6 +1,6 @@
 from src.utils import make_dir, make_valid_dir_string
 from src.file_io import JSON
-from src.types.objects import Alignments
+from src.objects import Alignments
 
 import pandas as pd
 import json

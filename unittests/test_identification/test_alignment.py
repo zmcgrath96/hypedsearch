@@ -1,6 +1,6 @@
 import unittest
 from src.identfication import alignment
-from src.types.database import Database
+from src.database import Database
 
 class test_alignment(unittest.TestCase):
     def setUp(self):

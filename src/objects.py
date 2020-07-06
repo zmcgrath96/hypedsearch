@@ -21,53 +21,6 @@ DatabaseEntry = namedtuple(
 )
 
 '''
-Spectrum:
-    Holds information regarding an MS or MS/MS spectrum
-
-    Properties:
-        spectrum:       (list) m/z float values from an MS run
-        abundance:      (list) floats that describe abundance of each peak value
-        ms_level:       (int) MS experiment level
-        scan_number:    (int) scan number of the spectrum
-        precursor_mass: (float) precursor mass of the spectrum 
-        file_name:      (string) name of the file that the spectrum was taken from
-'''
-Spectrum = namedtuple(
-    'Spectrum', 
-    ['spectrum', 'abundance', 'total_intensity', 'ms_level', 'scan_number', 'precursor_mass', 'file_name', 'id'],
-    defaults=[[], [], 0, 0, -1, 0, '', '']
-)
-
-'''
-KmerMetaData:
-    Holds metadata of a kmer
-
-    Properties:
-        protein:        (str) name of the source protein
-        start_position: (int) index of where the substring starts within the protein sequence
-        end_position:   (int) index of where the substring ends (inclusive) within the protein
-'''
-KmerMetaData = namedtuple(
-    'KmerMetaData',
-    ['protein', 'start_position', 'end_position'], 
-    defaults=['', 0, 0]
-)
-
-'''
-MassSequence:
-    Basic container for holding some mass associated with a sequence
-
-    Properties: 
-        mass:       (float) some mass associated with a sequence
-        sequence:   (str) the sequence associated with the mass
-'''
-MassSequence = namedtuple(
-    'MassSequence', 
-    ['mass', 'sequence'], 
-    defaults=[0.0, '']
-)
-
-'''
 KmerMasses:
     Holds mass dictionaries for b+, b++, y+, y++ ions. The keys to the
     dictionaries are the integer values of masses and the values
@@ -93,6 +46,48 @@ KmerMassesResults = namedtuple(
     'KmerMassesResults', 
     ['bs', 'bd', 'ys', 'yd'], 
     defaults=[[], [], [], []]
+)
+
+'''
+Database:
+    Holds proteins, fasta file, protein tree, and kmer masses 
+'''
+Database = namedtuple(
+    'Database', 
+    ['fasta_file', 'proteins', 'min_len', 'max_len', 'verbose', 'tree', 'kmer_masses'], 
+    defaults=['', {}, 0, 0, True, None, KmerMasses()]
+)
+
+'''
+Spectrum:
+    Holds information regarding an MS or MS/MS spectrum
+
+    Properties:
+        spectrum:       (list) m/z float values from an MS run
+        abundance:      (list) floats that describe abundance of each peak value
+        ms_level:       (int) MS experiment level
+        scan_number:    (int) scan number of the spectrum
+        precursor_mass: (float) precursor mass of the spectrum 
+        file_name:      (string) name of the file that the spectrum was taken from
+'''
+Spectrum = namedtuple(
+    'Spectrum', 
+    ['spectrum', 'abundance', 'total_intensity', 'ms_level', 'scan_number', 'precursor_mass', 'file_name', 'id'],
+    defaults=[[], [], 0, 0, -1, 0, '', '']
+)
+
+'''
+MassSequence:
+    Basic container for holding some mass associated with a sequence
+
+    Properties: 
+        mass:       (float) some mass associated with a sequence
+        sequence:   (str) the sequence associated with the mass
+'''
+MassSequence = namedtuple(
+    'MassSequence', 
+    ['mass', 'sequence'], 
+    defaults=[0.0, '']
 )
 
 '''
