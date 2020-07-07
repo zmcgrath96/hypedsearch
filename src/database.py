@@ -79,7 +79,7 @@ def __save_db(db: Database) -> bool:
         return False
 
     return True
-    
+
 
 def __read_fasta(db: Database, fasta_file: str) -> dict:
     '''
@@ -258,15 +258,19 @@ def get_entry_by_name(db: Database, name: str) -> dict:
     return None
 
 
-def search(db: Database, observed: Spectrum, kmers: str, tolerance: float) -> list:
+def search(db: Database, observed: Spectrum, kmers: str, ppm_tolerance=0, da_tolerance=0) -> list:
     '''
-    Search through all masses and saved kmers to find masses that are within our tolerance
+    Search through all masses and saved kmers to find masses that are within our tolerance. One
+    of the two tolerances should be set in order to perform a search. If non is set, then default
+    is 20 ppm.
     
     Inputs:
         db:         (Database) the database containing the kmermasses dictionaries to search
         spectrum:   (Spectrum) what to sequence
         kmers:      (str) which ion type we are searching. Options: ['bs', 'bd', 'ys', 'yd']
-        tolerance:  (float) the ppm tolerance to accept for each mass
+    kwargs:
+        ppm_tolerance:  (float) the ppm tolerance to accept for each mass. Default=0
+        da_tolerance:   (int) the tolerance to accept for each mass. Default=0
     Outputs:
         list of MassSequence for all masses that were in the acceptable range of an observed mass
     '''
@@ -276,7 +280,8 @@ def search(db: Database, observed: Spectrum, kmers: str, tolerance: float) -> li
 
     # get all of the bounds of a spectrum
     for mz in observed.spectrum:
-        tol = ppm_to_da(mz, tolerance)
+        tol = ppm_to_da(mz, ppm_tolerance) if ppm_tolerance > 0 \
+            else (da_tolerance if da_tolerance > 0 else ppm_to_da(mz, 20))
         bounds.append((mz - tol, mz + tol))
 
     # go through each bound pair and search the dataframe
