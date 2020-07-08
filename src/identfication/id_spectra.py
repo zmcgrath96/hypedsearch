@@ -18,7 +18,8 @@ def id_spectrum(
     ppm_tolerance=20, 
     precursor_tolerance=1,
     scoring_alg='ibb', 
-    DEBUG=False
+    DEBUG=False, 
+    is_last=False
 ) -> Alignments:
     '''
     Run an alignemnt in the form of an Amino Acid sequence with a score to the caller for this spectrum.
@@ -57,7 +58,8 @@ def id_spectrum(
         ppm_tolerance=ppm_tolerance, 
         scoring_alg=scoring_alg, 
         precursor_tolerance=precursor_tolerance, 
-        DEBUG=DEBUG
+        DEBUG=DEBUG,
+        is_last=is_last
     )
     
     # return the alignments in a structure
@@ -119,15 +121,17 @@ def id_spectra(
             verbose and print('Analyzing spectrum {}/{}[{}%]\r'.format(j + 1, len(spectra), int(float(j)/float(len(spectra)) * 100)), end='')            
             
             # align this spectrum
+            last = j == len(spectra) - 1
             aligned_spectrum = id_spectrum(
                 spec,
-                 db,
-                 min_peptide_len,
-                 result_count,
-                 ppm_tolerance=ppm_tolerance,
-                 precursor_tolerance=precursor_tolerance,
-                 scoring_alg=scoring_alg,
-                DEBUG=DEBUG
+                db,
+                min_peptide_len,
+                result_count,
+                ppm_tolerance=ppm_tolerance,
+                precursor_tolerance=precursor_tolerance,
+                scoring_alg=scoring_alg,
+                DEBUG=DEBUG, 
+                is_last=last
             )
             
             # if an alignment cannot be created, continue

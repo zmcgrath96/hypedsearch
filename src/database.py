@@ -5,11 +5,13 @@ from src.sequence.gen_spectra import max_mass
 
 from collections import defaultdict
 from pyteomics import fasta
+from more_itertools import flatten
 
 import pandas as pd
 import string
 import math
 import pickle
+import swifter
 
 ########################## Private Functions ##########################
 
@@ -178,21 +180,23 @@ def __build(
     #   2. make it a dataframe (DataFrame output)
     #   3. make each column's list entry (that is a list) into its own row (DataFrame output)
     #   4. remove any duplicates
-    a = db.proteins['sequence']    \
-        .apply(breakdown)       \
-        .to_frame()             \
-        .explode('sequence')    \
-        .drop_duplicates('sequence')
+    a = db.proteins['sequence'].swifter     \
+        .apply(breakdown)                   \
+        .to_frame()                         \
+        .explode('sequence')                \
+        .drop_duplicates('sequence')        \
+        .reset_index(drop=True)
 
     db.verbose and print('Done.')
     db.verbose and print(f'Indexing the masses for {len(a)} subsequences...')
 
     # for each of the subsequences that we created in a, spectrify it 
     # which creates a bs, bd, ys, yd column for each subsequence
-    b = pd.DataFrame(list(a['sequence'].apply(spectrify)))
+    a = pd.DataFrame(list(a['sequence'].swifter.apply(spectrify)))
+    a.astype({'bs': 'float32', 'bd': 'float32', 'ys': 'float32', 'yd': 'float32'})
 
     # update db kmer_masses to be the dataframe
-    db = db._replace(kmer_masses=b)
+    db = db._replace(kmer_masses=a)
 
     db.verbose and print('Done.')
 
@@ -238,7 +242,9 @@ def get_proteins_with_subsequence(db: Database, subsequence: str) -> list:
     Outputs:
         (list) names of the proteins that contain the subsequence
     '''
-    return list(db.proteins[db.proteins['sequence'].str.contains(subsequence)]['name'])
+    return list(
+        db.proteins[db.proteins['sequence'].apply(lambda x: subsequence in x)]['name']
+    )
 
 
 def get_entry_by_name(db: Database, name: str) -> dict:
@@ -274,19 +280,22 @@ def search(db: Database, observed: Spectrum, kmers: str, ppm_tolerance=0, da_tol
     Outputs:
         list of MassSequence for all masses that were in the acceptable range of an observed mass
     '''
-    
-    bounds = []
-    hits = []
 
-    # get all of the bounds of a spectrum
-    for mz in observed.spectrum:
+    # create a tuple of a lower and upper bound
+    def get_bounds(mz):
         tol = ppm_to_da(mz, ppm_tolerance) if ppm_tolerance > 0 \
             else (da_tolerance if da_tolerance > 0 else ppm_to_da(mz, 20))
-        bounds.append((mz - tol, mz + tol))
+
+        return (mz - tol, mz + tol)
+
+    # get all bounds for all mz values in the observed
+    bounds = [get_bounds(mz) for mz in observed.spectrum]
 
     # go through each bound pair and search the dataframe
-    for b in bounds:
-        hits += list(db.kmer_masses[db.kmer_masses[kmers].between(b[0], b[1])]['sequence'])
+    hits = list(flatten(
+        [list(db.kmer_masses[db.kmer_masses[kmers].between(b[0], b[1])]['sequence']) \
+            for b in bounds]
+    ))
             
     return hits
 

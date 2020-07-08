@@ -3,13 +3,26 @@ from src.scoring.scoring import score_subsequence, backbone_score, precursor_dis
 from src.identfication.filtering import result_filtering, mean_filtering
 from src.objects import Spectrum, KmerMassesResults, SequenceAlignment, HybridSequenceAlignment, Database
 from src import database
-from src.sequence.gen_spectra import gen_spectrum
+from src.sequence.gen_spectra import get_precursor
 
 from collections import defaultdict
 import re 
 from operator import itemgetter
 from more_itertools import flatten
 import math
+
+time_log_file = './timelog.txt'
+filter_time = 0
+first_align_time = 0
+ambiguous_removal_time = 0
+precursor_mass_time = 0
+objectify_time = 0
+
+filter_count = 0
+first_align_count = 0
+ambiguous_removal_count = 0
+precursor_mass_count = 0
+objectify_count = 0
 
 hyb_alignment_pattern = re.compile(r'[-\(\)]')
 
@@ -387,15 +400,13 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
 
                                     # get the new sequence and its precursor mass. Add it to filled in list
                                     new_seq = l_aa[gap-i:] + sequence + r_aa[:j]
-                                    new_prec = gen_spectrum(
-                                        new_seq.replace('(', '').replace(')', '')
-                                    )['precursor_mass']
+                                    new_prec = get_precursor(new_seq.replace('(', '').replace(')', ''))
 
                                     # get the precursor distance, and if it is close enough, keep it
                                     p_d = precursor_distance(spectrum.precursor_mass, new_prec)
 
                                     if p_d <= tolerance:
-                                                            filled_in.append(new_seq)
+                                        filled_in.append(new_seq)
 
                 # try all flanking of left right middle amino acids
                 else:
@@ -438,7 +449,7 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
 
                                             # get the new sequnce and precursor
                                             new_seq = ll + left_seq + lc + '-' + rc + right_seq + rr
-                                            new_prec = gen_spectrum(new_seq.replace('-', ''))['precursor_mass']
+                                            new_prec = get_precursor(new_seq.replace('-', ''))
 
                                             # get the precursor distance, and if it is close enough, keep it
                                             p_d = precursor_distance(spectrum.precursor_mass, new_prec)
@@ -464,7 +475,7 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
                         # get the new sequence and its precursor mass. Add it to filled in list
                         new_seq = flanking_pair[0][gap-i:] + sequence + flanking_pair[1][:j]
 
-                        new_prec = gen_spectrum(new_seq)['precursor_mass']
+                        new_prec = get_precursor(new_seq)
 
                         # get the precursor distance, and if it is close enough, keep it
                         p_d = precursor_distance(spectrum.precursor_mass, new_prec)
@@ -509,7 +520,7 @@ def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3, tolerance=1) 
                             + '-' + right_seq[k:-n] if n > 0 else right_seq[k:]
 
                         # find the new precursor mass
-                        new_prec = gen_spectrum(new_seq.replace('-', ''))['precursor_mass']
+                        new_prec = get_precursor(new_seq.replace('-', ''))
 
                         # get the precursor distance, and if it falls within the tolerance, keep it
                         p_d = precursor_distance(spectrum.precursor_mass, new_prec)
@@ -526,7 +537,7 @@ def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3, tolerance=1) 
                 clean_seq = new_seq.replace('(', '').replace(')', '') \
                             if '(' in new_seq or ')' in new_seq else new_seq
 
-                new_prec = gen_spectrum(clean_seq)['precursor_mass']
+                new_prec = get_precursor(clean_seq)
 
                 # get the precursor distance, and if it is close enough, keep it
                 p_d = precursor_distance(spectrum.precursor_mass, new_prec)
@@ -564,7 +575,7 @@ def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
     clean_seq = sequence.replace('-', '').replace('(', '').replace(')', '')
 
     # get the theoretical precursor mass
-    theory_precrusor = gen_spectrum(clean_seq)['precursor_mass']
+    theory_precrusor = get_precursor(clean_seq)
 
     # get the precursor distance 
     p_d = precursor_distance(spectrum.precursor_mass, theory_precrusor)
@@ -710,8 +721,9 @@ def attempt_alignment(
     ppm_tolerance=20, 
     precursor_tolerance=1,
     scoring_alg='ibb', 
-    DEBUG=False
-    ) -> list:
+    DEBUG=False, 
+    is_last=False
+) -> list:
     '''
     Given a set of hits in the form of KmerMassesResult (lists of sequences), reduce
     the number of hits and filter out poor scoring sequences. Combine N and C terminus
@@ -736,18 +748,24 @@ def attempt_alignment(
     Outputs:
         attempted_alignments: (list) attempted alignemnts. Contains both or either of SequenceAlignment and HybridSequenceAlignment
     '''
+    global first_align_time, ambiguous_removal_time, filter_time, precursor_mass_time, objectify_time
+    global first_align_count, ambiguous_removal_count, filter_count, precursor_mass_count, objectify_count
 
     # narrow down the potential alignments
     import time 
 
     st = time.time()
     b_results, y_results = result_filtering(spectrum, hits, base_kmer_len, scoring_alg=scoring_alg)
+    filter_time += time.time() - st
+    filter_count += len(hits)
     DEBUG and print(f'\nFiltering time took {time.time() - st} resulting in {len(b_results)} b sequences and {len(y_results)} y sequences')
   
     # align our b an y sequences
     st = time.time()
     a = align_b_y(b_results, y_results, db)
 
+    first_align_count += len(a)
+    first_align_time += time.time() - st
     DEBUG and print(f'First alignment round took {time.time() - st} time resulting in {len(a)} alignments')
 
     # seperate the hybrids from the non hybrids for later analysis
@@ -763,6 +781,9 @@ def attempt_alignment(
     # hybrid sequences
     st = time.time()
     updated_hybrids = [] if len(hyba) == 0 else replace_ambiguous_hybrids(hyba, db)
+
+    ambiguous_removal_count += len(updated_hybrids)
+    ambiguous_removal_time += time.time() - st
     DEBUG and print(f'Getting rid of ambiguous time took {time.time() - st}')
 
     # try and fill in the gaps that are in any alignments
@@ -783,7 +804,8 @@ def attempt_alignment(
 
         precursor_matches += p_ms
 
-  
+    precursor_mass_count += len(precursor_matches)
+    precursor_mass_time += time.time() - st
     DEBUG and print(f'Filling in precursor took {time.time() - st} for {len(updated_hybrids + nonhyba)} sequences')
 
     # make tuples again
@@ -804,11 +826,8 @@ def attempt_alignment(
     st = time.time()
     for aligned_pair in sequence_alignments:
 
-        # get the alignment spectrum 
-        alignemnt_spectrum_precursor = gen_spectrum(aligned_pair[0])
-
         # get the precursor distance. If its too big, continue
-        p_d = precursor_distance(spectrum.precursor_mass, alignemnt_spectrum_precursor['precursor_mass'])
+        p_d = precursor_distance(spectrum.precursor_mass, get_precursor(aligned_pair[0]))
 
         # individual ion scores
         b_score = intensity_ion_backbone_score(spectrum, aligned_pair[0], 'b', ppm_tolerance)
@@ -859,6 +878,8 @@ def attempt_alignment(
                     p_d
                 )
             )
+    objectify_count += len(sequence_alignments)
+    objectify_time += time.time() - st
     DEBUG and print(f'Time to make into objects took {time.time() - st}')
 
     tracker = {}
@@ -870,5 +891,13 @@ def attempt_alignment(
         set_alignments.append(a)
     # print(f'Number of alignments that passed the filter: {len(alignments)}')
     # print(sorted(alignments, key=lambda x: x.total_score, reverse=True)[:10])
+
+    if is_last:
+        with open(time_log_file, 'w') as o:
+            o.write(f'Total result filtering time: {filter_time}s \t seconds/op: {filter_time/filter_count}s\n')
+            o.write(f'B and Y alignment time: {first_align_time}s \t seconds/op: {first_align_time/first_align_count}s\n')
+            o.write(f'Removing ambiguous hybrids time: {ambiguous_removal_time}s \t seconds/op: {ambiguous_removal_time/ambiguous_removal_count}s\n')
+            o.write(f'Matching precursor matches time: {precursor_mass_time}s \t seconds/op: {precursor_mass_time/precursor_mass_count}s\n')
+            o.write(f'Turning matches into objects time: {objectify_time} \t seconds/op: {objectify_time/objectify_count}\n')
 
     return sorted(set_alignments, key=lambda x: x.total_score, reverse=True)[:n]

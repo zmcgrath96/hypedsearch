@@ -76,7 +76,7 @@ def calc_masses(sequence: str, charge=None, ion=None) -> (list, float):
         precursor_mass: float precursor mass of the entire amino acid sequence
     '''
     masses = []
-    # sequence = sequence[:-1]
+
     length = len(sequence)
     total = WATER_MASS
     for i in range(length):
@@ -123,6 +123,25 @@ def max_mass(seqeunce: str, ion: str, charge: int) -> float:
         total /= 2
     
     return total
+
+
+def get_precursor(sequence: str, charge=2) -> float:
+    '''
+    Calculate JUST the precursor mass of the input sequence at the charge provided.
+
+    Inputs:
+        sequence:   (str) the AA sequence to calculate the precursor for
+    kwargs:
+        charge:     (int) the charge for which to calculate the precursor. Default=2
+    Outputs:
+        (float) the precursor mass of the sequence
+    '''
+    total = WATER_MASS
+    for aa in sequence:
+        total +=  AMINO_ACIDS[aa]
+
+    pre_mz_charge = 2 if charge is None else charge
+    return (total+pre_mz_charge*1.0072764)/pre_mz_charge  
 
 
 def gen_spectrum(sequence: str, charge=None, ion=None) -> list:

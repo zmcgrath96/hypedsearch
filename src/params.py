@@ -38,6 +38,6 @@ RELATIVE_ABUNDANCE_FILTER = 0
 VERBOSE = True
 # which scoring algorithm to use. Options are 
 # 'ibb', 'ion', 'bb', 'iibb', 'iip'
-SCORING_ALG = 'iip'
+SCORING_ALG = 'ion'
 # Extra extra printing options for debugging the application
-DEBUG = True
+DEBUG = False

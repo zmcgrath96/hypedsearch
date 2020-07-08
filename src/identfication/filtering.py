@@ -7,6 +7,7 @@ from statistics import mean, stdev
 from typing import Iterable
 from collections import defaultdict
 from operator import itemgetter
+from more_itertools import flatten
 
 def slope_filtering(a: Iterable, min_window_size=5, mean_filter=1, key=None) -> list:
     '''
@@ -332,19 +333,6 @@ def result_filtering(
             seqs.append(reduced_seq)
         return seqs
 
-    def reduce_sequences2(d: dict, ion: str):
-        seqs = []
-        v: list
-        for k, v in d.items():
-            reduced_seq = max(
-                [(seq, score_alg(spectrum, seq, ion, ppm_tolerance)) for seq in list(set([str(k)] + v))],
-                key=itemgetter(1)
-            )[0]
-            seqs.append(reduced_seq)
-        return seqs
-
-    # print(f'Base mer hashed b:\n{base_mer_hashed_b}')
-    # print(f'Base mer hashed y:\n{base_mer_hashed_y}')
 
     # reduce to the most overlapping sequences
     b_seqs = reduce_sequences(base_mer_hashed_b, 'b')
@@ -384,8 +372,8 @@ def result_filtering(
     filtered_b_results = filter_scores(b_results)
     filtered_y_results = filter_scores(y_results)
 
-    # print(f'B results after filtering:\n{filtered_b_results}')
-    # print(f'Y results after filtering:\n{filtered_y_results}')
+    print(f'B results after filtering:\n{filtered_b_results}')
+    print(f'Y results after filtering:\n{filtered_y_results}')
 
     # if we have nothing, take the top 5 scores
     if len(filtered_b_results) == 0:

@@ -1,0 +1,5 @@
+Total result filtering time: 3.086054801940918s 	 seconds/op: 0.08572374449835883s
+B and Y alignment time: 0.2375776767730713s 	 seconds/op: 0.0006186918665965399s
+Removing ambiguous hybrids time: 13.525362491607666s 	 seconds/op: 0.04882802343540674s
+Matching precursor matches time: 0.317274808883667s 	 seconds/op: 0.0007178163096915543s
+Turning matches into objects time: 1.1961135864257812 	 seconds/op: 0.002706139335804935

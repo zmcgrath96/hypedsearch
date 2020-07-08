@@ -2,5 +2,5 @@ lxml
 numpy
 pyteomics
 pandas
-datrie
+swifter
 more_itertools
