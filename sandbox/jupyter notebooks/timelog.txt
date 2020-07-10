@@ -1,5 +1,5 @@
-Total result filtering time: 1.0323901176452637s 	 seconds/op: 0.12904876470565796s
-B and Y alignment time: 0.007716655731201172s 	 seconds/op: 0.0007716655731201172s
-Removing ambiguous hybrids time: 0.04557394981384277s 	 seconds/op: 0.015191316604614258s
-Matching precursor matches time: 0.03384208679199219s 	 seconds/op: 0.005640347798665364s
-Turning matches into objects time: 0.01147007942199707 	 seconds/op: 0.0019116799036661785
+Total result filtering time: 0.9015669822692871s 	 seconds/op: 0.11269587278366089s
+B and Y alignment time: 0.01595306396484375s 	 seconds/op: 0.0005501056539601293s
+Removing ambiguous hybrids time: 0.17077088356018066s 	 seconds/op: 0.021346360445022583s
+Matching precursor matches time: 0.023755311965942383s 	 seconds/op: 0.001696807997567313s
+Turning matches into objects time: 0.027336835861206055 	 seconds/op: 0.0019526311329432897

@@ -180,7 +180,7 @@ def __build(
     #   2. make it a dataframe (DataFrame output)
     #   3. make each column's list entry (that is a list) into its own row (DataFrame output)
     #   4. remove any duplicates
-    a = db.proteins['sequence'].swifter     \
+    kmers = db.proteins['sequence'].swifter     \
         .apply(breakdown)                   \
         .to_frame()                         \
         .explode('sequence')                \
@@ -188,15 +188,27 @@ def __build(
         .reset_index(drop=True)
 
     db.verbose and print('Done.')
-    db.verbose and print(f'Indexing the masses for {len(a)} subsequences...')
+    db.verbose and print(f'Indexing the masses for {len(kmers)} subsequences...')
 
     # for each of the subsequences that we created in a, spectrify it 
     # which creates a bs, bd, ys, yd column for each subsequence
-    a = pd.DataFrame(list(a['sequence'].swifter.apply(spectrify)))
-    a.astype({'bs': 'float32', 'bd': 'float32', 'ys': 'float32', 'yd': 'float32'})
+    mass_list = list(kmers['sequence'].swifter.apply(spectrify))
+    del kmers
+
+    # sequences that share one mass will share all masses, so put them all in the same row
+    # put them in a temporary dictionary by the b++ mass then to a dataframe
+    mass_dict = {}
+    for ml in mass_list:
+        if ml['bd'] not in mass_dict:
+            mass_dict[ml['bd']] = {'bd': ml['bd'], 'yd': ml['yd'], 'bs': ml['bs'], 'ys': ml['ys'], 'sequences': []}
+        mass_dict[ml['bd']]['sequences'].append(ml['sequence'])
+    
+    # turn from a dictionary to a dataframe
+    mass_sequences = pd.DataFrame([value for _, value in mass_dict.items()])
+    mass_sequences.astype({'bs': 'float32', 'bd': 'float32', 'ys': 'float32', 'yd': 'float32'})
 
     # update db kmer_masses to be the dataframe
-    db = db._replace(kmer_masses=a)
+    db = db._replace(kmer_masses=mass_sequences)
 
     db.verbose and print('Done.')
 
@@ -293,7 +305,7 @@ def search(db: Database, observed: Spectrum, kmers: str, ppm_tolerance=0, da_tol
 
     # go through each bound pair and search the dataframe
     hits = list(flatten(
-        [list(db.kmer_masses[db.kmer_masses[kmers].between(b[0], b[1])]['sequence']) \
+        [list(flatten(db.kmer_masses[db.kmer_masses[kmers].between(b[0], b[1])]['sequences'])) \
             for b in bounds]
     ))
             

@@ -248,7 +248,7 @@ def result_filtering(
         # ion counting score
         if 'ion' == scoring_alg:
             retindex = 0 if ion == 'b' else 1
-            return score_subsequence(spectrum.spectrum, refseq, ppm_tolerance=ppm_tolerance)[retindex] / len(refseq)
+            return score_subsequence(spectrum.spectrum, refseq, ppm_tolerance=ppm_tolerance)[retindex]
         
         if 'xcorr' == scoring_alg:
             refspec = gen_spectrum(refseq, ion=ion)['spectrum']
@@ -324,9 +324,6 @@ def result_filtering(
                 # get the highest score
                 max_score = max(score_pairs, key=itemgetter(1))[1]
 
-                if str(k) == 'AAR' and ion == 'y':
-                    print(f'Scores for {k} are: {score_pairs}')
-
                 # if theres more than 1 top score, make it k, otherwise the max score
                 if [x[1] for x in score_pairs].count(max_score) > 1:
                     reduced_seq = str(k)
@@ -352,8 +349,8 @@ def result_filtering(
     b_results.sort(key=itemgetter(1), reverse=True)
     y_results.sort(key=itemgetter(1), reverse=True)
 
-    print(f'B results before filtering:\n{b_results}')
-    print(f'Y results before filtering:\n{y_results}')
+    # print(f'B results before filtering:\n{b_results}')
+    # print(f'Y results before filtering:\n{y_results}')
 
     # take the scores that pass our filter
     def filter_scores(l: list) -> list:
