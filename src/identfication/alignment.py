@@ -482,7 +482,6 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
 
                         if p_d <= tolerance:
                                     filled_in.append(new_seq)
-                    
     return filled_in
 
 def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3, tolerance=1) -> list:
@@ -653,7 +652,68 @@ def get_parents(seq: str, db: Database) -> (list, list):
     return (get_sources(seq), None)
 
 
-def replace_ambiguous_hybrids(hybrid_alignments: list, db: Database) -> list:
+def __replace_ambiguous_hybrid(hybrid: tuple, db: Database, observed: Spectrum) -> (str, str):
+    '''
+    Attempt to replace a hybrid with a sequence from the database. 
+
+    Inputs:
+        hybrid:     (tuple) (nonhybrid sequence, hybrid sequence)
+        db:         (Database) the source of sequences
+        observed:   (Spectrum) observed spectrum
+    Outputs:
+        (str, str) (the updated non hybrid sequence, None if not hybrid else hybrid sequence)
+    '''
+    # get the sequence without the hybrid characters -()
+    nonhyb = hybrid[0]
+
+    # see if the sequence exists as a non hybrid. If so, return that
+    if len(database.get_proteins_with_subsequence(db, nonhyb)):
+        return ((nonhyb, None))
+
+    # Try replacing all L with I and vice versa
+    possible = all_perms_of_s(nonhyb, 'LI')
+
+    # if we had no other permutations, return the hybrid
+    if len(possible) == 0:
+        return hybrid
+
+    # otherwise look through each permutation
+    candidates = []
+
+    for p in possible:
+
+        # if this permutation exists as a nonhybrid, return it
+        if len(database.get_proteins_with_subsequence(db, p)):
+            return ((p, None))
+
+        # otherwise keep it
+        candidates.append(p)
+
+    # take the highest scoring sequence
+    best_candidates = sorted(
+        candidates, 
+        key=lambda x: sum(score_subsequence(observed.spectrum, p)), 
+        reverse=True
+    )
+
+    # find the sequence that COULD exist
+    for best_candidate in best_candidates:
+
+        # find the hybrid junction
+        for i in range(1, len(best_candidate)-1):
+            left = best_candidate[:i]
+            right = best_candidate[i:]
+
+            # if we can find a left and a right with the sequence, return it
+            if len(database.get_proteins_with_subsequence(db, left)) \
+                and len(database.get_proteins_with_subsequence(db, right)):
+                return ((best_candidate, f'{left}-{right}'))
+
+    # worst case, return the hybrid
+    return hybrid
+
+
+def replace_ambiguous_hybrids(hybrid_alignments: list, db: Database, observed: Spectrum) -> list:
     '''
     Remove any ambiguous hybrid alignments that can be explained by non hybrid sequences.
     The returned list has the sequences or their replacements in the same order that 
@@ -672,41 +732,14 @@ def replace_ambiguous_hybrids(hybrid_alignments: list, db: Database) -> list:
     Inputs:
         hybrid_alignments:  (list) tuples of attempted hybrid alignments with (nonhyb, hyb) form
         db:                 (Database) the source of the sequences
+        observed:           (Spectrum) the observed spectrum
     Ouputs:
         (list) alignments. If no replacements are found, the output is the input 
     '''
-    ret = []
-    for hybalignment in hybrid_alignments:
-        added = False
-
-        # get the sequence without the hybrid characters -()
-        nonhyb = hybalignment[0]
-
-        # also try to replace L and I with eachother
-        possible = all_perms_of_s(nonhyb, 'LI')
-
-        # if we had no other permutations and found a nonhybrid, add it
-        if len(possible) == 0 and len(database.get_proteins_with_subsequence(db, nonhyb)):
-            ret.append((nonhyb, None))
-            added = True
-
-        # otherwise look through each permutation
-        else:
-
-            # go through each permutation
-            for p in possible:
-
-                # if this permutation exists as a nonhybrid, return it
-                if len(database.get_proteins_with_subsequence(db, p)):
-                    ret.append((p, None))
-                    added = True
-                    break
-
-            # a nonhybrid was not found, keep the hybrid
-            if not added:
-                ret.append(hybalignment)
-
-    return ret 
+    return [
+        __replace_ambiguous_hybrid(hybrid_alignment, db, observed)\
+         for hybrid_alignment in hybrid_alignments
+    ]
 
 ########################################################################
 #          / SINGLE STRING ALIGNMENT FUNCTIONS
@@ -759,7 +792,7 @@ def attempt_alignment(
     filter_time += time.time() - st
     filter_count += len(hits)
     DEBUG and print(f'\nFiltering time took {time.time() - st} resulting in {len(b_results)} b sequences and {len(y_results)} y sequences')
-  
+
     # align our b an y sequences
     st = time.time()
     a = align_b_y(b_results, y_results, db)
@@ -768,29 +801,12 @@ def attempt_alignment(
     first_align_time += time.time() - st
     DEBUG and print(f'First alignment round took {time.time() - st} time resulting in {len(a)} alignments')
 
-    # seperate the hybrids from the non hybrids for later analysis
-    nonhyba, hyba = [], []
-    for aligned in a:
-
-        if aligned[1] is not None:
-            hyba.append(aligned)
-        else:
-            nonhyba.append(aligned)
-    
-    # replace any hybrid alignments that are seen that can be explained by non 
-    # hybrid sequences
-    st = time.time()
-    updated_hybrids = [] if len(hyba) == 0 else replace_ambiguous_hybrids(hyba, db)
-
-    ambiguous_removal_count += len(updated_hybrids)
-    ambiguous_removal_time += time.time() - st
-    DEBUG and print(f'Getting rid of ambiguous time took {time.time() - st}')
-
+    # Limit our search to things that match our precursor mass
     # try and fill in the gaps that are in any alignments
     st = time.time()
     precursor_matches = []
 
-    for sequence_pairs in nonhyba + updated_hybrids:
+    for sequence_pairs in a:
         
         # take the sequence. If hybrid, take the hybrid, otherwise the non hybrid
         sequence = sequence_pairs[0] if sequence_pairs[1] is None else sequence_pairs[1]
@@ -806,25 +822,32 @@ def attempt_alignment(
 
     precursor_mass_count += len(precursor_matches)
     precursor_mass_time += time.time() - st
-    DEBUG and print(f'Filling in precursor took {time.time() - st} for {len(updated_hybrids + nonhyba)} sequences')
+    DEBUG and print(f'Filling in precursor took {time.time() - st} for {len(a)} sequences')
 
-    # make tuples again
-    sequence_alignments = []
 
-    for precursor_match in precursor_matches:
-        
-        # add the tuple (non hybrid seq, hybrid seq) to the list
-        non_hyb_seq = precursor_match.replace('(', '').replace(')', '').replace('-', '')
-        hybrid_seq = None if not hyb_alignment_pattern.findall(precursor_match) else precursor_match
+    # seperate the hybrids from the non hybrids for later analysis
+    nonhyba, hyba = [], []
+    for p_m in precursor_matches:
 
-        sequence_alignments.append((non_hyb_seq, hybrid_seq))
+        if '-' in p_m or '(' in p_m or ')' in p_m:
+            hyba.append((p_m.replace('-', '').replace('(', '').replace(')', ''), p_m))
+        else:
+            nonhyba.append((p_m, None))
+    
+    # replace any hybrid alignments that are seen that can be explained by non 
+    # hybrid sequences
+    st = time.time()
+    updated_hybrids = [] if len(hyba) == 0 else replace_ambiguous_hybrids(hyba, db, spectrum)
 
+    ambiguous_removal_count += len(updated_hybrids)
+    ambiguous_removal_time += time.time() - st
+    DEBUG and print(f'Getting rid of ambiguous time took {time.time() - st}')
  
     # Make alignments into the namedtuple types SpectrumAlignments
     # and HybridSequenceAlignments
     alignments = []
     st = time.time()
-    for aligned_pair in sequence_alignments:
+    for aligned_pair in nonhyba + updated_hybrids:
 
         # get the precursor distance. If its too big, continue
         p_d = precursor_distance(spectrum.precursor_mass, get_precursor(aligned_pair[0]))
@@ -878,7 +901,7 @@ def attempt_alignment(
                     p_d
                 )
             )
-    objectify_count += len(sequence_alignments)
+    objectify_count += len(nonhyba + updated_hybrids)
     objectify_time += time.time() - st
     DEBUG and print(f'Time to make into objects took {time.time() - st}')
 
@@ -900,4 +923,4 @@ def attempt_alignment(
             o.write(f'Matching precursor matches time: {precursor_mass_time}s \t seconds/op: {precursor_mass_time/precursor_mass_count}s\n')
             o.write(f'Turning matches into objects time: {objectify_time} \t seconds/op: {objectify_time/objectify_count}\n')
 
-    return sorted(set_alignments, key=lambda x: x.total_score, reverse=True)[:n]
+    return sorted(set_alignments, key=lambda x: (x.total_score, x.b_score + x.y_score), reverse=True)[:n]

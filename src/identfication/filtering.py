@@ -248,7 +248,7 @@ def result_filtering(
         # ion counting score
         if 'ion' == scoring_alg:
             retindex = 0 if ion == 'b' else 1
-            return score_subsequence(spectrum.spectrum, refseq, ppm_tolerance=ppm_tolerance)[retindex]
+            return score_subsequence(spectrum.spectrum, refseq, ppm_tolerance=ppm_tolerance)[retindex] / len(refseq)
         
         if 'xcorr' == scoring_alg:
             refspec = gen_spectrum(refseq, ion=ion)['spectrum']
@@ -263,7 +263,7 @@ def result_filtering(
 
         if 'hybrid' == scoring_alg:
             retindex = 0 if ion == 'b' else 1
-            return ion_intensity_percentage(spectrum, refseq, ppm_tolerance, ion) // 8 + score_subsequence(spectrum.spectrum, refseq, ppm_tolerance=ppm_tolerance)[retindex]
+            return ion_intensity_percentage(spectrum, refseq, ppm_tolerance, ion) + score_subsequence(spectrum.spectrum, refseq, ppm_tolerance=ppm_tolerance)[retindex]
 
         # default to backbone score
         return backbone_score(spectrum, refseq, ppm_tolerance)
@@ -313,15 +313,19 @@ def result_filtering(
             # find take the sequence that has the greatest buildup 
             reduced_seq = overlap_assembler(list(set(v)), ion)
 
+
             # if it can't be found, take the highest scoring one
             if reduced_seq is None:
 
                 # pair the scores with the seqeunces
-                score_pairs = [(seq, sum(score_subsequence(spectrum.spectrum, seq, ppm_tolerance))) \
+                score_pairs = [(seq, score_alg(spectrum, seq, ion, ppm_tolerance)) \
                     for seq in list(set([str(k)] + v))]
 
                 # get the highest score
                 max_score = max(score_pairs, key=itemgetter(1))[1]
+
+                if str(k) == 'AAR' and ion == 'y':
+                    print(f'Scores for {k} are: {score_pairs}')
 
                 # if theres more than 1 top score, make it k, otherwise the max score
                 if [x[1] for x in score_pairs].count(max_score) > 1:
@@ -348,8 +352,8 @@ def result_filtering(
     b_results.sort(key=itemgetter(1), reverse=True)
     y_results.sort(key=itemgetter(1), reverse=True)
 
-    # print(f'B results before filtering:\n{b_results}')
-    # print(f'Y results before filtering:\n{y_results}')
+    print(f'B results before filtering:\n{b_results}')
+    print(f'Y results before filtering:\n{y_results}')
 
     # take the scores that pass our filter
     def filter_scores(l: list) -> list:
@@ -364,16 +368,20 @@ def result_filtering(
         
         nonzero = [x for x in filtered if len(x) > 0]
         if len(nonzero) == 0:
-            return []
+            return l
         
         return min(nonzero, key=len)
 
 
-    filtered_b_results = filter_scores(b_results)
-    filtered_y_results = filter_scores(y_results)
+    def filter_scores2(l: list) -> list:
+        top_score = max(map(lambda x: x[1], l))
+        return [x for x in l if x[1] == top_score]
 
-    print(f'B results after filtering:\n{filtered_b_results}')
-    print(f'Y results after filtering:\n{filtered_y_results}')
+    filtered_b_results = filter_scores2(b_results)
+    filtered_y_results = filter_scores2(y_results)
+
+    # print(f'B results after filtering:\n{filtered_b_results}')
+    # print(f'Y results after filtering:\n{filtered_y_results}')
 
     # if we have nothing, take the top 5 scores
     if len(filtered_b_results) == 0:
