@@ -115,6 +115,11 @@ def id_spectra(
         # load the spectra into memory
         spectra = mzML.read(spectrum_file, peak_filter=peak_filter, relative_abundance_filter=relative_abundance_filter)
 
+        # cache the hits for these spectra
+        verbose and print('Caching spectra')
+        db = database.cache_database(db, spectra)
+        verbose and print('\nDone')
+
         # go through each spectrum in the mzml file
         for j, spec in enumerate(spectra):
 

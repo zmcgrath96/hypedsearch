@@ -22,15 +22,15 @@ __cache:
     Holds protein and kmer hits that were in the sqlite database. 
 
     Properties:
-        proteins:   (DataFrame) cached proteins 
-        kmers:      (DataFrame) cached proteins
-        cache_size: (int) number (in bytes) of allowed usage by the cache
-
+        proteins:           (DataFrame) cached proteins 
+        kmers:              (DataFrame) cached proteins
+        max_mass:           (float) the highest m/z value we cached
+        proteins_cached:    (bool) proteins were cached into memory
 '''
-__cache = namedtuple(
-    '__cache',
-    ['proteins', 'kmers', 'cache_size'], 
-    defaults=[None, None, 0.0]
+cache__ = namedtuple(
+    'cache__',
+    ['proteins', 'kmers', 'max_mass', 'proteins_cached'], 
+    defaults=[None, None, 0, False]
 )
 
 '''
@@ -47,7 +47,7 @@ Database:
 '''
 Database = namedtuple(
     'Database', 
-    ['fasta_file', 'min_len', 'max_len', 'verbose', 'conn', '__cache'], 
+    ['fasta_file', 'min_len', 'max_len', 'verbose', 'conn', 'cache__'], 
     defaults=['', 0, 0, True, None, None]
 )
 

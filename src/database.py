@@ -1,6 +1,6 @@
 
-from src.objects import MassSequence, Spectrum, Database
-from src.utils import ppm_to_da, make_dir, is_file
+from src.objects import MassSequence, Spectrum, Database, cache__
+from src.utils import ppm_to_da, make_dir, is_file, overlap_intervals
 from src.sequence.gen_spectra import max_mass
 
 from collections import defaultdict
@@ -307,6 +307,14 @@ def __build(
 
     return db
 
+
+# create a tuple of a lower and upper bound
+def __get_bounds(mz: float, ppm_tolerance=0, da_tolerance=0):
+    tol = ppm_to_da(mz, ppm_tolerance) if ppm_tolerance > 0 \
+        else (da_tolerance if da_tolerance > 0 else ppm_to_da(mz, 20))
+
+    return [mz - tol, mz + tol]
+
 ########################## /Private Functions ##########################
 
 ########################## Public Functions ##########################
@@ -350,6 +358,15 @@ def get_proteins_with_subsequence(db: Database, subsequence: str) -> list:
     Outputs:
         (list) names of the proteins that contain the subsequence
     '''
+    # check to see if the proteins were cached
+    if db.cache__ and db.cache__.proteins_cached:
+        # run the query on pandas dataframe
+        return list(
+            db.cache__.proteins[db.cache__.proteins['sequence'] \
+            .apply(lambda x: subsequence in x)]['name']
+        )
+
+    # otherwise run the query on the sqlite database
     # we take x[0] because the results come back as tuples in the form ('name', )
     return [x[0] for x in 
         sql.execute_return(
@@ -372,6 +389,12 @@ def get_entry_by_name(db: Database, name: str) -> dict:
     Outputs:
         (dict) Entry of the protein. Empty Entry if not found
     '''
+    # check to see if proteins were cached
+    if db.cache__ and db.cache__.proteins_cached:
+        result = db.cache__.proteins[db.cache__.proteins['name'] == name].to_dict('r')
+        return result[0] if len(result) else None
+
+    # otherwise run query on sqlite database
     a = list(sql.execute_return(
         db.conn, 
         f'''
@@ -389,7 +412,7 @@ def get_entry_by_name(db: Database, name: str) -> dict:
         'sequence': a[2]
     })
 
-def cache_spectra(db: Database, spectra: list, ppm_tolerance=0, da_tolerance=0) -> None:
+def cache_database(db: Database, spectra: list) -> Database:
     '''
     Caching the hits of as many spectra peaks as possible. One
     of the two tolerances should be set in order to perform a search. If non is set, then default
@@ -402,11 +425,102 @@ def cache_spectra(db: Database, spectra: list, ppm_tolerance=0, da_tolerance=0) 
         ppm_tolerance:  (float) the ppm tolerance to accept for each mass. Default=0
         da_tolerance:   (int) the tolerance to accept for each mass. Default=0
     Outputs:
-        None
+        (Database) the updated database
     '''
+    def over_limit():
+        # get available memory
+        memory_available = psutil.virtual_memory().available
+        
+        # subtract 1/8 system memory in order to avoid swapping 
+        eigth_memory = psutil.virtual_memory().total / 8
+
+        # if 0 is larger than available-overhead, return true
+        return 0 > (memory_available - eigth_memory)
+
+    # if we are out, return
+    if over_limit():
+        return db 
+
+    kmers_cache = pd.DataFrame(columns=['bs', 'bd', 'ys', 'yd', 'sequence'])
+
+    # CACHING PROCESS
+    # We take all of our spectra in a large window. We compute the 
+    # bounds for all of them and remove all overlaps for larger windows
+    # we will then iteratively add these bounds to the datframe untile
+    # we either (a) run out of memory or (b) cache all spectra
+    # NOTE: we can do 1000 BETWEEN queries on the sqlite database, so we limit 
+    # ourself to 200 bounds at a time since we have 4 columns to check. This means
+    # we will run 200 * 4 BETWEEN queries, so we have 200 to spare for safety
+    all_bounds = [__get_bounds(mz, da_tolerance=1) for spectrum in spectra for mz in spectrum.spectrum]
+    smoothed_bounds = sorted(overlap_intervals(all_bounds), key=lambda x: x[1])
+
+    batch_size = 200
+    num_batches = math.ceil(len(smoothed_bounds) / batch_size)
+
+    for batch in range(num_batches):
+
+        db.verbose and print(f'Caching as many spectra as possible... {int(100 * batch / num_batches)}%\r', end='')
+
+        # generate the between query for this batch
+        batch_bounds = smoothed_bounds[batch*batch_size:(batch+1)*batch_size]
+        between_query = []
+
+        # we must do this for all ion types
+        for ion_type in ['bs', 'bd', 'ys', 'yd']:
+            # create the sql query
+            between_query += [f'{ion_type} BETWEEN {b[0]} and {b[1]}' for b in batch_bounds]
+
+        # create the full select query to run
+        full_query = f'SELECT * FROM kmers WHERE {" or ".join(between_query)}'
+
+        # run the query 
+        batched_results = pd.DataFrame(
+            sql.execute_return(db.conn, full_query).fetchall(), 
+            columns=['bs', 'bd', 'ys', 'yd', 'sequence']
+        )
+
+        # add the results to the table
+        kmers_cache = kmers_cache.append(batched_results)
+
+        # check memory again and if we are over limit, set db cache and break 
+        if over_limit():
+            cache = cache__(None, kmers_cache, batch_bounds[-1][-1], False)
+            db = db._replace(cache__=cache)
+            return db
+
+    # if we ran out of memory, update db cache and return
+    if over_limit():
+        cache = cache__(None, kmers_cache, smoothed_bounds[-1][-1], False)
+        db = db._replace(cache__=cache)
+        return db
+
+    # check to see if we've already cached proteins
+    if db.cache__ and db.cache__.proteins_cached:
+        return db
+
+    # keep size of batch, break into proteins 
+    proteins_cache = pd.DataFrame(
+        sql.execute_return(
+            db.conn,
+            'SELECT * FROM proteins'
+        ).fetchall(),
+        columns=['name', 'id', 'sequence']
+    )
+
+    # add them to db
+    cache = cache__(proteins_cache, kmers_cache, smoothed_bounds[-1][-1], True)
+    db = db._replace(cache__=cache)
+
+    return db
 
 
-def search(db: Database, observed: Spectrum, kmers: str, ppm_tolerance=0, da_tolerance=0) -> list:
+def search(
+    db: Database, 
+    observed: Spectrum, 
+    kmers: str, 
+    ppm_tolerance=0, 
+    da_tolerance=0
+) -> list:
     '''
     Search through all masses and saved kmers to find masses that are within our tolerance. One
     of the two tolerances should be set in order to perform a search. If non is set, then default
@@ -419,22 +533,26 @@ def search(db: Database, observed: Spectrum, kmers: str, ppm_tolerance=0, da_tol
     kwargs:
         ppm_tolerance:  (float) the ppm tolerance to accept for each mass. Default=0
         da_tolerance:   (int) the tolerance to accept for each mass. Default=0
+        spectrum_count: (int) the count number of the spectrum. If passed, we try and look through cache
+                        for spectrum hits. Default=None
     Outputs:
         list of MassSequence for all masses that were in the acceptable range of an observed mass
     '''
-
-    # create a tuple of a lower and upper bound
-    def get_bounds(mz):
-        tol = ppm_to_da(mz, ppm_tolerance) if ppm_tolerance > 0 \
-            else (da_tolerance if da_tolerance > 0 else ppm_to_da(mz, 20))
-
-        return (mz - tol, mz + tol)
-
     # get all bounds for all mz values in the observed
-    bounds = [get_bounds(mz) for mz in observed.spectrum]
+    bounds = [__get_bounds(mz, ppm_tolerance, da_tolerance) for mz in observed.spectrum]
+    largest_mass = max(map(lambda x: x[1], bounds))
 
+    # check to see if we can check cache
+    if db.cache__ is not None and db.cache__.max_mass >= largest_mass:
+        # run the bounds query on the pandas dataframe
+        return list(flatten(
+            [db.cache__.kmers[db.cache__.kmers[kmers].between(b[0], b[1])]['sequence'] for b in bounds]
+        ))
+
+    print('NOT SEARCHING CACHED RESULTS')
+    # otherwise run query on the sqlite database
     # create a query as large as bounds / 2
-    between_query = [f'{kmers} BETWEEN {b1} and {b2}' for b1, b2 in bounds]
+    between_query = [f'{kmers} BETWEEN {b[0]} and {b[1]}' for b in bounds]
 
     # create the full select query to run
     full_query = f'SELECT sequence FROM kmers WHERE {" or ".join(between_query)}'

@@ -311,3 +311,22 @@ def make_sparse_array(spectrum: list, width: float, value=50) -> np.ndarray:
         sparse[int(m // width)] = value
 
     return sparse
+
+def overlap_intervals(intervals: list) -> list:
+    '''
+    Take a list of intervals and turn it into a smaller list by finding any 
+    overlapping intervals and making it a larger interval
+    Inputs:
+        intervals:  (list) intervals (in the form of lists) of upper and lower bounds (inclusive)
+    Outputs:
+        (list) intervals of lists
+    '''
+    intervals.sort(key=lambda interval: interval[0])
+    merged = [intervals[0]]
+    for current in intervals:
+        previous = merged[-1]
+        if current[0] <= previous[1]:
+            previous[1] = max(previous[1], current[1])
+        else:
+            merged.append(current)
+    return merged  
