@@ -18,6 +18,22 @@ KmerMassesResults = namedtuple(
 )
 
 '''
+__cache:
+    Holds protein and kmer hits that were in the sqlite database. 
+
+    Properties:
+        proteins:   (DataFrame) cached proteins 
+        kmers:      (DataFrame) cached proteins
+        cache_size: (int) number (in bytes) of allowed usage by the cache
+
+'''
+__cache = namedtuple(
+    '__cache',
+    ['proteins', 'kmers', 'cache_size'], 
+    defaults=[None, None, 0.0]
+)
+
+'''
 Database:
     Holds proteins, fasta file, protein tree, and kmer masses 
 
@@ -26,12 +42,12 @@ Database:
         min_len:        (int) the minimum length peptide to consider
         max_len:        (int) the maximum length peptide to consider
         verbose:        (bool) extra printing
-        proteins:       (DataFrame) the store for database information
-        kmer_masses:    (DataFrame) the store for kmers and their masses
+        conn:           (sqlite3.Connection) the connection to the sqlite database
+        __cache:        (__cache) data to be held in memory
 '''
 Database = namedtuple(
     'Database', 
-    ['fasta_file', 'min_len', 'max_len', 'verbose', 'proteins', 'kmer_masses'], 
+    ['fasta_file', 'min_len', 'max_len', 'verbose', 'conn', '__cache'], 
     defaults=['', 0, 0, True, None, None]
 )
 

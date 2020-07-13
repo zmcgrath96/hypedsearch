@@ -7,15 +7,65 @@ from collections import defaultdict
 from pyteomics import fasta
 from more_itertools import flatten
 
+import src.sqlite_interface as sql
 import pandas as pd
 import string
 import math
 import pickle
-import swifter
+import psutil
 
 ########################## Private Functions ##########################
 
+def __make_db_dir(db: Database) -> str:
+    '''
+    Make the directories to save the datbase into. The subdirectories
+    are made. The structure is as follows:
+
+        databases/<fasta_file_name>/
+
+    If no fasta file is made, then "noname" is used as the intermediate folder name
+
+    Inputs:
+        db:     (Databse) the database for which the file name is made for
+    Outputs:
+        (str) the name of the full path for which the database is saved
+    '''
+    # make the database directory
+    db_dir = './databases/'
+    make_dir(db_dir)
+
+    # make the intermediate folder
+    db_dir += db.fasta_file.split('/')[-1].replace('.fasta', '') + '/' \
+        if db.fasta_file is not None and db.fasta_file != '' else 'noname/'
+    make_dir(db_dir)
+
+    return db_dir
+
+
 def __make_db_file(db: Database) -> str:
+    '''
+    Make the name and directories to save the datbase into. The subdirectories
+    are made, but no file is made. The structure is as follows:
+
+        databases/<fasta_file_name>/f<min len>t<max len>.pkl
+
+    If no fasta file is made, then "noname" is used as the intermediate folder name
+
+    Inputs:
+        db:     (Databse) the database for which the file name is made for
+    Outputs:
+        (str) the name of the file (full path) for which the database is saved
+    '''
+    # make the database directory
+    db_dir = __make_db_dir(db)
+
+    # add the f t clause
+    db_file = db_dir + f'f{db.min_len}t{db.max_len}.pkl'
+
+    return db_file
+
+
+def __make_sql_db_file(db: Database) -> str:
     '''
     Make the name and directories to save the datbase into. The subdirectories
     are made, but no file is made. The structure is as follows:
@@ -29,17 +79,11 @@ def __make_db_file(db: Database) -> str:
     Outputs:
         (str) the name of the file (full path) for which the database is saved
     '''
-    # make the database directory
-    db_file = './databases/'
-    make_dir(db_file)
+    # get the db dir
+    db_dir = __make_db_dir(db)
 
-    # make the intermediate folder
-    db_file += db.fasta_file.split('/')[-1].replace('.fasta', '') + '/' \
-        if db.fasta_file is not None and db.fasta_file != '' else 'noname/'
-    make_dir(db_file)
-
-    # add the f t clause
-    db_file += f'f{db.min_len}t{db.max_len}.db'
+    # make the .db file 
+    db_file = db_dir + f'f{db.min_len}t{db.max_len}.db'
 
     return db_file
 
@@ -76,7 +120,14 @@ def __save_db(db: Database) -> bool:
 
     try:
         print(f'Saving to: {db_file}')
+        
+        # temporarily remove the connection as its not pickleable
+        conn = db.conn
+        db = db._replace(conn=None)
         pickle.dump(db, open(db_file, 'wb'))
+
+        # replace db conn
+        db = db._replace(conn=conn)
     except:
         return False
 
@@ -95,6 +146,20 @@ def __read_fasta(db: Database, fasta_file: str) -> dict:
     '''
     prots = []
     db = db._replace(fasta_file=fasta_file)
+
+    # create the connection and table for proteins
+    conn = sql.create_connection(__make_sql_db_file(db))
+    db = db._replace(conn=conn)
+    sql.create_table(
+        db.conn,
+        '''
+        CREATE TABLE IF NOT EXISTS proteins (
+            name TEXT, 
+            id TEXT PRIMARY KEY, 
+            sequence TEXT
+        )
+        '''
+    )
 
     db.verbose and print('Loading fasta file into memory...')
 
@@ -123,11 +188,14 @@ def __read_fasta(db: Database, fasta_file: str) -> dict:
         # make the entry and add it to prots
         prots.append({'name': name, 'id': id_, 'sequence': seq})
 
-    # throw it into a pandas dataframe
-    proteins = pd.DataFrame(prots)
-
-    # update db's proteins attribute
-    db = db._replace(proteins=proteins)
+    # add these sequences to the table
+    sql.execute_indel_many(
+        db.conn, 
+        '''
+        INSERT INTO proteins (name, id, sequence) VALUES (?, ?, ?)
+        ''', 
+        [(x['name'], x['id'], x['sequence']) for x in prots]
+    )
 
     db.verbose and print('Done')
 
@@ -152,63 +220,88 @@ def __build(
         kmers = []
 
         # go through each starting position of the sequence
-        for j in range(len(s) - db.min_len):
+        for j in range(len(s) - db.min_len + 1):
 
             # make a kmer sequence. Do the max (to generate the kmer spec once) then 
             # just iterate through it
-            kmer_len = db.max_len if j + db.max_len <= len(s) else len(s) - j
+            kmer_len = db.max_len + 1 if j + db.max_len <= len(s) else len(s) - j + 1
 
             for k in range(db.min_len, kmer_len):
                 kmers.append(s[j:j+k])
-            
+
         return kmers
 
     # get the singly and doubly b and y masses for this subsequence
     def spectrify(s: str) -> dict:
-        f = {}
-        f['bs'] = max_mass(s, 'b', 1)
-        f['bd'] = max_mass(s, 'b', 2)
-        f['ys'] = max_mass(s, 'y', 1)
-        f['yd'] = max_mass(s, 'y', 2)
-        f['sequence'] = s
-        return f
+        return (
+            max_mass(s, 'b', 1),
+            max_mass(s, 'b', 2),
+            max_mass(s, 'y', 1),
+            max_mass(s, 'y', 2),
+            s
+        )
+       
+    # create the kmers database in sqlite
+    sql.create_table(
+        db.conn, 
+        '''
+        CREATE TABLE IF NOT EXISTS kmers (
+            bs REAL, 
+            bd REAL, 
+            ys REAL, 
+            yd REAL, 
+            sequence TEXT
+        )
+        '''
+    )
 
     db.verbose and print(f'Finding all subsequences in range {db.min_len} to {db.max_len}')
 
-    # for each protein sequence:
-    #   1. break it down to all the subsequences via breakdown function (list output)
-    #   2. make it a dataframe (DataFrame output)
-    #   3. make each column's list entry (that is a list) into its own row (DataFrame output)
-    #   4. remove any duplicates
-    kmers = db.proteins['sequence'].swifter     \
-        .apply(breakdown)                   \
-        .to_frame()                         \
-        .explode('sequence')                \
-        .drop_duplicates('sequence')        \
-        .reset_index(drop=True)
+    # in batches of 1000 proteins, apply the breakdown and spectrify functions
+    #   1. get the number of proteins in the database
+    #   2. calculate the number of batches to run
+    #   3. for each batch   
+    #       a. get the sequences of proteins in batch
+    #       b. apply breakdown to each sequence
+    #       c. apply spectrify to all sequences
+    #   4. add the results of spectrify to the table
+    batch_size = 1000
 
-    db.verbose and print('Done.')
-    db.verbose and print(f'Indexing the masses for {len(kmers)} subsequences...')
+    # get the protein sequences
+    sequences = [x[0] for x in sql.execute_return(
+        db.conn, 
+        '''
+        SELECT sequence FROM proteins
+        '''
+    ).fetchall()]
+    num_prots = len(sequences)
 
-    # for each of the subsequences that we created in a, spectrify it 
-    # which creates a bs, bd, ys, yd column for each subsequence
-    mass_list = list(kmers['sequence'].swifter.apply(spectrify))
-    del kmers
+    # calculate the number of batches
+    num_batches = math.ceil(num_prots / batch_size)
 
-    # sequences that share one mass will share all masses, so put them all in the same row
-    # put them in a temporary dictionary by the b++ mass then to a dataframe
-    mass_dict = {}
-    for ml in mass_list:
-        if ml['bd'] not in mass_dict:
-            mass_dict[ml['bd']] = {'bd': ml['bd'], 'yd': ml['yd'], 'bs': ml['bs'], 'ys': ml['ys'], 'sequences': []}
-        mass_dict[ml['bd']]['sequences'].append(ml['sequence'])
-    
-    # turn from a dictionary to a dataframe
-    mass_sequences = pd.DataFrame([value for _, value in mass_dict.items()])
-    mass_sequences.astype({'bs': 'float32', 'bd': 'float32', 'ys': 'float32', 'yd': 'float32'})
+    # go through each batch
+    for batch in range(num_batches):
+        print(f'Indexing sequences for faster searches... {int(batch * 100 / num_batches)}%\r', end='')
+        
+        # the tuples to add to kmers
+        kmer_additions = []
 
-    # update db kmer_masses to be the dataframe
-    db = db._replace(kmer_masses=mass_sequences)
+        # the sequences in the batch
+        batch_sequences = sequences[batch*batch_size:(batch+1)*batch_size]
+        
+        for sequence in batch_sequences:
+            kmer_additions += [
+                spectrify(kmer) for kmer in breakdown(sequence)
+            ]
+        
+        # add it to the table
+        sql.execute_indel_many(
+            db.conn,
+            '''
+            INSERT INTO kmers (bs, bd, ys, yd, sequence) VALUES (?, ?, ?, ?, ?)
+            ''',
+            kmer_additions
+        )
 
     db.verbose and print('Done.')
 
@@ -231,6 +324,9 @@ def build_or_load_db(db: Database) -> Database:
     if __saved_db_exists(db):
         print('Loading saved database...')
         db = pickle.load(open(__make_db_file(db), 'rb'))
+
+        # establish the sqlite connection
+        db = db._replace(conn=sql.create_connection(__make_sql_db_file(db)))
         print('Done')
 
     else: 
@@ -254,9 +350,16 @@ def get_proteins_with_subsequence(db: Database, subsequence: str) -> list:
     Outputs:
         (list) names of the proteins that contain the subsequence
     '''
-    return list(
-        db.proteins[db.proteins['sequence'].apply(lambda x: subsequence in x)]['name']
-    )
+    # we take x[0] because the results come back as tuples in the form ('name', )
+    return [x[0] for x in 
+        sql.execute_return(
+            db.conn, 
+            f'''
+            SELECT name FROM proteins
+            WHERE sequence LIKE "%{subsequence}%"
+            '''
+        ).fetchall()
+    ]
 
 
 def get_entry_by_name(db: Database, name: str) -> dict:
@@ -269,11 +372,38 @@ def get_entry_by_name(db: Database, name: str) -> dict:
     Outputs:
         (dict) Entry of the protein. Empty Entry if not found
     '''
-    res = db.proteins[db.proteins['name'] == name].to_dict('r')
+    a = list(sql.execute_return(
+        db.conn, 
+        f'''
+        SELECT * FROM proteins
+        WHERE name == "{name}"
+        '''
+    ).fetchall())[0]
 
-    if len(res):
-        return res[0]
-    return None
+    if len(a) == 0:
+        return {}
+
+    return({
+        'name': a[0],
+        'id': a[1],
+        'sequence': a[2]
+    })
+
+def cache_spectra(db: Database, spectra: list, ppm_tolerance=0, da_tolerance=0) -> None:
+    '''
+    Caching the hits of as many spectra peaks as possible. One
+    of the two tolerances should be set in order to perform a search. If non is set, then default
+    is 20 ppm.
+    
+    Inputs:
+        db:         (Database) the database containing the kmermasses dictionaries to search
+        spectra:    (list) spectra (each of Spectrum type) to cache
+    kwargs:
+        ppm_tolerance:  (float) the ppm tolerance to accept for each mass. Default=0
+        da_tolerance:   (int) the tolerance to accept for each mass. Default=0
+    Outputs:
+        None
+    '''
 
 
 def search(db: Database, observed: Spectrum, kmers: str, ppm_tolerance=0, da_tolerance=0) -> list:
@@ -303,12 +433,17 @@ def search(db: Database, observed: Spectrum, kmers: str, ppm_tolerance=0, da_tol
     # get all bounds for all mz values in the observed
     bounds = [get_bounds(mz) for mz in observed.spectrum]
 
-    # go through each bound pair and search the dataframe
-    hits = list(flatten(
-        [list(flatten(db.kmer_masses[db.kmer_masses[kmers].between(b[0], b[1])]['sequences'])) \
-            for b in bounds]
-    ))
+    # create a query as large as bounds / 2
+    between_query = [f'{kmers} BETWEEN {b1} and {b2}' for b1, b2 in bounds]
+
+    # create the full select query to run
+    full_query = f'SELECT sequence FROM kmers WHERE {" or ".join(between_query)}'
+
+    # run the query. we take x[0] because entries come as tuples ('sequence',)
+    return [x[0] for x in list(sql.execute_return(
+        db.conn, 
+        full_query
+    ).fetchall())]
             
-    return hits
 
 ########################## /Public Functions ##########################

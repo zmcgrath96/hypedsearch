@@ -368,7 +368,7 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
                 # touch the overlap
                 if '(' in sequence or ')' in sequence: 
 
-                    # get the left and right proteins
+                    # get the left and right proteins. 3rd entry (index 2) is the sequece
                     l_p_s = database.get_entry_by_name(db, l_p)['sequence']
                     r_p_s = database.get_entry_by_name(db, r_p)['sequence']
 
