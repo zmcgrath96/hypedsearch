@@ -352,30 +352,30 @@ def result_filtering(
     # print(f'B results before filtering:\n{b_results}')
     # print(f'Y results before filtering:\n{y_results}')
 
-    # take the scores that pass our filter
+    # # take the scores that pass our filter
+    # def filter_scores(l: list) -> list:
+    #     if len(l) < 2:
+    #         return l
+
+    #     filtered = [
+    #         stddev_filtering(l, stddevs=2, key=1),
+    #         mean_filtering(l, mean_filter=2, key=1),
+    #         slope_filtering(l, mean_filter=2, key=1)
+    #     ]
+        
+    #     nonzero = [x for x in filtered if len(x) > 0]
+    #     if len(nonzero) == 0:
+    #         return l
+        
+    #     return min(nonzero, key=len)
+
+
     def filter_scores(l: list) -> list:
-        if len(l) < 2:
-            return l
-
-        filtered = [
-            stddev_filtering(l, stddevs=2, key=1),
-            mean_filtering(l, mean_filter=2, key=1),
-            slope_filtering(l, mean_filter=2, key=1)
-        ]
-        
-        nonzero = [x for x in filtered if len(x) > 0]
-        if len(nonzero) == 0:
-            return l
-        
-        return min(nonzero, key=len)
-
-
-    def filter_scores2(l: list) -> list:
         top_score = max(map(lambda x: x[1], l))
         return [x for x in l if x[1] == top_score]
 
-    filtered_b_results = filter_scores2(b_results)
-    filtered_y_results = filter_scores2(y_results)
+    filtered_b_results = filter_scores(b_results)
+    filtered_y_results = filter_scores(y_results)
 
     # print(f'B results after filtering:\n{filtered_b_results}')
     # print(f'Y results after filtering:\n{filtered_y_results}')

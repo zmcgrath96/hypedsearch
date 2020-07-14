@@ -13,6 +13,7 @@ import string
 import math
 import pickle
 import psutil
+import multiprocessing
 
 ########################## Private Functions ##########################
 
@@ -265,7 +266,11 @@ def __build(
     #       b. apply breakdown to each sequence
     #       c. apply spectrify to all sequences
     #   4. add the results of spectrify to the table
-    batch_size = 1000
+
+    # NOTE: 1000 proteins uses ~4.5GB, so we should lower this to 750 for multicore processing
+    # that way 8, 16 and 32 GB of RAM with various counts of CPU can use as many CPU's as possible
+    # without going over
+    batch_size = 750
 
     # get the protein sequences
     sequences = [x[0] for x in sql.execute_return(
@@ -276,32 +281,84 @@ def __build(
     ).fetchall()]
     num_prots = len(sequences)
 
-    # calculate the number of batches
+    # calculate the number of batches, get num cpus
     num_batches = math.ceil(num_prots / batch_size)
+    num_cpus = multiprocessing.cpu_count()
+    num_producers = num_cpus - 1
 
-    # go through each batch
+    ########################## Multiprocessing ##########################
+
+    # process safe queues
+    output_q = multiprocessing.Queue()
+    input_q = multiprocessing.Queue()
+
+    # sending to database
+    def __spectrify_consumer(input_q: multiprocessing.Queue):
+        finished = 0
+        while True:
+        
+            print(f'Indexing sequences for faster searches... {int(finished * 100 / num_batches)}%\r', end='')
+
+            # get the top thing off the queueue
+            kmer_additions = input_q.get(True)
+
+            # if kmer_additions is none, return 
+            if kmer_additions is None:
+                return 
+
+            # add it to the table
+            sql.execute_indel_many(
+                db.conn,
+                '''
+                INSERT INTO kmers (bs, bd, ys, yd, sequence) VALUES (?, ?, ?, ?, ?)
+                ''',
+                kmer_additions
+            )
+            finished += 1
+
+    # generating sequences
+    def __spectrfiy_producer(input_q: multiprocessing.Queue, output_q: multiprocessing.Queue):
+        while True:
+
+            # get the sequences from the input queue
+            batch_sequences = input_q.get(True)
+
+            # if its None, return
+            if batch_sequences is None:
+                return 
+
+            # breakdown and spectrify the batch and put it in the output quue
+            kmer_additions = []
+            for seq in batch_sequences:
+                kmer_additions += [spectrify(kmer) for kmer in breakdown(seq)]
+            output_q.put(kmer_additions)
+
+
+    
+    # add things to the input queue
     for batch in range(num_batches):
-        print(f'Indexing sequences for faster searches... {int(batch * 100 / num_batches)}%\r', end='')
-        
-        # the tuples to add to kmers
-        kmer_additions = []
+        input_q.put([seq for seq in sequences[batch*batch_size:(batch+1)*batch_size]])
 
-        # the sequences in the batch
-        batch_sequences = sequences[batch*batch_size:(batch+1)*batch_size]
-        
-        for sequence in batch_sequences:
-            kmer_additions += [
-                spectrify(kmer) for kmer in breakdown(sequence)
-            ]
-        
-        # add it to the table
-        sql.execute_indel_many(
-            db.conn,
-            '''
-            INSERT INTO kmers (bs, bd, ys, yd, sequence) VALUES (?, ?, ?, ?, ?)
-            ''',
-            kmer_additions
-        )
+    # put None in for the number of producers
+    [input_q.put(None) for _ in range(num_producers)]
+
+    # start the producers
+    producers = [multiprocessing.Process(target=__spectrfiy_producer, args=(input_q, output_q)) \
+        for _ in range(num_producers)]
+    for p in producers:
+        p.start()
+
+    # start the consumer
+    consumer = multiprocessing.Process(target=__spectrify_consumer, args=(output_q, ))
+    consumer.start()
+
+    # wait for producers
+    for p in producers:
+        p.join()
+
+    # end the consumer
+    output_q.put(None)
+    consumer.join()
 
     db.verbose and print('Done.')
 

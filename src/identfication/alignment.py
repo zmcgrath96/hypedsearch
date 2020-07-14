@@ -140,10 +140,6 @@ def same_protein_alignment(seq1: str, seq2: str, parent_sequence: str) -> (str, 
     Outputs:
         tuple:   first entry is the seqence, second entry is 
                  the second entry is the hybrid sequence, if not hybrid, then its None
-                 
-                 
-                 
-                 ABCDE     DEFGH
     ''' 
     # check to see if they are equal or one covers the entirety of the other
     if seq1 == seq2:
