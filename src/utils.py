@@ -245,6 +245,41 @@ def insort_by_index(value: Any, a: Iterable, index: int) -> Iterable:
     else:
         return a[:mid] + insort_by_index(value, a[mid:], index)
 
+def insort_by_func(value: Any, a: Iterable, func: callable) -> Iterable:
+    '''
+    Insort value into a using func as the the callable (on 2 inputs to be compared)
+
+    Example:
+        value:  12.34
+        a:      [1.90, 5.90, 12.33, 45]
+
+        When func is called, it is called on 2 inputs (func(12.34, 12.33)) and returns
+        True if the first input is smaller than the second, otherwise False
+
+    Inputs:
+        value:  (Any) value to be added to the list
+        a:      (Iterable) the iterable to add Any into
+        func:   (Callable) function with inputs (value, value2) and outputs True if value2 > value
+    Outputs:
+        (Iterable) updated value of a
+    '''
+
+    if len(a) == 0:
+        return [value]
+    elif len(a) == 1:
+        return a + [value] if func(a[0], value) else [value] + a
+    
+    mid = math.floor(len(a)/2)
+    if func(a[mid-1], value) and func(value, a[mid]):
+        # check to see if the nieghboring values are the same, if not don't add the new one
+        if a[mid-1] == value or a[mid] == value:
+            return a
+        return a[:mid] + [value] + a[mid:]
+    elif func(value, a[mid]):
+        return insort_by_func(value, a[:mid], func) + a[mid:]
+    else:
+        return a[:mid] + insort_by_func(value, a[mid:], func)
+
 def all_perms_of_s(s: str, keyletters: str) -> list:
     '''
     Find all permutations of a string that has values 'keyletters' in them

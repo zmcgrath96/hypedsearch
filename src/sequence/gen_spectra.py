@@ -1,4 +1,6 @@
-from src.constants import AMINO_ACIDS, WATER_MASS, SINGLY_CHARGED_B_BASE, SINGLY_CHARGED_Y_BASE, DOUBLY_CHARGED_B_BASE, DOUBLY_CHARGED_Y_BASE
+from src.constants import AMINO_ACIDS, WATER_MASS, SINGLY_CHARGED_B_BASE, SINGLY_CHARGED_Y_BASE, DOUBLY_CHARGED_B_BASE, DOUBLY_CHARGED_Y_BASE, INTEGER_ORDERED_AMINO_ACIDS
+
+import numpy as np
 
 def b_ions(sequence: str, charge=None): 
     '''
@@ -180,3 +182,25 @@ def gen_spectra(sequences: list, charge=None, ion=None) -> list:
         list of dictionaries of the form {'spectrum': list of floats, 'precursor_mass': float}
     '''
     return [gen_spectrum(seq, charge=charge, ion=ion) for seq in sequences]
+
+def gen_min_ordering(sequence: str) -> list:
+    '''
+    Generates an np array the length of the sequence that is the minimal representation
+    of a spectrum (for ordering purposes). Each amino acid is represented as an integer
+    (an 8 bit integer by NumPy). The integer is the sorted value (lowest to highest) by mass. 
+    For example, G has the lowest mass, so its index is 0. W, the heaviest, has an index of 19.
+    This is done for the smallest (memory) representation for sorting a list of k-mers
+    (needed for simple DAWG construction)
+
+    Inputs:
+        sequence:   (str) the sequence of amino acids to converte
+    Outputs:
+        (list) a list of 16 bit integers
+    '''
+
+    middle = [np.int8(INTEGER_ORDERED_AMINO_ACIDS[aa]) for aa in sequence if aa in INTEGER_ORDERED_AMINO_ACIDS]
+    if len(middle) == 0:
+        return []
+    return middle
+
+   
