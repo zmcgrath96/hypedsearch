@@ -1,37 +1,7 @@
 from collections import namedtuple
+from mass_dawg import PyMassDawg
 
-'''
-Named tuples for lighter-weight object like interaction
-'''
-
-'''
-KmerMassesResults:
-    Holds the hits from a hash on the entries of KmerMassesResults.
-
-    Properties:
-        (bs, bd, ys, yd):   (list) MassSequence hits 
-'''
-KmerMassesResults = namedtuple(
-    'KmerMassesResults', 
-    ['bs', 'bd', 'ys', 'yd'], 
-    defaults=[[], [], [], []]
-)
-
-'''
-__cache:
-    Holds protein and kmer hits that were in the sqlite database. 
-
-    Properties:
-        proteins:           (DataFrame) cached proteins 
-        kmers:              (DataFrame) cached proteins
-        max_mass:           (float) the highest m/z value we cached
-        proteins_cached:    (bool) proteins were cached into memory
-'''
-cache__ = namedtuple(
-    'cache__',
-    ['proteins', 'kmers', 'max_mass', 'proteins_cached'], 
-    defaults=[None, None, 0, False]
-)
+from src.tree import Tree
 
 '''
 Database:
@@ -39,16 +9,17 @@ Database:
 
     Properties:
         fasta_file:     (str) the name of the input fasta file
-        min_len:        (int) the minimum length peptide to consider
-        max_len:        (int) the maximum length peptide to consider
-        verbose:        (bool) extra printing
-        conn:           (sqlite3.Connection) the connection to the sqlite database
-        __cache:        (__cache) data to be held in memory
+        proteins:       (dict) the key: value pairs of proteins where keys are the 
+                                entry number and the value is a named tuple of 
+                                ('description', 'sequence')
+        tree:           (Tree) the tree the contains sequences keyed by the source proteins
+        b_dawg:         (PyMassDawg) the dawg used to keep track of the b sequences of interest found
+        y_dawg:         (PyMassDawg) the dawg used to keep track of the y sequences of interest found
 '''
 Database = namedtuple(
     'Database', 
-    ['fasta_file', 'min_len', 'max_len', 'verbose', 'conn', 'cache__'], 
-    defaults=['', 0, 0, True, None, None]
+    ['fasta_file', 'proteins', 'tree', 'b_dawg', 'y_dawg'], 
+    defaults=['', {}, Tree(), PyMassDawg(), PyMassDawg()]
 )
 
 '''

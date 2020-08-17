@@ -1,6 +1,6 @@
 ########################## PROGRAM IO ##########################
 # full path to the spectra folder containing all spectra files
-SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/nod2 data/filteredSpec/'
+SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/nod2 data/single/'
 # full path to the .fasta database file
 DATABASE_FILE = '/Users/zacharymcgrath/Desktop/nod2 data/filteredNOD2.fasta'
 # full path to the output directory

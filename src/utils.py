@@ -2,6 +2,7 @@ import os, gzip, shutil, copy, math
 from typing import Iterable, Any
 from itertools import product
 import numpy as np
+from collections import namedtuple
 
 def make_valid_dir_string(dir_path: str) -> str:
     '''

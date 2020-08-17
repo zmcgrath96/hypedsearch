@@ -1,7 +1,6 @@
 from src.utils import insort_by_index, all_perms_of_s, make_sparse_array
 from src.scoring.scoring import score_subsequence, backbone_score, precursor_distance, xcorr, ion_backbone_score, intensity_ion_backbone_score, intensity_backbone_score, ion_intensity_percentage
-from src.identfication.filtering import result_filtering, mean_filtering
-from src.objects import Spectrum, KmerMassesResults, SequenceAlignment, HybridSequenceAlignment, Database
+from src.objects import Spectrum, SequenceAlignment, HybridSequenceAlignment, Database
 from src import database
 from src.sequence.gen_spectra import get_precursor
 
@@ -10,6 +9,8 @@ import re
 from operator import itemgetter
 from more_itertools import flatten
 import math
+
+import time
 
 time_log_file = './timelog.txt'
 filter_time = 0
@@ -287,7 +288,7 @@ def align_b_y(b_results: list, y_results: list, db: Database) -> list:
                 for sp in shared_prots:
 
                     # get the sequence from the entry for alignment
-                    prot_seq = database.get_entry_by_name(db, sp)['sequence']
+                    prot_seq = database.get_entry_by_name(db, sp).sequence
 
                     # try all same protein alignments
                     spec_alignments.append(
@@ -365,8 +366,8 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
                 if '(' in sequence or ')' in sequence: 
 
                     # get the left and right proteins. 3rd entry (index 2) is the sequece
-                    l_p_s = database.get_entry_by_name(db, l_p)['sequence']
-                    r_p_s = database.get_entry_by_name(db, r_p)['sequence']
+                    l_p_s = database.get_entry_by_name(db, l_p).sequence
+                    r_p_s = database.get_entry_by_name(db, r_p).sequence
 
                     # separate the left and the right sequences
                     left_seq = sequence[:sequence.index(')')].replace('(', '')
@@ -410,13 +411,13 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
                     right_seq = sequence.split('-')[1]
 
                     left_flanking_pairs = __get_surrounding_amino_acids(
-                        database.get_entry_by_name(db, l_p)['sequence'],
+                        database.get_entry_by_name(db, l_p).sequence,
                         left_seq, 
                         gap
                     )
 
                     right_flanking_pairs = __get_surrounding_amino_acids(
-                        database.get_entry_by_name(db, r_p)['sequence'],
+                        database.get_entry_by_name(db, r_p).sequence,
                         right_seq, 
                         gap
                     )
@@ -459,7 +460,7 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
         for p in parents[0]:
 
             # get the parent sequence
-            p_seq = database.get_entry_by_name(db, p)['sequence']
+            p_seq = database.get_entry_by_name(db, p).sequence
 
             # get the flanking amino acid pairs
             for flanking_pair in __get_surrounding_amino_acids(p_seq, sequence, gap):
@@ -744,8 +745,8 @@ def replace_ambiguous_hybrids(hybrid_alignments: list, db: Database, observed: S
 def attempt_alignment(
     spectrum: Spectrum, 
     db: Database, 
-    hits: KmerMassesResults, 
-    base_kmer_len: int, 
+    b_hits: list,
+    y_hits: list, 
     n=3, 
     ppm_tolerance=20, 
     precursor_tolerance=1,
@@ -754,12 +755,12 @@ def attempt_alignment(
     is_last=False
 ) -> list:
     '''
-    Given a set of hits in the form of KmerMassesResult (lists of sequences), reduce
-    the number of hits and filter out poor scoring sequences. Combine N and C terminus
-    amino acid sequences (via string overlapping) to explain the spectrum.
+    Given a set of left and right (b and y ion) hits, try and overlap or extend one side to 
+    explain the input spectrum
 
     Example:
-        hits = [ABCD, LMNOP, ABCDEF]
+        b_hits = [ABCD, LMNOP]
+        y_hits = [ABCDEF]
         if the true value of the spectrum is ABCDEF, then we filter out LMNOP,
         overlap ABCD and ABCDEF and return ABCDEF
 
@@ -780,18 +781,9 @@ def attempt_alignment(
     global first_align_time, ambiguous_removal_time, filter_time, precursor_mass_time, objectify_time
     global first_align_count, ambiguous_removal_count, filter_count, precursor_mass_count, objectify_count
 
-    # narrow down the potential alignments
-    import time 
-
-    st = time.time()
-    b_results, y_results = result_filtering(spectrum, hits, base_kmer_len, scoring_alg=scoring_alg)
-    filter_time += time.time() - st
-    filter_count += len(hits)
-    DEBUG and print(f'\nFiltering time took {time.time() - st} resulting in {len(b_results)} b sequences and {len(y_results)} y sequences')
-
     # align our b an y sequences
     st = time.time()
-    a = align_b_y(b_results, y_results, db)
+    a = align_b_y(b_hits, y_hits, db)
 
     first_align_count += len(a)
     first_align_time += time.time() - st
