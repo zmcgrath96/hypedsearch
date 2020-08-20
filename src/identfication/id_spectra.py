@@ -2,13 +2,16 @@ from src.file_io import mzML
 from src.objects import Database, Spectrum, Alignments
 from src.sequence.gen_spectra import gen_spectrum, gen_min_ordering
 from src.identfication.alignment import attempt_alignment
-from src.utils import ppm_to_da
-from src.scoring import scoring
+from src.utils import ppm_to_da, to_percent
+from src.scoring import scoring, mass_comparisons
 from src import database
 
 from math import ceil
+from collections import defaultdict
 
 import bisect
+
+TOP_X = 10
 
 def reduce_search_space(db: Database, reduced_spectra: list, ppm_tol: int) -> None:
     '''
@@ -39,6 +42,9 @@ def reduce_search_space(db: Database, reduced_spectra: list, ppm_tol: int) -> No
    
             spec = gen_spectrum(kmer, ion=ion)['spectrum']
 
+            max_len = 0
+            num_hits = 0
+
             for c, mass in enumerate(spec):
 
                 # calculate the upper and lower bounds in the search
@@ -52,13 +58,19 @@ def reduce_search_space(db: Database, reduced_spectra: list, ppm_tol: int) -> No
 
                 # see if the NEXT value is in the range. If so, keep the kmer
                 if beginning_entry + 1 < len(reduced_spectra) and reduced_spectra[beginning_entry] <= ub:
-                    # add the correct kmer to the correct dictionary and to the tree
-                    if ion == 'b':
-                        b_hits[kmer[:c+1]] = None
-                        db.tree.insert(prot_name, kmer[:c+1])
-                    else:
-                        y_hits[kmer[-c-1:]] = None
-                        db.tree.insert(prot_name, kmer[-c-1:])
+                    # increment the hits and the longest kmer found
+                    max_len = c
+                    num_hits += 1
+                   
+            if num_hits < max_len * .25: 
+                continue
+        
+            if ion == 'b':
+                b_hits[kmer[:max_len+1]] = None
+                db.tree.insert(prot_name, kmer[:max_len+1])
+            else:
+                y_hits[kmer[-max_len-1:]] = None
+                db.tree.insert(prot_name, kmer[-max_len-1:])
 
     # instead of calling len all the time, call it once
     plen = len(db.proteins)
@@ -85,24 +97,11 @@ def reduce_search_space(db: Database, reduced_spectra: list, ppm_tol: int) -> No
 
     # go through all the b_hits and y_hits and add them to the corresponding graph
     print()
-    blen = len(b_hits)
-    for i, kmer in enumerate(sorted(b_hits.keys(), key=gen_min_ordering)):
-        print(f'\rIndexing b k-mer {i+1}/{blen} [{int(100 * (i+1)/blen)}%]', end='')
-        bs = gen_spectrum(kmer, ion='b', charge=1)['spectrum']
-        bd = gen_spectrum(kmer, ion='b', charge=2)['spectrum']
-        db.b_dawg.insert(bs, bd, kmer)
-    db.b_dawg.finish()
+    db = db._replace(b_hits=list(b_hits.keys()))
+    db = db._replace(y_hits=list(y_hits.keys()))
 
-    print()
-    ylen = len(y_hits)
-    for i, kmer in enumerate(sorted(y_hits.keys(), key=lambda x: gen_min_ordering(x[::-1]))):
-        print(f'\rIndexing y k-mer {i+1}/{ylen} [{int(100 * (i+1)/ylen)}%]', end='')
-        ys = gen_spectrum(kmer, ion='y', charge=1)['spectrum']
-        yd = gen_spectrum(kmer, ion='y', charge=2)['spectrum']
-        db.y_dawg.insert(ys, yd, kmer[::-1])
-    db.y_dawg.finish()
-
-    print('\nDone.')
+    print('Done.')
+    return db
 
 
 def load_spectra(spectra_files: list, peak_filter=0, relative_abundance_filter=0) -> (list, list):
@@ -139,45 +138,45 @@ def load_spectra(spectra_files: list, peak_filter=0, relative_abundance_filter=0
     return (all_spectra, sorted(list(set(linear_spectra))))
 
 
-def id_spectrum(db: Database, spectrum: Spectrum, ppm_tol: int, num_alignments=3) -> Alignments:
-    '''
-    Make num_alignments SequenceAlignments or HybridSequenceAlignments for a given spectrum
+# def id_spectrum(db: Database, spectrum: Spectrum, ppm_tol: int, num_alignments=3) -> Alignments:
+#     '''
+#     Make num_alignments SequenceAlignments or HybridSequenceAlignments for a given spectrum
 
-    Inputs:
-        db:             (Database) the database to search
-        spectrum:       (Spectrum) the spectrum namedtuple to make an alignment for
-        ppm_tol:        (int) the tolerance in parts per million to allow when trying to match a mass
-    kwargs:
-        num_alignemnts: (int) the number of alignemnts to create for the spectrum
-    Outputs:
-        (Alignments) the namedtuple holding the spectrum and all of the attempted alignments
-    '''
-    # get the b and y hits for the spectrum
-    b_kmers = db.b_dawg.fuzzy_search(spectrum.spectrum, 1, ppm_tol)
-    sorted_b_results = sorted(
-        [(kmer, scoring.score_subsequence(spectrum.spectrum, kmer, ppm_tol)[0]) for kmer in b_kmers],
-         key=lambda x: x[1], reverse=True
-    )
-    max_score = sorted_b_results[0][1]
-    filtered_b_results = [x[0] for x in sorted_b_results if x[1] == max_score]
+#     Inputs:
+#         db:             (Database) the database to search
+#         spectrum:       (Spectrum) the spectrum namedtuple to make an alignment for
+#         ppm_tol:        (int) the tolerance in parts per million to allow when trying to match a mass
+#     kwargs:
+#         num_alignemnts: (int) the number of alignemnts to create for the spectrum
+#     Outputs:
+#         (Alignments) the namedtuple holding the spectrum and all of the attempted alignments
+#     '''
+#     # get the b and y hits for the spectrum
+#     b_kmers = db.b_dawg.fuzzy_search(spectrum.spectrum, 1, ppm_tol)
+#     sorted_b_results = sorted(
+#         [(kmer, scoring.score_subsequence(spectrum.spectrum, kmer, ppm_tol)[0]) for kmer in b_kmers],
+#          key=lambda x: x[1], reverse=True
+#     )
+#     max_score = sorted_b_results[0][1]
+#     filtered_b_results = [x[0] for x in sorted_b_results if x[1] == max_score]
 
-    y_kmers = db.y_dawg.fuzzy_search(spectrum.spectrum, 1, ppm_tol)
-    sorted_y_results = sorted(
-        [(kmer, scoring.score_subsequence(spectrum.spectrum, kmer, ppm_tol)[1]) for kmer in y_kmers], 
-        key=lambda x: x[1], 
-        reverse=True
-    )
-    max_score = sorted_y_results[0][1]
-    filtered_y_results = [x[0] for x in sorted_y_results if x[1] == max_score]
+#     y_kmers = db.y_dawg.fuzzy_search(spectrum.spectrum, 1, ppm_tol)
+#     sorted_y_results = sorted(
+#         [(kmer, scoring.score_subsequence(spectrum.spectrum, kmer, ppm_tol)[1]) for kmer in y_kmers], 
+#         key=lambda x: x[1], 
+#         reverse=True
+#     )
+#     max_score = sorted_y_results[0][1]
+#     filtered_y_results = [x[0] for x in sorted_y_results if x[1] == max_score]
 
-    return attempt_alignment(
-        spectrum,
-        db,
-        filtered_b_results,
-        filtered_y_results,
-        ppm_tolerance=ppm_tol,
-        n=num_alignments
-    )
+#     return attempt_alignment(
+#         spectrum,
+#         db,
+#         filtered_b_results,
+#         filtered_y_results,
+#         ppm_tolerance=ppm_tol,
+#         n=num_alignments
+#     )
 
 
 def id_spectra(
@@ -229,16 +228,55 @@ def id_spectra(
     verbose and print('Done')
 
     # build tree and graphs
-    reduce_search_space(db, reduced_spectra, ppm_tolerance)
+    db = reduce_search_space(db, reduced_spectra, ppm_tolerance)
 
-    # create an alignment for each spectrum
+    # keep track of each of the results
+    b_results = defaultdict(list)
+    y_results = defaultdict(list)
+
+    # go through each b hit and score against each spectrum
+    for i, b_hit in enumerate(db.b_hits):
+        print(f'\rScoring b-ion kmer {i+1}/{len(db.b_hits)} [{to_percent(i, len(db.b_hits))}%]', end='')
+
+        # generate the theoretical
+        b_theory = gen_spectrum(b_hit, ion='b')['spectrum']
+        
+        for j, spectrum in enumerate(spectra):
+            score = mass_comparisons.optimized_compare_masses(spectrum.spectrum, b_theory, ppm_tolerance)
+
+            # scores must be > 25% length of the protein
+            if score >= ceil(len(b_hit) / 4):
+                b_results[j].append((b_hit, score))
+
+    print()
+    # go through each b hit and score against each spectrum
+    for i, y_hit in enumerate(db.y_hits):
+        print(f'\rScoring y-ion kmer {i+1}/{len(db.y_hits)} [{to_percent(i, len(db.y_hits))}%]', end='')
+        
+        # generate the theoretical
+        y_theory = gen_spectrum(y_hit, ion='y')['spectrum']
+
+        for j, spectrum in enumerate(spectra):
+            score = mass_comparisons.optimized_compare_masses(spectrum.spectrum, y_theory, ppm_tolerance)
+
+            # skip zero scores
+            if score >= ceil(len(y_hit) / 4): 
+                y_results[j].append((y_hit, score))
+
+    # go through each spectrum, sort their results, and take the top X hits to try and align
     results = {}
-    spectrum: Spectrum
-
-    num_spec = len(spectra)
     for i, spectrum in enumerate(spectra):
-        print(f'On spectrum {i+1}/{num_spec} [{int(100 * (i+1) / num_spec)}%]')
-        spectrum_key = f'{spectrum.file_name}_{spectrum.scan_number}'
-        results[spectrum_key] = id_spectrum(db, spectrum, ppm_tolerance)
+        print(f'\rCreating an alignment for {i+1}/{len(spectra)} [{to_percent(i, len(spectra))}%]', end='')
+        b_results[i].sort(key=lambda x: x[1], reverse=True)
+        y_results[i].sort(key=lambda x: x[1], reverse=True)
 
+        results[i] = attempt_alignment(
+            spectrum, 
+            db, 
+            [x[0] for x in b_results[i][:TOP_X]], 
+            [x[0] for x in y_results[i][:TOP_X]], 
+            ppm_tolerance=ppm_tolerance, 
+            n=3, 
+            scoring_alg='ion'
+        )
     return results

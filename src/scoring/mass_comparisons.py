@@ -274,6 +274,5 @@ def optimized_compare_masses(observed: list, reference: list, ppm_tolerance=20, 
         observed_boundaries += boundaries(obs)
         
     # local variables for score
-    score = sum([1 for ref in reference if bisect(observed_boundaries, ref) % 2])
+    return sum([1 for ref in reference if bisect(observed_boundaries, ref) % 2])
     
-    return score

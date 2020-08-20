@@ -1,5 +1,4 @@
 from collections import namedtuple
-from mass_dawg import PyMassDawg
 
 from src.tree import Tree
 
@@ -13,13 +12,13 @@ Database:
                                 entry number and the value is a named tuple of 
                                 ('description', 'sequence')
         tree:           (Tree) the tree the contains sequences keyed by the source proteins
-        b_dawg:         (PyMassDawg) the dawg used to keep track of the b sequences of interest found
-        y_dawg:         (PyMassDawg) the dawg used to keep track of the y sequences of interest found
+        b_hits:         (list) string sequences of the b ion hits
+        y_hits:         (list) string sequences of the y ion hits
 '''
 Database = namedtuple(
     'Database', 
-    ['fasta_file', 'proteins', 'tree', 'b_dawg', 'y_dawg'], 
-    defaults=['', {}, Tree(), PyMassDawg(), PyMassDawg()]
+    ['fasta_file', 'proteins', 'tree', 'b_hits', 'y_hits'], 
+    defaults=['', {}, Tree(), [], []]
 )
 
 '''

@@ -24,6 +24,21 @@ def score_subsequence(pepspec: list, subseq: str, ppm_tolerance=20) -> (float, f
     y_score = mass_comparisons.optimized_compare_masses(pepspec, kmerspec_y, ppm_tolerance=ppm_tolerance)
     return (b_score, y_score)
 
+def score_sequence(observed: list, theoretical: str, ppm_tolerance=20) -> float:
+    '''
+    Score a mass spectrum to a substring of tagged amino acids
+
+    Inputs:
+        observed:       (list) the mass spectrum to score
+        theoretical:    (list) theoretical spectrum
+    kwargs:
+        ppm_tolerance:  (int) the tolerance to accepted while scoring. Default=20
+    Outputs:
+        (float) the score generated from this comparison
+    '''
+
+    return mass_comparisons.optimized_compare_masses(observed, theoretical, ppm_tolerance=ppm_tolerance)
+
 
 def backbone_score(observed: Spectrum, reference: str, ppm_tolerance: int) -> int:
     '''

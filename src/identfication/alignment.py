@@ -1,6 +1,6 @@
 from src.utils import insort_by_index, all_perms_of_s, make_sparse_array
 from src.scoring.scoring import score_subsequence, backbone_score, precursor_distance, xcorr, ion_backbone_score, intensity_ion_backbone_score, intensity_backbone_score, ion_intensity_percentage
-from src.objects import Spectrum, SequenceAlignment, HybridSequenceAlignment, Database
+from src.objects import Spectrum, SequenceAlignment, HybridSequenceAlignment, Database, Alignments
 from src import database
 from src.sequence.gen_spectra import get_precursor
 
@@ -911,4 +911,11 @@ def attempt_alignment(
             o.write(f'Matching precursor matches time: {precursor_mass_time}s \t seconds/op: {precursor_mass_time/precursor_mass_count}s\n')
             o.write(f'Turning matches into objects time: {objectify_time} \t seconds/op: {objectify_time/objectify_count}\n')
 
-    return sorted(set_alignments, key=lambda x: (x.total_score, x.b_score + x.y_score), reverse=True)[:n]
+    return Alignments(
+        spectrum, 
+        sorted(
+            set_alignments, 
+            key=lambda x: (x.total_score, x.b_score + x.y_score), 
+            reverse=True
+        )[:n]
+    )

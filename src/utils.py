@@ -366,3 +366,6 @@ def overlap_intervals(intervals: list) -> list:
         else:
             merged.append(current)
     return merged  
+
+def to_percent(index, total):
+    return int(100 * (index + 1)/total)
