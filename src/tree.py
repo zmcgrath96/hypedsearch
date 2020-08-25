@@ -136,6 +136,27 @@ class Tree:
             current_node = current_node.get_child(value)
             
         return current_node.keys
+
+    def get_children_of(self, sequence: Iterable) -> list:
+        '''
+        Search the tree for a sequence and return a list of values
+        that, when added to the input sequnence, are found in the dictionary 
+        stored in the tree
+
+        Inputs:
+            sequence:   (Iterable) the sequence to look for following values
+        Outputs:
+            (list) values that follow the sequence
+        '''
+        current_node = self.root 
+
+        for value in sequence:
+            if not current_node.has_child(value):
+                return []
+            
+            current_node = current_node.get_child(value)
+
+        return [c.value for c in current_node.children]
     
     
     def show(self):
