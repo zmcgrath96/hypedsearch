@@ -802,7 +802,7 @@ def attempt_alignment(
         # add the closer precursors to the list
         p_ms = [
             x for x in \
-            fill_in_precursor(spectrum, sequence, db, gap=4, tolerance=precursor_tolerance) \
+            fill_in_precursor(spectrum, sequence, db, gap=2, tolerance=precursor_tolerance) \
             if x is not None
         ]
 

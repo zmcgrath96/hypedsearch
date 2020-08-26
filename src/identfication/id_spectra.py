@@ -27,8 +27,8 @@ def reduce_search_space(db: Database, reduced_spectra: list, ppm_tol: int) -> No
         None
     '''
     # easiest way to keep track of unique kmers for each ion type
-    b_hits = {}
-    y_hits = {}
+    b_hits = defaultdict(list)
+    y_hits = defaultdict(list)
 
     # the maximum lenth peptide we could possibly find. Calculation is:
     # the ceiling of ( the maximum observed mass / the smallest singly charged mass (G))
@@ -55,14 +55,24 @@ def reduce_search_space(db: Database, reduced_spectra: list, ppm_tol: int) -> No
                 beginning_entry = bisect.bisect_left(reduced_spectra, lb)
 
                 # see if the NEXT value is in the range. If so, keep the kmer
+                to_insert = False
                 if beginning_entry + 1 < len(reduced_spectra) and reduced_spectra[beginning_entry] <= ub:
+                    to_insert = True
+                    offset = 0
+                    while reduced_spectra[beginning_entry + offset] <= ub:
+                        
+                        # increment the hits and the longest kmer found
+                        if ion == 'b':
+                            b_hits[reduced_spectra[beginning_entry + offset]].append(kmer[:c+1])
+                        else:
+                            y_hits[reduced_spectra[beginning_entry + offset]].append(kmer[-c-1:])
 
-                    # increment the hits and the longest kmer found
+                        offset += 1
+
+                if to_insert:
                     if ion == 'b':
-                        b_hits[kmer[:c+1]] = None
                         db.tree.insert(prot_name, kmer[:c+1])
                     else:
-                        y_hits[kmer[-c-1:]] = None
                         db.tree.insert(prot_name, kmer[-c-1:])
 
     # instead of calling len all the time, call it once
@@ -90,8 +100,8 @@ def reduce_search_space(db: Database, reduced_spectra: list, ppm_tol: int) -> No
 
     # go through all the b_hits and y_hits and add them to the corresponding graph
     print()
-    db = db._replace(b_hits=list(b_hits.keys()))
-    db = db._replace(y_hits=list(y_hits.keys()))
+    db = db._replace(b_hits=b_hits)
+    db = db._replace(y_hits=y_hits)
 
     print('Done.')
     return db
@@ -125,7 +135,7 @@ def load_spectra(spectra_files: list, peak_filter=0, relative_abundance_filter=0
         # go through each mass of each spectrum, load it into memory, 
         # round the numbers to 3 decimal places for easier, and append to linear_spectra
         linear_spectra += list(set([
-            round(x, 3) for spectrum in these_spectra for x in spectrum.spectrum
+            x for spectrum in these_spectra for x in spectrum.spectrum
         ]))
 
     return (all_spectra, sorted(list(set(linear_spectra))))
@@ -186,41 +196,91 @@ def id_spectra(
     b_results = defaultdict(list)
     y_results = defaultdict(list)
 
-    # clean way to add a hit to a dictionary
-    def add_hit(results, kmer, r_d):
-        for i, value in enumerate(results):
-            if value <= 0:
-                continue
-            r_d[i].append((kmer, value))
+    # # clean way to add a hit to a dictionary
+    # def add_hit(results, kmer, r_d):
+    #     for i, value in enumerate(results):
+    #         if value <= 0:
+    #             continue
+    #         r_d[i].append((kmer, value))
             
-    # go through all of the b hits, score them against each spectrum, add them to the b hits dictionary
-    for i, b_hit in enumerate(db.b_hits):
-        print(f'\rScoring b_hit {i+1}/{len(db.b_hits)} [{to_percent(i, len(db.b_hits))}%]', end='')
-        b_hit_spec = gen_spectrum(b_hit, ion='b')['spectrum']
-        results = [mass_comparisons.optimized_compare_masses(spectrum.spectrum, b_hit_spec, ppm_tolerance) for spectrum in spectra]
-        add_hit(results, b_hit, b_results)
+    # # go through all of the b hits, score them against each spectrum, add them to the b hits dictionary
+    # for i, b_hit in enumerate(db.b_hits):
+    #     print(f'\rScoring b_hit {i+1}/{len(db.b_hits)} [{to_percent(i, len(db.b_hits))}%]', end='')
+    #     b_hit_spec = gen_spectrum(b_hit, ion='b')['spectrum']
+    #     results = [mass_comparisons.optimized_compare_masses(spectrum.spectrum, b_hit_spec, ppm_tolerance) for spectrum in spectra]
+    #     add_hit(results, b_hit, b_results)
 
-    print()
-    # go through all of the y hits, score them against each spectrum, add them to the y hits dictionary
-    for i, y_hit in enumerate(db.y_hits):
-        print(f'\rScoring y_hit {i+1}/{len(db.y_hits)} [{to_percent(i, len(db.y_hits))}%]', end='')
-        y_hit_spec = gen_spectrum(y_hit, ion='y')['spectrum']
-        results = [mass_comparisons.optimized_compare_masses(spectrum.spectrum, y_hit_spec, ppm_tolerance) for spectrum in spectra]
-        add_hit(results, y_hit, y_results)
+    # print()
+    # # go through all of the y hits, score them against each spectrum, add them to the y hits dictionary
+    # for i, y_hit in enumerate(db.y_hits):
+    #     print(f'\rScoring y_hit {i+1}/{len(db.y_hits)} [{to_percent(i, len(db.y_hits))}%]', end='')
+    #     y_hit_spec = gen_spectrum(y_hit, ion='y')['spectrum']
+    #     results = [mass_comparisons.optimized_compare_masses(spectrum.spectrum, y_hit_spec, ppm_tolerance) for spectrum in spectra]
+    #     add_hit(results, y_hit, y_results)
 
-    print()
+    # print()
     # go through each spectrum, sort their results, and take the top X hits to try and align
     results = {}
+    len_reducer = 0
     for i, spectrum in enumerate(spectra):
         print(f'\rCreating an alignment for {i+1}/{len(spectra)} [{to_percent(i, len(spectra))}%]', end='')
-        b_results[i].sort(key=lambda x: x[1], reverse=True)
-        y_results[i].sort(key=lambda x: x[1], reverse=True)
+        # b_results[i].sort(key=lambda x: x[1], reverse=True)
+        # y_results[i].sort(key=lambda x: x[1], reverse=True)
+        b_hits, y_hits = [], []
+        for mz in spectrum.spectrum:
+            if mz in db.b_hits:
+                b_hits += db.b_hits[mz]
+            if mz in db.y_hits:
+                y_hits += db.y_hits[mz]
+
+        b_hits = list(set(b_hits))
+        y_hits = list(set(y_hits))
+
+        # for y in y_hits:
+        #     if 'AFKLF' == y[-5:]:
+        #         print(f'\nScore of {y}: {mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectrum(y, ion="y")["spectrum"]) - (len(y) / 10)}')
+
+        # score and sort these results
+        b_results = sorted([
+            (
+                kmer, 
+                mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectrum(kmer, ion='b')['spectrum']) - (len(kmer) * len_reducer)
+            ) for kmer in b_hits], 
+            key=lambda x: x[1], 
+            reverse=True
+        )
+        y_results = sorted([
+            (
+                kmer, 
+                mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectrum(kmer, ion='y')['spectrum']) - (len(kmer) * len_reducer)
+            ) for kmer in y_hits], 
+            key=lambda x: x[1], 
+            reverse=True
+        )
+
+        # filter out the results
+        # 1. take all non-zero values 
+        # 2. either take the TOP_X or if > TOP_X have the same score, all of those values
+        filtered_b, filtered_y = [], []
+        max_b_score = max([x[1] for x in b_results])
+        max_y_score = max([x[1] for x in y_results])
+
+        num_max_b = sum([1 for x in b_results if x[1] == max_b_score])
+        num_max_y = sum([1 for x in y_results if x[1] == max_y_score])
+
+        keep_b_count = max(TOP_X, num_max_b)
+        keep_y_count = max(TOP_X, num_max_y)
+
+        filtered_b = [x[0] for x in b_results[:keep_b_count] if x[1] > 0]
+        filtered_y = [x[0] for x in y_results[:keep_y_count] if x[1] > 0]
+
+        print(f'Results that made it through the filter: \nb: {filtered_b} \ny: {filtered_y}')
 
         results[i] = attempt_alignment(
             spectrum, 
             db, 
-            [x[0] for x in b_results[i][:TOP_X]], 
-            [x[0] for x in y_results[i][:TOP_X]], 
+            filtered_b, 
+            filtered_y, 
             ppm_tolerance=ppm_tolerance, 
             n=3, 
             scoring_alg='ion'

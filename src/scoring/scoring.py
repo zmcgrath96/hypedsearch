@@ -24,7 +24,7 @@ def score_subsequence(pepspec: list, subseq: str, ppm_tolerance=20) -> (float, f
     y_score = mass_comparisons.optimized_compare_masses(pepspec, kmerspec_y, ppm_tolerance=ppm_tolerance)
     return (b_score, y_score)
 
-def score_sequence(observed: list, theoretical: str, ppm_tolerance=20) -> float:
+def score_sequence(observed: list, theoretical: list, ppm_tolerance=20) -> float:
     '''
     Score a mass spectrum to a substring of tagged amino acids
 
@@ -182,8 +182,8 @@ def ion_backbone_score(observed: Spectrum, reference: str, ion: str, ppm_toleran
             da_tol = ppm_to_da(peaks[i], ppm_tolerance)
             if any([peaks[i] - da_tol <= obs_peak <= peaks[i] + da_tol for obs_peak in observed.spectrum]):
                 jcount[i] += 1
-
-    jcoverage = int(100 * sum([1 if jc > 0 else 0 for jc in jcount]) / len(jcount))
+    divider = 1 if len(jcount) <= 1 else len(jcount)
+    jcoverage = int(100 * sum([1 if jc > 0 else 0 for jc in jcount]) / divider)
     #extrapoints = sum([jc - 1 if jc > 1 else 0 for jc in jcount])
     
     return jcoverage #+ extrapoints
