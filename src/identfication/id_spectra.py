@@ -196,29 +196,6 @@ def id_spectra(
     b_results = defaultdict(list)
     y_results = defaultdict(list)
 
-    # # clean way to add a hit to a dictionary
-    # def add_hit(results, kmer, r_d):
-    #     for i, value in enumerate(results):
-    #         if value <= 0:
-    #             continue
-    #         r_d[i].append((kmer, value))
-            
-    # # go through all of the b hits, score them against each spectrum, add them to the b hits dictionary
-    # for i, b_hit in enumerate(db.b_hits):
-    #     print(f'\rScoring b_hit {i+1}/{len(db.b_hits)} [{to_percent(i, len(db.b_hits))}%]', end='')
-    #     b_hit_spec = gen_spectrum(b_hit, ion='b')['spectrum']
-    #     results = [mass_comparisons.optimized_compare_masses(spectrum.spectrum, b_hit_spec, ppm_tolerance) for spectrum in spectra]
-    #     add_hit(results, b_hit, b_results)
-
-    # print()
-    # # go through all of the y hits, score them against each spectrum, add them to the y hits dictionary
-    # for i, y_hit in enumerate(db.y_hits):
-    #     print(f'\rScoring y_hit {i+1}/{len(db.y_hits)} [{to_percent(i, len(db.y_hits))}%]', end='')
-    #     y_hit_spec = gen_spectrum(y_hit, ion='y')['spectrum']
-    #     results = [mass_comparisons.optimized_compare_masses(spectrum.spectrum, y_hit_spec, ppm_tolerance) for spectrum in spectra]
-    #     add_hit(results, y_hit, y_results)
-
-    # print()
     # go through each spectrum, sort their results, and take the top X hits to try and align
     results = {}
     len_reducer = 0
@@ -233,12 +210,9 @@ def id_spectra(
             if mz in db.y_hits:
                 y_hits += db.y_hits[mz]
 
+        # remove any duplicates
         b_hits = list(set(b_hits))
         y_hits = list(set(y_hits))
-
-        # for y in y_hits:
-        #     if 'AFKLF' == y[-5:]:
-        #         print(f'\nScore of {y}: {mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectrum(y, ion="y")["spectrum"]) - (len(y) / 10)}')
 
         # score and sort these results
         b_results = sorted([
@@ -262,20 +236,24 @@ def id_spectra(
         # 1. take all non-zero values 
         # 2. either take the TOP_X or if > TOP_X have the same score, all of those values
         filtered_b, filtered_y = [], []
+
+        # find the highest b and y scores
         max_b_score = max([x[1] for x in b_results])
         max_y_score = max([x[1] for x in y_results])
 
+        # count the number fo kmers that have the highest value
         num_max_b = sum([1 for x in b_results if x[1] == max_b_score])
         num_max_y = sum([1 for x in y_results if x[1] == max_y_score])
 
+        # if we have more than TOP_X number of the highest score, take all of them
         keep_b_count = max(TOP_X, num_max_b)
         keep_y_count = max(TOP_X, num_max_y)
 
+        # take the afformentioned number of results that > than zero
         filtered_b = [x[0] for x in b_results[:keep_b_count] if x[1] > 0]
         filtered_y = [x[0] for x in y_results[:keep_y_count] if x[1] > 0]
 
-        print(f'Results that made it through the filter: \nb: {filtered_b} \ny: {filtered_y}')
-
+        # create an alignment for the spectrum
         results[i] = attempt_alignment(
             spectrum, 
             db, 
