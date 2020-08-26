@@ -8,7 +8,7 @@ Executor for the program
 In charge of the flow of the program
 '''
 from os import walk
-from src.identfication import id_spectra
+from src import identification
 from src import summary
 
 def run(args: dict) -> None:
@@ -42,7 +42,7 @@ def run(args: dict) -> None:
             spectra_files.append(args['spectra_folder'] + fname)
         break
 
-    matched_spectra = id_spectra.id_spectra(
+    matched_spectra = identification.id_spectra(
         spectra_files, args['database_file'], 
         min_peptide_len=args['min_peptide_len'], 
         max_peptide_len=args['max_peptide_len'], 

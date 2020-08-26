@@ -1,0 +1,417 @@
+from src.objects import Database, Spectrum
+from src.sequence import gen_spectra
+from src.scoring import scoring
+
+from src import database
+
+import re
+import math
+
+#################### Constants ####################
+
+HYBRID_ALIGNMENT_PATTERN = re.compile(r'[-\(\)]')
+
+#################### Private functions ####################
+
+def __get_surrounding_amino_acids(parent_sequence: str, sequence: str, count: int) -> list:
+    '''
+    Get the amino acids that surround a sequence. Return the (left, right) count number of amino acids
+
+    Inputs:
+        parent_sequence:    (str) the protein sequence to pull from
+        sequence:           (str) the subsequence we are looking for
+        count:              (int) the number of amino acids to get on each side
+    Outputs:
+        (list) pairs (tuples) of flanking amino acids for each occurance of sequence in parent_sequence
+    '''
+    # keep track of the pairs
+    flanking_pairs = []
+
+    # get all the positions of sequence in the parent sequence
+    occurances = [m.start() for m in re.finditer(sequence, parent_sequence)]
+
+    for o in occurances:
+        flanking_pairs.append(
+            (parent_sequence[max(0, o - count): o], 
+            parent_sequence[o + len(sequence): min(len(parent_sequence), o + len(sequence) + count)])
+        )
+
+    return flanking_pairs
+
+def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, tolerance=1) -> list:
+    '''
+    Try and add amino acids to get the closest precursor mass
+
+    Inputs:
+        spectrum:   (Spectrum) the observed precursor mass
+        seqeunce:   (str) the attempted alignment
+        db:         (Database) holds the protein sequences
+    kwargs:
+        gap:        (int) the number of additions allowed. Default=3
+        tolerance:  (float) the mass (in Da) tolerance to accept in a precursor distance. Default=1
+    Outputs:
+        (list) the sequence(s) with the closest precursor mass
+    '''
+    filled_in  = []
+
+    # get the parents of the sequence(s) and add or subtract amino acids
+    parents = get_parents(sequence, db)
+
+    # if its hybrid, we should fill it in in all possible ways
+    if HYBRID_ALIGNMENT_PATTERN.findall(sequence):
+
+        # go through each set of parents
+        for l_p in parents[0]:
+            for r_p in parents[1]:
+
+                # if the () are in the sequence, only add left and right of the sequence, don't
+                # touch the overlap
+                if '(' in sequence or ')' in sequence: 
+
+                    # get the left and right proteins. 3rd entry (index 2) is the sequece
+                    l_p_s = database.get_entry_by_name(db, l_p).sequence
+                    r_p_s = database.get_entry_by_name(db, r_p).sequence
+
+                    # separate the left and the right sequences
+                    left_seq = sequence[:sequence.index(')')].replace('(', '')
+                    right_seq = sequence[sequence.index('(')+1:].replace(')', '')
+
+                    # get the sequence until ) and get the leftmost amino acids
+                    left_aas = [x[0] for x in __get_surrounding_amino_acids(
+                        l_p_s,
+                        left_seq,
+                        gap
+                    )]
+
+                    # get the sequence after ( and get the rightmost amino acids
+                    right_aas = [x[0] for x in __get_surrounding_amino_acids(
+                        r_p_s,
+                        right_seq,
+                        gap
+                    )]
+
+                    # go through all sets of left and right flanking amino acids
+                    for l_aa in left_aas:
+                        for r_aa in right_aas:
+
+                            # go through all possible combinations of the flanking pairs
+                            for i in range(gap + 1):
+                                for j in range(gap - i + 1):
+
+                                    # get the new sequence and its precursor mass. Add it to filled in list
+                                    new_seq = l_aa[gap-i:] + sequence + r_aa[:j]
+                                    new_prec = gen_spectra.get_precursor(new_seq.replace('(', '').replace(')', ''))
+
+                                    # get the precursor distance, and if it is close enough, keep it
+                                    p_d = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
+
+                                    if p_d <= tolerance:
+                                        filled_in.append(new_seq)
+
+                # try all flanking of left right middle amino acids
+                else:
+                    left_seq = sequence.split('-')[0]
+                    right_seq = sequence.split('-')[1]
+
+                    left_flanking_pairs = __get_surrounding_amino_acids(
+                        database.get_entry_by_name(db, l_p).sequence,
+                        left_seq, 
+                        gap
+                    )
+
+                    right_flanking_pairs = __get_surrounding_amino_acids(
+                        database.get_entry_by_name(db, r_p).sequence,
+                        right_seq, 
+                        gap
+                    )
+
+                    # go through all the possible sets of left right middle sequences
+                    for left_pair in left_flanking_pairs:
+                        for right_pair in right_flanking_pairs:
+
+                            # go through all lengths and contributions
+                            for i in range(gap + 1):
+                                for j in range(gap - i + 1):
+                                    for k in range(max(gap - i - j + 1, 0)):
+                                        for n in range(max(gap - i - j - k + 1, 0)):
+
+                                            # leftmost addition
+                                            ll = left_pair[0][gap-i:]
+                                            
+                                            # left center addition
+                                            lc = left_pair[1][:j]
+
+                                            # right center addition
+                                            rc = right_pair[0][gap-k:]
+
+                                            # right most addition
+                                            rr = right_pair[1][:n]
+
+                                            # get the new sequnce and precursor
+                                            new_seq = ll + left_seq + lc + '-' + rc + right_seq + rr
+                                            new_prec = gen_spectra.get_precursor(new_seq.replace('-', ''))
+
+                                            # get the precursor distance, and if it is close enough, keep it
+                                            p_d = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
+
+                                            if p_d <= tolerance:
+                                                filled_in.append(new_seq)
+        
+
+    # if its nonhybrid, try left and right side
+    else:
+        for p in parents[0]:
+
+            # get the parent sequence
+            p_seq = database.get_entry_by_name(db, p).sequence
+
+            # get the flanking amino acid pairs
+            for flanking_pair in __get_surrounding_amino_acids(p_seq, sequence, gap):
+
+                # go through all possible combinations of the flanking pairs
+                for i in range(gap + 1):
+                    for j in range(gap - i + 1):
+
+                        # get the new sequence and its precursor mass. Add it to filled in list
+                        new_seq = flanking_pair[0][gap-i:] + sequence + flanking_pair[1][:j]
+
+                        new_prec = gen_spectra.get_precursor(new_seq)
+
+                        # get the precursor distance, and if it is close enough, keep it
+                        p_d = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
+
+                        if p_d <= tolerance:
+                            filled_in.append(new_seq)
+    return filled_in
+
+def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3, tolerance=1) -> list:
+    '''
+    Remove up to gap number of amino acids to try and match precursor mass
+
+    Inputs:
+        spectrum:   (Spectrum) the aligned spectrum
+        sequence:   (str) the attempted string alignment
+    kwargs:
+        gap:        (int) the total number of free amino acids to try. Default=3
+        tolerance:  (float) the number (in Da) to allow as the tolerance for acceptable 
+                            precursor masses. Default=1
+    Outputs:
+        (list) the sequence(s) with the closest precursor mass
+    '''
+    attempted = []
+
+    # remove left and right first
+    for i in range(gap + 1):
+        for j in range(gap - i + 1):
+
+             # if appended hybrid, removed the insides too
+            if '-' in sequence:
+
+                # split at the junction site
+                left_seq = sequence.split('-')[0]
+                right_seq = sequence.split('-')[1]
+
+                for k in range(gap - i - j + 1):
+                    for n in range(gap - i -j - k + 1):
+                        
+                        # create a new one by subtracting amino acids from each side
+                        new_seq = left_seq[i:-j] if j >0 else left_seq [i:] \
+                            + '-' + right_seq[k:-n] if n > 0 else right_seq[k:]
+
+                        # find the new precursor mass
+                        new_prec = gen_spectra.get_precursor(new_seq.replace('-', ''))
+
+                        # get the precursor distance, and if it falls within the tolerance, keep it
+                        p_d = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
+                        
+                        if p_d <= tolerance:
+                            attempted.append(new_seq)
+
+            else:
+                
+                # take off the trailing (right) or leading (left) amino acids
+                new_seq = sequence[i:-j] if j > 0 else sequence[i:]
+
+                # if it s a hybrid with an ambiguous area, only subtract from the outside
+                clean_seq = new_seq.replace('(', '').replace(')', '') \
+                            if '(' in new_seq or ')' in new_seq else new_seq
+
+                new_prec = gen_spectra.get_precursor(clean_seq)
+
+                # get the precursor distance, and if it is close enough, keep it
+                p_d = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
+
+                if p_d <= tolerance:
+                    attempted.append(new_seq)
+
+    return attempted 
+
+#################### Public functions ####################
+
+def align_overlaps(seq1: str, seq2: str) -> str:
+    '''
+    Attempt to align two string sequences. It will look at the right side of seq1 and left side of seq2
+    to overlap the two strings. If no overlap is found, seq2 is appended to seq1
+
+    Example 1: strings with overlap
+
+        seq1: ABCD
+        seq2: CDEF
+
+        returns: ABCDEF
+
+    Example 2: strings with no overlap
+
+        seq1: ABCD
+        seq2: EFGH
+
+        return: ABCD-EFGH
+    
+    Inputs:
+        seq1:    (str) the left side sequence 
+        seq2:    (str) the right side sequence
+    Outputs:
+        str the attempted alignments
+    '''
+    alignment = None
+    # if we have a perfect overlap, return it
+    if seq1 == seq2:
+        return seq1
+    
+    # if one is a full subsequence of another, return the larger one
+    elif seq1 in seq2:
+        return seq2
+    elif seq2 in seq1:
+        return seq1
+    
+    # try and find an alignment. seq2 should overlap as much of the right of seq1 as possible
+    # get the starting points. 
+    # Starting points means we found the first character in seq2 in seq1
+    start_points = [i for i in range(len(seq1)) if seq2[0] == seq1[i]]
+    for sp in start_points:
+
+        # try and see if extending it makes it match
+        # a correct overlap should mean we run out of characters in 
+        # seq1 before we hit the end of seq2
+        for i in range(sp, len(seq1)):
+
+            # if the next value i in seq1 does not equal the next 
+            # characeter i-sp in seq2
+            if seq1[i] != seq2[i-sp]:
+                i -= 1
+                break
+
+        # if i hits the the end of seq1, we have an overlap
+        if i == len(seq1) - 1:
+            s2_start = len(seq1) - sp
+            right_seq = seq2[s2_start:] if s2_start < len(seq2) else ''
+            alignment = seq1 + right_seq
+            break
+  
+    # if no overlpa exists, just make append seq2 to seq1
+    if alignment is None:
+        alignment = seq1 + '-' + seq2
+
+    return alignment
+
+def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3, tolerance=1) -> list:
+    '''
+    Try and fill in the gaps of an alignment. This is primarily focused on 
+    filling in the gaps left by the difference in precursor mass. If we find that
+    the difference is more than GAP amino acids, then return the broken one
+
+    Inputs:
+        spectrum:   (Spectrum) sequence to align 
+        sequence:   (str) the aligned sequence
+        db:         (Database) the database with string sequences
+    kwargs:
+        gap:        (int) the number of amino acids to accept. Default=3
+        tolerance:  (float) the mass (in Da) to accept as error in matching precursors. Default=1
+    Outputs:
+        (list) sequence(s) that may have filled in the gap
+    '''
+    # the max mass for an amino acid (doubly charged)
+    max_mass = 93.04
+
+    # the min mass for an amino acid (doubly charged)
+    min_mass = 28.5108
+
+    # remove special characters for generating sequences
+    clean_seq = sequence.replace('-', '').replace('(', '').replace(')', '')
+
+    # get the theoretical precursor mass
+    theory_precrusor = gen_spectra.get_precursor(clean_seq)
+
+    # get the precursor distance 
+    p_d = scoring.precursor_distance(spectrum.precursor_mass, theory_precrusor)
+
+    # if there are too many to add or subtract, return None
+    if gap * max_mass < p_d:
+        return [None]
+
+    # if we can't add or subtract because our mass is too close, check to see if it
+    # falls within our tolerance
+    if p_d < min_mass:
+
+        # if we are within the tolerance, return the sequence
+        if p_d <= tolerance:
+            return [sequence]
+
+        # otherwise return none
+        return [None]
+
+    # determine HOW many amino acids we could be off
+    num_off = min(math.ceil(p_d / max_mass) + 1, gap)
+
+    # add amino acids
+    if spectrum.precursor_mass > theory_precrusor:
+
+        return __add_amino_acids(spectrum, sequence, db, num_off, tolerance)
+
+    # subtract amino acids:
+    else:
+
+        return __remove_amino_acids(spectrum, sequence, num_off, tolerance)
+
+def get_parents(seq: str, db: Database) -> (list, list):
+    '''
+    Get the parents of a sequence. If the sequence is a hybrid sequence, 
+    then the second entry of the tuple holds a list of proteins for the right contributor.
+    Otherwise the right entry is empty.
+
+    Example 1: non hybrid peptide
+        sequence: ABCDE
+        Output: ([protein1, protein2], None)
+
+    Example 2: hybridpeptide
+        sequence: ABC(DE)FGH
+        output: ([protein1], [protein2])
+
+    Inputs:
+        seq:    (str) sequence to find parents for
+        db:     (Database) holds source information
+    Outputs:
+        (list, list) lists of parents
+    '''
+    get_sources = lambda s: database.get_proteins_with_subsequence(db, s)
+
+    # If the sequence is hybrid, split it to find each parent
+    if HYBRID_ALIGNMENT_PATTERN.findall(seq):
+        
+        # straightforward left right split
+        if '-' in seq:
+            div = seq.split('-')
+            left, right = div[0], div[1]
+            return (get_sources(left), get_sources(right))
+
+        # split by the () and make sure each side has the ambiguous area
+        else:
+            try:
+                left = seq[:seq.index(')')].replace('(', '')
+                right = seq[seq.index('(')+1:].replace(')', '')
+                return (get_sources(left), get_sources(right))
+            except:
+                return ([], [])
+
+    # otherwise just look up the one for the full sequence
+    return (get_sources(seq), None)

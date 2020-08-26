@@ -1,7 +1,7 @@
 from src.file_io import mzML
 from src.objects import Database, Spectrum, Alignments
 from src.sequence.gen_spectra import gen_spectrum, gen_min_ordering
-from src.identfication.alignment import attempt_alignment
+from src.alignment import alignment
 from src.utils import ppm_to_da, to_percent
 from src.scoring import scoring, mass_comparisons
 from src import database
@@ -254,7 +254,7 @@ def id_spectra(
         filtered_y = [x[0] for x in y_results[:keep_y_count] if x[1] > 0]
 
         # create an alignment for the spectrum
-        results[i] = attempt_alignment(
+        results[i] = alignment.attempt_alignment(
             spectrum, 
             db, 
             filtered_b, 
