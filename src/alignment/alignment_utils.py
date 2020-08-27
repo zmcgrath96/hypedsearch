@@ -12,6 +12,23 @@ import math
 HYBRID_ALIGNMENT_PATTERN = re.compile(r'[-\(\)]')
 
 #################### Private functions ####################
+def __split_hybrid(sequence: str) -> (str, str):
+    '''
+    Split a hybrid sequence into it's left and right components
+    
+    Inputs:
+        sequence:    (str) the hybrid string sequnce
+    Outputs: 
+        (str, str) the left and right sequences respectively
+    '''
+    if '-' in sequence:
+        return (sequence.split('-')[0], sequence.split('-')[1])
+    
+    else:
+        left = sequence.split(')')[0].replace('(', '')
+        right = sequence.split('(')[1].replace(')', '')
+        return (left, right)
+
 
 def __get_surrounding_amino_acids(parent_sequence: str, sequence: str, count: int) -> list:
     '''
@@ -63,101 +80,45 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
         # go through each set of parents
         for l_p in parents[0]:
             for r_p in parents[1]:
-
-                # if the () are in the sequence, only add left and right of the sequence, don't
-                # touch the overlap
-                if '(' in sequence or ')' in sequence: 
-
-                    # get the left and right proteins. 3rd entry (index 2) is the sequece
-                    l_p_s = database.get_entry_by_name(db, l_p).sequence
-                    r_p_s = database.get_entry_by_name(db, r_p).sequence
-
-                    # separate the left and the right sequences
-                    left_seq = sequence[:sequence.index(')')].replace('(', '')
-                    right_seq = sequence[sequence.index('(')+1:].replace(')', '')
-
-                    # get the sequence until ) and get the leftmost amino acids
-                    left_aas = [x[0] for x in __get_surrounding_amino_acids(
-                        l_p_s,
-                        left_seq,
-                        gap
-                    )]
-
-                    # get the sequence after ( and get the rightmost amino acids
-                    right_aas = [x[0] for x in __get_surrounding_amino_acids(
-                        r_p_s,
-                        right_seq,
-                        gap
-                    )]
-
-                    # go through all sets of left and right flanking amino acids
-                    for l_aa in left_aas:
-                        for r_aa in right_aas:
-
-                            # go through all possible combinations of the flanking pairs
-                            for i in range(gap + 1):
-                                for j in range(gap - i + 1):
-
-                                    # get the new sequence and its precursor mass. Add it to filled in list
-                                    new_seq = l_aa[gap-i:] + sequence + r_aa[:j]
-                                    new_prec = gen_spectra.get_precursor(new_seq.replace('(', '').replace(')', ''))
-
-                                    # get the precursor distance, and if it is close enough, keep it
-                                    p_d = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
-
-                                    if p_d <= tolerance:
-                                        filled_in.append(new_seq)
-
-                # try all flanking of left right middle amino acids
-                else:
-                    left_seq = sequence.split('-')[0]
-                    right_seq = sequence.split('-')[1]
-
-                    left_flanking_pairs = __get_surrounding_amino_acids(
-                        database.get_entry_by_name(db, l_p).sequence,
-                        left_seq, 
-                        gap
-                    )
-
-                    right_flanking_pairs = __get_surrounding_amino_acids(
-                        database.get_entry_by_name(db, r_p).sequence,
-                        right_seq, 
-                        gap
-                    )
-
-                    # go through all the possible sets of left right middle sequences
-                    for left_pair in left_flanking_pairs:
-                        for right_pair in right_flanking_pairs:
-
-                            # go through all lengths and contributions
-                            for i in range(gap + 1):
-                                for j in range(gap - i + 1):
-                                    for k in range(max(gap - i - j + 1, 0)):
-                                        for n in range(max(gap - i - j - k + 1, 0)):
-
-                                            # leftmost addition
-                                            ll = left_pair[0][gap-i:]
-                                            
-                                            # left center addition
-                                            lc = left_pair[1][:j]
-
-                                            # right center addition
-                                            rc = right_pair[0][gap-k:]
-
-                                            # right most addition
-                                            rr = right_pair[1][:n]
-
-                                            # get the new sequnce and precursor
-                                            new_seq = ll + left_seq + lc + '-' + rc + right_seq + rr
-                                            new_prec = gen_spectra.get_precursor(new_seq.replace('-', ''))
-
-                                            # get the precursor distance, and if it is close enough, keep it
-                                            p_d = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
-
-                                            if p_d <= tolerance:
-                                                filled_in.append(new_seq)
+                
+                # since its a hybrid, we only want to add to the middle. We know that
+                # the most left and most right SHOULD be the best scoring bits, so adding 
+                # to the left of the left will only hurt, and adding to the right of the right
+                # will only hurt
+                left_seq, right_seq = __split_hybrid(sequence)
+                
+                # get the left and right protein sequences
+                left_prot = database.get_entry_by_name(db, l_p).sequence
+                right_prot = database.get_entry_by_name(db, r_p).sequence
+                
+                # get the aas to the right of the left sequence
+                left_append = [x[1] for x in __get_surrounding_amino_acids(left_prot, left_seq, gap)]
+                
+                # get the aas to the left of the right sequence
+                right_prepend = [x[0] for x in __get_surrounding_amino_acids(right_prot, right_seq, gap)]
+                
+                # slowly add each set of amino acids
+                for to_append in left_append:
+                    for to_prepend in right_prepend:
+                        
+                        # slowly add each
+                        for i in range(len(to_append)):
+                            for j in range(len(to_prepend)):
+                                
+                                new_left = left_seq + to_append[:i]
+                                new_right = ('' if j == 0 else to_prepend[-j:]) + right_seq
+                                
+                                # create the new sequence and get the new precursor mass
+                                new_seq = align_overlaps(new_left, new_right)
+                                
+                                new_prec = gen_spectra.get_precursor(new_seq.replace('(', '').replace(')', '').replace('-', ''))
+                                
+                                # find the precursor distance, and if its close enough, keep it 
+                                pd = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
+                                
+                                if pd <= tolerance:
+                                    filled_in.append(new_seq)
         
-
     # if its nonhybrid, try left and right side
     else:
         for p in parents[0]:
@@ -199,52 +160,56 @@ def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3, tolerance=1) 
         (list) the sequence(s) with the closest precursor mass
     '''
     attempted = []
-
-    # remove left and right first
-    for i in range(gap + 1):
-        for j in range(gap - i + 1):
-
-             # if appended hybrid, removed the insides too
-            if '-' in sequence:
-
-                # split at the junction site
-                left_seq = sequence.split('-')[0]
-                right_seq = sequence.split('-')[1]
-
-                for k in range(gap - i - j + 1):
-                    for n in range(gap - i -j - k + 1):
-                        
-                        # create a new one by subtracting amino acids from each side
-                        new_seq = left_seq[i:-j] if j >0 else left_seq [i:] \
-                            + '-' + right_seq[k:-n] if n > 0 else right_seq[k:]
-
-                        # find the new precursor mass
-                        new_prec = gen_spectra.get_precursor(new_seq.replace('-', ''))
-
-                        # get the precursor distance, and if it falls within the tolerance, keep it
-                        p_d = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
-                        
-                        if p_d <= tolerance:
-                            attempted.append(new_seq)
-
-            else:
+    
+    # treat hybrids different than non-hybrids
+    if '-' in sequence or '(' in sequence or ')' in sequence:
+        
+        # get the left and right seperately
+        left_seq, right_seq = __split_hybrid(sequence)
+        
+        # since this is a hybrid, we assume that the left is ~correct and the right is ~correct
+        # so we only want to remove amino acids from the middle section
+        for i in range(gap + 1):
+            for j in range(gap - i + 1):
                 
-                # take off the trailing (right) or leading (left) amino acids
-                new_seq = sequence[i:-j] if j > 0 else sequence[i:]
-
-                # if it s a hybrid with an ambiguous area, only subtract from the outside
-                clean_seq = new_seq.replace('(', '').replace(')', '') \
-                            if '(' in new_seq or ')' in new_seq else new_seq
-
-                new_prec = gen_spectra.get_precursor(clean_seq)
-
-                # get the precursor distance, and if it is close enough, keep it
-                p_d = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
-
-                if p_d <= tolerance:
+                # take left to :-i and right j:
+                new_left = left_seq[:-i] if i > 0 else left_seq
+                new_right = right_seq[j:]
+                
+                # create a new hybrid
+                new_seq = align_overlaps(new_left, new_right)
+                
+                # get the new precursor
+                new_prec = gen_spectra.get_precursor(new_seq.replace('-', '').replace('(', '').replace(')', ''))
+                
+                # get the new precursor distance
+                pd = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
+                
+                # if the precursor distance is within our tolerance, append it
+                if pd <= tolerance:
                     attempted.append(new_seq)
 
-    return attempted 
+      # otherwise, just take up to gap off from the left and the right
+    else:
+        for i in range(1, gap):
+            new_seq1 = sequence[i:]
+            new_seq2 = sequence[:-i]
+            
+            # cacluate the new precurosrs and add to attempted if within the tolerance
+            new_prec1 = gen_spectra.get_precursor(new_seq1)
+            new_prec2 = gen_spectra.get_precursor(new_seq2)
+            
+            pd1 = scoring.precursor_distance(spectrum.precursor_mass, new_prec1)
+            pd2 = scoring.precursor_distance(spectrum.precursor_mass, new_prec2)
+            
+            if pd1 <= tolerance:
+                attempted.append(new_seq1)
+            
+            if pd2 <= tolerance:
+                attempted.append(new_seq2)
+
+    return list(set(attempted))
+     
 
 #################### Public functions ####################
 
@@ -397,21 +362,11 @@ def get_parents(seq: str, db: Database) -> (list, list):
 
     # If the sequence is hybrid, split it to find each parent
     if HYBRID_ALIGNMENT_PATTERN.findall(seq):
-        
-        # straightforward left right split
-        if '-' in seq:
-            div = seq.split('-')
-            left, right = div[0], div[1]
-            return (get_sources(left), get_sources(right))
 
-        # split by the () and make sure each side has the ambiguous area
-        else:
-            try:
-                left = seq[:seq.index(')')].replace('(', '')
-                right = seq[seq.index('(')+1:].replace(')', '')
-                return (get_sources(left), get_sources(right))
-            except:
-                return ([], [])
+        # get the left and right sequnces
+        left_seq, right_seq = __split_hybrid(seq)
+        
+        return (get_sources(left_seq), get_sources(right_seq))
 
     # otherwise just look up the one for the full sequence
     return (get_sources(seq), None)
