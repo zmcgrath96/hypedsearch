@@ -266,8 +266,15 @@ def attempt_alignment(
     # Make alignments into the namedtuple types SpectrumAlignments
     # and HybridSequenceAlignments
     alignments = []
+    tracker = {}
     st = time.time()
     for aligned_pair in nonhyba + updated_hybrids:
+
+        # add to tracker, continue if what we see is already in the tracker
+        if aligned_pair[0] in tracker:
+            continue
+
+        tracker[aligned_pair[0]] = True
 
         # get the precursor distance. If its too big, continue
         p_d = scoring.precursor_distance(spectrum.precursor_mass, gen_spectra.get_precursor(aligned_pair[0]))
@@ -324,15 +331,9 @@ def attempt_alignment(
     OBJECTIFY_TIME += time.time() - st
     DEBUG and print(f'Time to make into objects took {time.time() - st}')
 
-    tracker = {}
-    set_alignments = []
-    for a in alignments:
-        if a.sequence in tracker: 
-            continue
-        tracker[a.sequence] = True
-        set_alignments.append(a)
-    # print(f'Number of alignments that passed the filter: {len(alignments)}')
-    # print(sorted(alignments, key=lambda x: x.total_score, reverse=True)[:10])
+    # print()
+    # for a in sorted(alignments, key=lambda x: x.total_score, reverse=True)[:10]:
+    #     print(f'{a.sequence} \t total: {a.total_score} \t b: {a.b_score} \t y: {a.y_score} \t hybrid: {"True" if len(a) == 8 else "False"}')
 
     if is_last:
         with open(TIME_LOG_FILE, 'w') as o:
@@ -345,7 +346,7 @@ def attempt_alignment(
     return Alignments(
         spectrum, 
         sorted(
-            set_alignments, 
+            alignments, 
             key=lambda x: (x.total_score, x.b_score + x.y_score), 
             reverse=True
         )[:n]

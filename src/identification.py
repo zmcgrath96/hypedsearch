@@ -198,7 +198,7 @@ def id_spectra(
 
     # go through each spectrum, sort their results, and take the top X hits to try and align
     results = {}
-    len_reducer = 0
+    len_reducer = 0.1
     for i, spectrum in enumerate(spectra):
         print(f'\rCreating an alignment for {i+1}/{len(spectra)} [{to_percent(i, len(spectra))}%]', end='')
         # b_results[i].sort(key=lambda x: x[1], reverse=True)
