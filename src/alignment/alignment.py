@@ -279,23 +279,18 @@ def attempt_alignment(
         # get the precursor distance. If its too big, continue
         p_d = scoring.precursor_distance(spectrum.precursor_mass, gen_spectra.get_precursor(aligned_pair[0]))
 
-        # individual ion scores
-        b_score = scoring.intensity_ion_backbone_score(spectrum, aligned_pair[0], 'b', ppm_tolerance)
-        y_score = scoring.intensity_ion_backbone_score(spectrum, aligned_pair[0], 'y', ppm_tolerance)
-
-        # backbone score
-        bb_score = scoring.backbone_score(spectrum, aligned_pair[0], ppm_tolerance)
-
-        # sum of the ion scores
-        sion = sum(scoring.score_subsequence(spectrum.spectrum, aligned_pair[0], ppm_tolerance))
-
-        # the ion intensity
-        iip_score = scoring.ion_intensity_percentage(spectrum, aligned_pair[0], ppm_tolerance, '')
-
-        t_score = bb_score // 8 + iip_score
-
-        # backbone intensity
-        bbi = scoring.intensity_backbone_score(spectrum, aligned_pair[0], ppm_tolerance)
+        # get the final score of these sequences
+        b_score = scoring.score_sequence(
+            spectrum.spectrum, 
+            sorted(gen_spectra.gen_spectrum(aligned_pair[0], ion='b')['spectrum']), 
+            ppm_tolerance
+        )
+        y_score = scoring.score_sequence(
+            spectrum.spectrum, 
+            sorted(gen_spectra.gen_spectrum(aligned_pair[0], ion='y')['spectrum']), 
+            ppm_tolerance
+        )
+        t_score = b_score + y_score
 
         # get the parent proteins of the sequence
         parents = alignment_utils.get_parents(aligned_pair[0] if aligned_pair[1] is None else aligned_pair[1], db)

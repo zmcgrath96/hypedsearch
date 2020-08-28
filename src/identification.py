@@ -27,8 +27,8 @@ def reduce_search_space(db: Database, reduced_spectra: list, ppm_tol: int) -> No
         None
     '''
     # easiest way to keep track of unique kmers for each ion type
-    b_hits = defaultdict(list)
-    y_hits = defaultdict(list)
+    b_hits = defaultdict(set)
+    y_hits = defaultdict(set)
 
     # the maximum lenth peptide we could possibly find. Calculation is:
     # the ceiling of ( the maximum observed mass / the smallest singly charged mass (G))
@@ -40,40 +40,44 @@ def reduce_search_space(db: Database, reduced_spectra: list, ppm_tol: int) -> No
         and to the dictionaries too keep track of sequences
         '''
         for ion in 'by':
+            for charge in [1, 2]:
    
-            spec = gen_spectrum(kmer, ion=ion)['spectrum']
+                spec = gen_spectrum(kmer, ion=ion, charge=charge)['spectrum']
 
-            for c, mass in enumerate(spec):
+                for c, mass in enumerate(spec):
 
-                # calculate the upper and lower bounds in the search
-                da_tol = ppm_to_da(mass, ppm_tol)
-                lb = mass - da_tol
-                ub = mass + da_tol
+                    # calculate the upper and lower bounds in the search
+                    da_tol = ppm_to_da(mass, ppm_tol)
+                    lb = mass - da_tol
+                    ub = mass + da_tol
 
-                # get the index of the value to the left of any existing values of 
-                # the lower bound. Any value after this postion is greater or equal to lower bound
-                beginning_entry = bisect.bisect_left(reduced_spectra, lb)
+                    # get the index of the value to the left of any existing values of 
+                    # the lower bound. Any value after this postion is greater or equal to lower bound
+                    beginning_entry = bisect.bisect_left(reduced_spectra, lb)
 
-                # see if the NEXT value is in the range. If so, keep the kmer
-                to_insert = False
-                if beginning_entry + 1 < len(reduced_spectra) and reduced_spectra[beginning_entry] <= ub:
-                    to_insert = True
-                    offset = 0
-                    while reduced_spectra[beginning_entry + offset] <= ub:
-                        
-                        # increment the hits and the longest kmer found
+                    if kmer[-c-1:] == 'EAPNFEANTTIGRIRFH' and ion == 'y':
+                        print('potato')
+
+                    # see if the NEXT value is in the range. If so, keep the kmer
+                    to_insert = False
+                    if beginning_entry + 1 < len(reduced_spectra) and reduced_spectra[beginning_entry] <= ub:
+                        to_insert = True
+                        offset = 0
+                        while reduced_spectra[beginning_entry + offset] <= ub:
+                            
+                            # increment the hits and the longest kmer found
+                            if ion == 'b':
+                                b_hits[reduced_spectra[beginning_entry + offset]].add(kmer[:c+1])
+                            else:
+                                y_hits[reduced_spectra[beginning_entry + offset]].add(kmer[-c-1:])
+
+                            offset += 1
+
+                    if to_insert:
                         if ion == 'b':
-                            b_hits[reduced_spectra[beginning_entry + offset]].append(kmer[:c+1])
+                            db.tree.insert(prot_name, kmer[:c+1])
                         else:
-                            y_hits[reduced_spectra[beginning_entry + offset]].append(kmer[-c-1:])
-
-                        offset += 1
-
-                if to_insert:
-                    if ion == 'b':
-                        db.tree.insert(prot_name, kmer[:c+1])
-                    else:
-                        db.tree.insert(prot_name, kmer[-c-1:])
+                            db.tree.insert(prot_name, kmer[-c-1:])
 
     # instead of calling len all the time, call it once
     plen = len(db.proteins)
@@ -198,7 +202,6 @@ def id_spectra(
 
     # go through each spectrum, sort their results, and take the top X hits to try and align
     results = {}
-    len_reducer = 0.4
     for i, spectrum in enumerate(spectra):
         print(f'\rCreating an alignment for {i+1}/{len(spectra)} [{to_percent(i, len(spectra))}%]', end='')
         # b_results[i].sort(key=lambda x: x[1], reverse=True)
@@ -206,9 +209,9 @@ def id_spectra(
         b_hits, y_hits = [], []
         for mz in spectrum.spectrum:
             if mz in db.b_hits:
-                b_hits += db.b_hits[mz]
+                b_hits += list(db.b_hits[mz])
             if mz in db.y_hits:
-                y_hits += db.y_hits[mz]
+                y_hits += list(db.y_hits[mz])
 
         # remove any duplicates
         b_hits = list(set(b_hits))
@@ -218,7 +221,7 @@ def id_spectra(
         b_results = sorted([
             (
                 kmer, 
-                mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectrum(kmer, ion='b')['spectrum']) - (len(kmer) * len_reducer)
+                mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectrum(kmer, ion='b')['spectrum'])
             ) for kmer in b_hits], 
             key=lambda x: x[1], 
             reverse=True
@@ -226,7 +229,7 @@ def id_spectra(
         y_results = sorted([
             (
                 kmer, 
-                mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectrum(kmer, ion='y')['spectrum']) - (len(kmer) * len_reducer)
+                mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectrum(kmer, ion='y')['spectrum'])
             ) for kmer in y_hits], 
             key=lambda x: x[1], 
             reverse=True
