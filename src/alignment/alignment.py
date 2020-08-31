@@ -342,7 +342,7 @@ def attempt_alignment(
         spectrum, 
         sorted(
             alignments, 
-            key=lambda x: (x.total_score, x.b_score + x.y_score), 
+            key=lambda x: (x.total_score, 1/x.precursor_distance), 
             reverse=True
         )[:n]
     )
