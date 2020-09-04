@@ -17,8 +17,8 @@ Database:
 '''
 Database = namedtuple(
     'Database', 
-    ['fasta_file', 'proteins', 'tree', 'b_hits', 'y_hits'], 
-    defaults=['', {}, Tree(), [], []]
+    ['fasta_file', 'proteins', 'kmers', 'b_hits', 'y_hits'], 
+    defaults=['', {}, {}, [], []]
 )
 
 '''

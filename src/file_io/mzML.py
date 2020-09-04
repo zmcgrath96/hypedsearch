@@ -120,6 +120,8 @@ def read(filename: str, peak_filter=0, relative_abundance_filter=0) -> list:
             
         precursor = precursor if precursor is not None else max(masses)/2
 
+        masses = [round(x, 4) for x in masses]
+
         # get the id
         id_ = content.get('id', '')
 
