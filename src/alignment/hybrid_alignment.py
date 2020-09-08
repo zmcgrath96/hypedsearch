@@ -32,39 +32,15 @@ def __replace_ambiguous_hybrid(hybrid: tuple, db: Database, observed: Spectrum) 
     if len(possible) == 0:
         return hybrid
 
-    # otherwise look through each permutation
-    candidates = []
-
+    # try and find a sequnce that could be explained by an LI switch
     for p in possible:
 
         # if this permutation exists as a nonhybrid, return it
         if len(database.get_proteins_with_subsequence(db, p)):
             return ((p, None))
 
-        # otherwise keep it
-        candidates.append(p)
-
-    # take the highest scoring sequence
-    best_candidates = sorted(
-        candidates, 
-        key=lambda x: sum(scoring.score_subsequence(observed.spectrum, p)), 
-        reverse=True
-    )
-
-    # find the sequence that COULD exist
-    for best_candidate in best_candidates:
-
-        # find the hybrid junction
-        for i in range(1, len(best_candidate)-1):
-            left = best_candidate[:i]
-            right = best_candidate[i:]
-
-            # if we can find a left and a right with the sequence, return it
-            if len(database.get_proteins_with_subsequence(db, left)) \
-                and len(database.get_proteins_with_subsequence(db, right)):
-                return ((best_candidate, f'{left}-{right}'))
-
-    # worst case, return the hybrid
+    # if we didn't find a sequence that could be found in the database, 
+    # just return the hybrid input 
     return hybrid
 
 #################### Public functions ####################

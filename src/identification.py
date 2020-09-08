@@ -256,7 +256,7 @@ def id_spectra(
                 kmer, 
                 mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectrum(kmer, ion='b')['spectrum'])
             ) for kmer in b_hits], 
-            key=itemgetter(1), 
+            key=lambda x: (x[1], 1/len(x[0])), 
             reverse=True
         )
         y_results = sorted([
@@ -264,7 +264,7 @@ def id_spectra(
                 kmer, 
                 mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectrum(kmer, ion='y')['spectrum'])
             ) for kmer in y_hits], 
-            key=itemgetter(1), 
+            key=lambda x: (x[1], 1/len(x[0])), 
             reverse=True
         )
 

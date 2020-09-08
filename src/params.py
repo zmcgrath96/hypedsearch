@@ -1,6 +1,6 @@
 ########################## PROGRAM IO ##########################
 # full path to the spectra folder containing all spectra files
-SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/nod2 data/filteredSpec/'
+SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/nod2 data/hybridSpec/'
 # full path to the .fasta database file
 DATABASE_FILE = '/Users/zacharymcgrath/Desktop/nod2 data/filteredNOD2.fasta'
 # full path to the output directory
@@ -24,11 +24,11 @@ PRECURSOR_TOLERANCE = 3
 #-----------------------------------------------------------
 # the number of most abundant (intense) peaks to allow when filtering
 # input spectra
-PEAK_FILTER = 30
+PEAK_FILTER = 0
 # the minimum allowed percentage of the total intensity a peak 
 # is allowed to have to pass the filter. Values should be 
 # in the range (0, 1) 
-RELATIVE_ABUNDANCE_FILTER = 0
+RELATIVE_ABUNDANCE_FILTER = .005
 ########################## RUN PARAMETERS ##########################
 # printing to the console during the run
 VERBOSE = True
