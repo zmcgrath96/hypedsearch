@@ -14,7 +14,7 @@ import bisect
 import time
 
 # top results to keep for creating an alignment
-TOP_X = 10
+TOP_X = 20
 
 def hashable_boundaries(boundaries: list) -> str:
     return '-'.join([str(x) for x in boundaries])
@@ -296,7 +296,7 @@ def id_spectra(
             filtered_b, 
             filtered_y, 
             ppm_tolerance=ppm_tolerance, 
-            n=3, 
+            n=5, 
             scoring_alg='ion'
         )
     return results
