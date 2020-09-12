@@ -3,8 +3,10 @@ from src.objects import Spectrum, SequenceAlignment, HybridSequenceAlignment, Da
 from src.alignment import alignment_utils, hybrid_alignment
 from src.sequence import gen_spectra
 
+from src import utils
 from src import database
 
+import math
 import re
 
 ####################### Time constants #######################
@@ -221,6 +223,10 @@ def attempt_alignment(
     FIRST_ALIGN_TIME += time.time() - st
     DEBUG and print(f'First alignment round took {time.time() - st} time resulting in {len(a)} alignments')
 
+    # get the predicted length of the sequence and allow for a 25% gap to be filled in
+    predicted_len = utils.predicted_len(max(spectrum.spectrum))
+    allowed_gap = math.ceil(predicted_len * .25)
+
     # Limit our search to things that match our precursor mass
     # try and fill in the gaps that are in any alignments
     st = time.time()
@@ -234,7 +240,7 @@ def attempt_alignment(
         # add the closer precursors to the list
         p_ms = [
             x for x in \
-            alignment_utils.fill_in_precursor(spectrum, sequence, db, gap=2, tolerance=precursor_tolerance) \
+            alignment_utils.fill_in_precursor(spectrum, sequence, db, gap=allowed_gap, tolerance=precursor_tolerance) \
             if x is not None
         ]
 

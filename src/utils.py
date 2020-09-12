@@ -4,6 +4,8 @@ from itertools import product
 import numpy as np
 from collections import namedtuple
 
+import math
+
 def make_valid_dir_string(dir_path: str) -> str:
     '''
     Add / character to end of directory string to make valid directory path
@@ -369,3 +371,14 @@ def overlap_intervals(intervals: list) -> list:
 
 def to_percent(index, total):
     return int(100 * (index + 1)/total)
+
+def predicted_len(max_mass: float) -> int:
+    '''
+    The predicted length of a spectrum based on its maximum mass
+
+    Inputs:
+        max_mass:   float   the maximum mass of the sequence
+    Outputs:
+        (int) predicted length
+    '''
+    return math.ceil(max_mass / (57.021464))

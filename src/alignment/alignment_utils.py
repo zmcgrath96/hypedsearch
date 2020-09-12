@@ -102,8 +102,8 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
                     for to_prepend in right_prepend:
                         
                         # slowly add each
-                        for i in range(len(to_append)):
-                            for j in range(len(to_prepend)):
+                        for i in range(len(to_append) + 1):
+                            for j in range(len(to_prepend) + 1):
                                 
                                 new_left = left_seq + to_append[:i]
                                 new_right = ('' if j == 0 else to_prepend[-j:]) + right_seq

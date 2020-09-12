@@ -4,7 +4,7 @@ SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/nod2 data/hybridSpec/'
 # full path to the .fasta database file
 DATABASE_FILE = '/Users/zacharymcgrath/Desktop/nod2 data/filteredNOD2.fasta'
 # full path to the output directory
-OUTPUT_DIRECTORY = '/Users/zacharymcgrath/Desktop/Experiment output/filtered_NOD2_E3_AUG_26/'
+OUTPUT_DIRECTORY = '/Users/zacharymcgrath/Desktop/Experiment output/filtered_NOD2_E3_SEP_9/'
 
 ########################## SEARCH PARAMETERS ##########################
 # minimum length peptide to look for

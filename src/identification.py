@@ -2,24 +2,26 @@ from src.file_io import mzML
 from src.objects import Database, Spectrum, Alignments
 from src.sequence.gen_spectra import gen_spectrum, gen_min_ordering
 from src.alignment import alignment
-from src.utils import ppm_to_da, to_percent, overlap_intervals
+from src.utils import ppm_to_da, to_percent, overlap_intervals, predicted_len
 from src.scoring import scoring, mass_comparisons
 from src import database
 
 from math import ceil
 from collections import defaultdict
 from operator import itemgetter
+from typing import Iterable
 
 import bisect
 import time
+import array as arr
 
 # top results to keep for creating an alignment
-TOP_X = 20
+TOP_X = 25
 
 def hashable_boundaries(boundaries: list) -> str:
     return '-'.join([str(x) for x in boundaries])
 
-def merge(P: list, indices: list, kmers: list, boundaries: list, ppm_tol: int):
+def merge(P: Iterable, indices: Iterable, kmers: Iterable, boundaries: Iterable, ppm_tol: int):
     b_i, p_i = 0, 0
 
     matched_masses = defaultdict(list)
@@ -80,8 +82,8 @@ def make_database_set(db: Database, max_len: int) -> (list, list, list):
 
     print('\nSorting the set of protein masses...')
     
-    db_list_b, index_list_b, kmer_list_b = [], [], []
-    db_list_y, index_list_y, kmer_list_y = [], [], []
+    db_list_b, index_list_b, kmer_list_b = arr.array('f'), arr.array('i'), []
+    db_list_y, index_list_y, kmer_list_y = arr.array('f'), arr.array('i'), []
     sorted_keys = sorted(db_dict_b.keys())
     for mz in sorted_keys:
         kmers = db_dict_b[mz]
@@ -218,7 +220,7 @@ def id_spectra(
     # build tree and graphs
     build_st = time.time()
     print('Making the protein mass set...')
-    max_len = ceil(boundaries[-1][1] / 57.021464)
+    max_len = predicted_len(boundaries[-1][1])
     db_list_b, index_list_b, kmer_list_b, db_list_y, index_list_y, kmer_list_y, db = make_database_set(db, max_len)
     print(f'Done. Length of the list: {len(db_list_b) + len(db_list_y)}')
     print(f'Time to build: {round(time.time() - build_st, 4)} seconds')
