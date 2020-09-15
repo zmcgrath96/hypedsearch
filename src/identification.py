@@ -16,7 +16,7 @@ import time
 import array as arr
 
 # top results to keep for creating an alignment
-TOP_X = 25
+TOP_X = 50
 
 def hashable_boundaries(boundaries: list) -> str:
     return '-'.join([str(x) for x in boundaries])
@@ -231,6 +231,7 @@ def id_spectra(
     print(f'Time to do merge: {round(time.time() - merge_st, 4)} seconds')
     # go through each spectrum, sort their results, and take the top X hits to try and align
     results = {}
+
     for i, spectrum in enumerate(spectra):
         print(f'\rCreating an alignment for {i+1}/{len(spectra)} [{to_percent(i, len(spectra))}%]', end='')
 
