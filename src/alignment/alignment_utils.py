@@ -243,11 +243,16 @@ def align_overlaps(seq1: str, seq2: str) -> str:
     if seq1 == seq2:
         return seq1
     
-    # if one is a full subsequence of another, return the larger one
-    elif seq1 in seq2:
-        return seq2
-    elif seq2 in seq1:
-        return seq1
+    # if the first bit of seq2 == all of seq1 or if the last bit of seq1 == all of seq2, return
+    # (ex: ABC, ABCDE -> ABCDE)
+    # (ex: ABCDE, CDE -> ABCDE)
+    idx_len = min(len(seq1), len(seq2))
+
+    if seq1[:idx_len] == seq2[:idx_len]:
+        return seq1 if len(seq1) > len(seq2) else seq2
+
+    if seq1[-idx_len:] == seq2[-idx_len:]:
+        return seq1 if len(seq1) > len(seq2) else seq2
     
     # try and find an alignment. seq2 should overlap as much of the right of seq1 as possible
     # get the starting points. 
@@ -262,7 +267,7 @@ def align_overlaps(seq1: str, seq2: str) -> str:
 
             # if the next value i in seq1 does not equal the next 
             # characeter i-sp in seq2
-            if seq1[i] != seq2[i-sp]:
+            if i-sp < 0 or i-sp > len(seq2)-1 or seq1[i] != seq2[i-sp]:
                 i -= 1
                 break
 

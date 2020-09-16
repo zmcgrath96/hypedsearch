@@ -168,6 +168,9 @@ def align_b_y(b_results: list, y_results: list, db: Database) -> list:
                     spec_alignments.append(
                         same_protein_alignment(b_seq, y_seq, prot_seq)
                     )
+                
+                # try just a dumb hybrid too to make sure
+                spec_alignments.append((f'{b_seq}{y_seq}', f'{b_seq}-{y_seq}'))
 
             # otherwise try hybrid alignment
             else: 
