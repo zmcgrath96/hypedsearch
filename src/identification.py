@@ -179,7 +179,6 @@ def id_spectra(
     relative_abundance_filter=0.0,
     ppm_tolerance=20, 
     precursor_tolerance=1, 
-    scoring_alg='ibb', 
     DEBUG=False
 ) -> dict:
     '''
@@ -195,7 +194,6 @@ def id_spectra(
         max_peptide_len:        (int) maximum length sequence to consider for alignemtn. Default=20
         ppm_tolerance:          (int) tolerance for ppm to include in search. Default=20
         precursor_tolerance:    (float) the tolerance to allow when matching precusor masses. Default=1
-        scoring_alg:            (str) the scoring algorithm to use. Either 'bb' or 'ion'. Default=bb
     Outputs:
         dict containing the results. 
         All information is keyed by the spectrum file name with scan number appended 
@@ -299,7 +297,6 @@ def id_spectra(
             filtered_b, 
             filtered_y, 
             ppm_tolerance=ppm_tolerance, 
-            n=5, 
-            scoring_alg='ion'
+            n=5
         )
     return results

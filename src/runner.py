@@ -28,7 +28,6 @@ def run(args: dict) -> None:
             relative_abundance_filter:  (float) the percentage of the total abundance a peak must
                                             be to pass the filter
             verbose:                    (bool) extra printing
-            scoring_alg:                (str) scoring algorithm to use
             DEBUG:                      (bool) debuging print messages. Default=False
     Outputs:
         None
@@ -51,7 +50,6 @@ def run(args: dict) -> None:
         peak_filter=args['peak_filter'],
         relative_abundance_filter=args['relative_abundance_filter'],
         verbose=True, 
-        scoring_alg=args['scoring_alg'], 
         DEBUG=args['DEBUG']
     )
     print('\nFinished search. Writting results to {}...'.format(args['output_dir']))

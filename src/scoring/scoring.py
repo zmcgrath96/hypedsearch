@@ -293,6 +293,87 @@ def ion_intensity_percentage(observed: Spectrum, reference: str, ppm_tolerance: 
     return score
 
 
+def hybrid_score(observed: Spectrum, hybrid_seq: str, ppm_tolerance: int) -> float:
+    '''
+    A stricter score for hybrid sequences. Ions found on the relative side of the hybrid junction
+    (left for b, right for y) will only be awarded .5 points, where as an ion found on the other 
+    side of the junction (right for b, left for y) will be awarded a full point
+
+    Example:
+        ABC-DEF
+
+        b-ions: A, C, E
+        y-ions: D, A
+
+        Score .5(bA) + .5(bC) + 1(bE) + .5 (yD) + 1(yA) = 3.5
+
+    Inputs:
+        observed:       (Spectrum) observed spectrum
+        hybrid_seq:     (str) the hybrid sequence to score against
+        ppm_tolerance:  (int) the tolerance to allow when searching for a mass
+    Outputs:
+        (float) the score
+    '''
+    if '-' not in hybrid_seq and '(' not in hybrid_seq and ')' not in hybrid_seq:
+        return 0
+
+    score = 0
+
+    # get a non hybrid for scoring purposes
+    non_hyb = hybrid_seq.replace('-', '').replace('(', '').replace(')', '')
+
+    # get the index to the left of which b ions will only get .5 points
+    b_split = hybrid_seq.index('-') if '-' in hybrid_seq else hybrid_seq.index('(')
+
+    # get the index to the right of which y ions will only get .5 points
+    y_split = len(hybrid_seq) - hybrid_seq.index('-') if '-' in hybrid_seq else len(hybrid_seq) - hybrid_seq.index(')') 
+
+    # generate b and y separately to be sure
+    b_spec = sorted(gen_spectra.gen_spectrum(non_hyb, ion='b')['spectrum'])
+    y_spec = sorted(gen_spectra.gen_spectrum(non_hyb, ion='y')['spectrum'])
+
+    # convert the spectra into lists of tuples
+    gen_range = lambda x: (x - ppm_to_da(x, ppm_tolerance), x + ppm_to_da(x, ppm_tolerance))
+    b_ranges = [gen_range(x) for x in b_spec]
+    y_ranges = [gen_range(x) for x in y_spec]
+
+    # do a merge search where we linearly search each mass in the observed twice
+    b_range_i = 0
+    observed_i = 0
+    while b_range_i < len(b_ranges) and observed_i < len(observed.spectrum):
+
+        # if observed is larger than the range, increment range
+        if observed.spectrum[observed_i] > b_ranges[b_range_i][1]:
+            b_range_i += 1
+
+        # if observed is smaller than the range, increment observed
+        elif observed.spectrum[observed_i] < b_ranges[b_range_i][0]:
+            observed_i += 1
+
+        # otherwise its in the range, see what to increment score by, and increment observed
+        else:
+            score += 1 if b_range_i >= b_split else .5
+            observed_i += 1
+
+    y_range_i = 0
+    observed_i = 0
+    while y_range_i < len(y_ranges) and observed_i < len(observed.spectrum):
+
+        # if observed is larger than the range, increment range
+        if observed.spectrum[observed_i] > y_ranges[y_range_i][1]:
+            y_range_i += 1
+
+        # if observed is smaller than the range, increment observed
+        elif observed.spectrum[observed_i] < y_ranges[y_range_i][0]:
+            observed_i += 1
+
+        # otherwise its in the range, see what to increment score by, and increment observed
+        else:
+            score += 1 if y_range_i >= y_split else .5
+            observed_i += 1
+
+    return score
+
 def precursor_distance(observed_precursor: float, reference_precursor: float) -> float:
     '''
     The absolute distance between two precursor masses

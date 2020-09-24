@@ -187,7 +187,6 @@ def attempt_alignment(
     n=3, 
     ppm_tolerance=20, 
     precursor_tolerance=1,
-    scoring_alg='ibb', 
     DEBUG=False, 
     is_last=False
 ) -> list:
@@ -210,8 +209,6 @@ def attempt_alignment(
         n:                      (int) number of results to return. Default=3
         ppm_tolerance:          (int) ppm tolerance to allow when scoring. Default=20
         precursor_tolerance:    (float) tolerance in Da to allow for a match. Default = 1
-        scoring_alg:            (str) scoring algorithm to use. 'bb' for backbone, 'ion' for 
-                              specific ion scoring, 'ibb' for ion backbone. Default='ibb'
     Outputs:
         attempted_alignments: (list) attempted alignemnts. Contains both or either of SequenceAlignment and HybridSequenceAlignment
     '''
@@ -299,13 +296,20 @@ def attempt_alignment(
             sorted(gen_spectra.gen_spectrum(aligned_pair[0], ion='y')['spectrum']), 
             ppm_tolerance
         )
-        t_score = b_score + y_score
+
+        # the total score for non hybrids will be the sum of the b and y, but hybrids will use 
+        # the hybrid score
+        t_score = None
 
         # get the parent proteins of the sequence
         parents = alignment_utils.get_parents(aligned_pair[0] if aligned_pair[1] is None else aligned_pair[1], db)
 
         # check if the second entry is None
         if aligned_pair[1] is not None:
+
+            # get the hybrid score
+            t_score = b_score + y_score
+
             alignments.append(
                 HybridSequenceAlignment(
                     parents[0], 
@@ -321,6 +325,8 @@ def attempt_alignment(
 
         # if its not a hybrid sequence, make a SequenceAlignment object
         else:
+            t_score = scoring.hybrid_score(observed, aligned_pair[1], ppm_tolerance)
+
             alignments.append(
                 SequenceAlignment(
                     parents[0], 
@@ -351,7 +357,7 @@ def attempt_alignment(
         spectrum, 
         sorted(
             alignments, 
-            key=lambda x: (x.total_score, 1/x.precursor_distance, 1 if len(x) == 6 else 0), 
+            key=lambda x: (x.total_score, x.b_score, x.y_score, 1/x.precursor_distance), 
             reverse=True
         )[:n]
     )

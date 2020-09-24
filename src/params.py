@@ -1,18 +1,16 @@
 ########################## PROGRAM IO ##########################
 # full path to the spectra folder containing all spectra files
-SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/nod2 data/hybridSpec/'
+SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/nod2 data/filteredSpec/'
 # full path to the .fasta database file
 DATABASE_FILE = '/Users/zacharymcgrath/Desktop/nod2 data/filteredNOD2.fasta'
 # full path to the output directory
-OUTPUT_DIRECTORY = '/Users/zacharymcgrath/Desktop/Experiment output/filtered_NOD2_E3_SEP_9/'
+OUTPUT_DIRECTORY = '/Users/zacharymcgrath/Desktop/Experiment output/filtered_NOD2_E3_SEP_22/'
 
 ########################## SEARCH PARAMETERS ##########################
 # minimum length peptide to look for
 MIN_PEPTIDE_LEN = 3
 # maximum length peptide to look for
 MAX_PEPTIDE_LEN = 30
-# the number of digest sites that could have been missed
-MISSED_CLEAVAGES = 2
 # tolerance (in ppm) to allow when matching m/z peaks
 PPM_TOLERANCE = 20
 # tolerance (in Da) to allow when matching precursor masses
@@ -32,8 +30,5 @@ RELATIVE_ABUNDANCE_FILTER = .005
 ########################## RUN PARAMETERS ##########################
 # printing to the console during the run
 VERBOSE = True
-# which scoring algorithm to use. Options are 
-# 'ibb', 'ion', 'bb', 'iibb', 'iip'
-SCORING_ALG = 'ion'
 # Extra extra printing options for debugging the application
 DEBUG = False
