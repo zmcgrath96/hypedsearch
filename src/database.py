@@ -47,7 +47,7 @@ def get_proteins_with_subsequence(db: Database, sequence: str) -> list:
     Outputs:
         (list) string names of the source proteins
     '''
-    return list(set(db.kmers[sequence]))
+    return list(set(db.kmers.getKeysWithPrefix(sequence)))
 
 def get_entry_by_name(db: Database, name: str) -> namedtuple:
     '''

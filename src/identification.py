@@ -5,14 +5,17 @@ from src.alignment import alignment
 from src.utils import ppm_to_da, to_percent, overlap_intervals, predicted_len
 from src.scoring import scoring, mass_comparisons
 from src import database
+from src import bits
 
 from math import ceil
 from collections import defaultdict
 from operator import itemgetter
 from typing import Iterable
+from nf_prefix_tree import PyPrefixTree
 
 import bisect
 import time
+
 import array as arr
 
 # top results to keep for creating an alignment
@@ -46,9 +49,9 @@ def merge(P: Iterable, indices: Iterable, kmers: Iterable, boundaries: Iterable,
 def make_database_set(db: Database, max_len: int) -> (list, list, list):
     '''
     '''
-    db_dict_b = defaultdict(set)
-    db_dict_y = defaultdict(set)
-    kmer_set = defaultdict(list)
+    db_dict_b = defaultdict(list)
+    db_dict_y = defaultdict(list)
+    kmer_t = PyPrefixTree()
 
     def add_all(kmer, prot_name):
         for ion in 'by':
@@ -58,8 +61,11 @@ def make_database_set(db: Database, max_len: int) -> (list, list, list):
                 for i, mz in enumerate(spec):
                     kmer_to_add = kmer[:i+1] if ion == 'b' else kmer[-i-1:]
                     r_d = db_dict_b if ion == 'b' else db_dict_y
-                    r_d[mz].add(kmer_to_add)
-                    kmer_set[kmer_to_add].append(prot_name)
+
+                    # convert to a bit representation
+                    bit_kmer = bits.str_to_bits(kmer_to_add)
+                    r_d[mz].append(bit_kmer)
+                    kmer_t.addSequence(kmer_to_add, prot_name)
 
     plen = len(db.proteins)
 
@@ -100,7 +106,7 @@ def make_database_set(db: Database, max_len: int) -> (list, list, list):
         index_list_y.append(len(kmers) + offset)
         kmer_list_y += kmers
 
-    db = db._replace(kmers=kmer_set)
+    db = db._replace(kmers=kmer_t)
     return db_list_b, index_list_b, kmer_list_b, db_list_y, index_list_y, kmer_list_y, db
 
 def load_spectra(spectra_files: list, ppm_tol: int, peak_filter=0, relative_abundance_filter=0) -> (list, list, dict):
@@ -246,6 +252,10 @@ def id_spectra(
 
             if b in matched_masses_y:
                 y_hits += matched_masses_y[b]
+
+        # convert bhits from bits to strings
+        b_hits = [bits.bits_to_str(x) for x in b_hits]
+        y_hits = [bits.bits_to_str(x) for x in y_hits]
 
         # remove any duplicates
         b_hits = list(set(b_hits))
