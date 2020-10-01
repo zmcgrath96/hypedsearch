@@ -1,5 +1,5 @@
 from src.objects import Database, Spectrum
-from src.sequence import gen_spectra
+from src.gen_spectra import gen_spectra
 from src.scoring import scoring
 
 from src import database

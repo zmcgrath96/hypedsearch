@@ -1,4 +1,4 @@
-from src.sequence.gen_spectra import calc_masses
+from src.gen_spectra import calc_masses
 from src.utils import ppm_to_da
 
 from bisect import bisect

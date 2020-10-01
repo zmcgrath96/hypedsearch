@@ -2,7 +2,7 @@
 # full path to the spectra folder containing all spectra files
 SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/nod2 data/filteredSpec/'
 # full path to the .fasta database file
-DATABASE_FILE = '/Users/zacharymcgrath/Desktop/nod2 data/filteredNOD2.fasta'
+DATABASE_FILE = '/Users/zacharymcgrath/Desktop/nod2 data/all data/NOD2_mouse_database.fasta'
 # full path to the output directory
 OUTPUT_DIRECTORY = '/Users/zacharymcgrath/Desktop/Experiment output/filtered_NOD2_E3_SEP_22/'
 

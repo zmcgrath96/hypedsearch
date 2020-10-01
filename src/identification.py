@@ -1,6 +1,6 @@
 from src.file_io import mzML
 from src.objects import Database, Spectrum, Alignments
-from src.sequence.gen_spectra import gen_spectrum, gen_min_ordering
+from src.cppModules import gen_spectra
 from src.alignment import alignment
 from src.utils import ppm_to_da, to_percent, overlap_intervals, predicted_len
 from src.scoring import scoring, mass_comparisons
@@ -17,11 +17,12 @@ import array as arr
 
 # top results to keep for creating an alignment
 TOP_X = 50
+BATCH_SIZE = 300
 
 def hashable_boundaries(boundaries: list) -> str:
     return '-'.join([str(x) for x in boundaries])
 
-def merge(P: Iterable, indices: Iterable, kmers: Iterable, boundaries: Iterable, ppm_tol: int):
+def merge(P: Iterable, indices: Iterable, kmers: Iterable, boundaries: Iterable):
     b_i, p_i = 0, 0
 
     matched_masses = defaultdict(list)
@@ -43,17 +44,37 @@ def merge(P: Iterable, indices: Iterable, kmers: Iterable, boundaries: Iterable,
 
     return matched_masses
 
-def make_database_set(db: Database, max_len: int) -> (list, list, list):
+def make_database_set(proteins: list, max_len: int) -> (list, list, list):
     '''
+    Create parallel lists of (masses, index_maps, kmers) for the merge sort operation
+
+    Inputs:
+        proteins:   (list) protein entries of shape (name, entry) where entry has a .sequence attribute
+        max_len:    (int) the max length kmer to generate
+    Ouputs:
+        db_list_b:      (array) all b ion masses created in iteration through the proteins
+        index_list_b:   (array) the index mapping. Equal size to db_list_b where each entry maps 
+                                idx(db_list_b) -> range of indices in kmer_list_b of kmers corresponding to masses
+        kmer_list_b:    (list) the list of kmers associated to db_list_b through index_list_b
+
+        db_list_y:      (array) all y ion masses created in iteration through the proteins
+        index_list_y:   (array) he index mapping. Equal size to db_list_y where each entry maps 
+                                idx(db_list_y) -> range of indices in kmer_list_y of kmers corresponding to masses
+        kmer_list_y:    (list) the list of kmers associated to db_list_b through index_list_y
+
+        kmer_set:       (dict) mappings of kmers -> source proteins
+
     '''
     db_dict_b = defaultdict(set)
     db_dict_y = defaultdict(set)
     kmer_set = defaultdict(list)
 
+    # function to add all masses of b+, b++, y+, y++ ions to the correct dict for sorting
+    # and keep track of the source proteins
     def add_all(kmer, prot_name):
         for ion in 'by':
             for charge in [1, 2]:
-                spec = gen_spectrum(kmer, ion=ion, charge=charge)['spectrum']
+                spec = gen_spectra.gen_spectrum(kmer, ion=ion, charge=charge)
 
                 for i, mz in enumerate(spec):
                     kmer_to_add = kmer[:i+1] if ion == 'b' else kmer[-i-1:]
@@ -61,10 +82,10 @@ def make_database_set(db: Database, max_len: int) -> (list, list, list):
                     r_d[mz].add(kmer_to_add)
                     kmer_set[kmer_to_add].append(prot_name)
 
-    plen = len(db.proteins)
+    plen = len(proteins)
 
-    # go through each protein and 
-    for i, (prot_name, prot_entry) in enumerate(db.proteins.items()):
+    # go through each protein and add all kmers to the correct dictionary for later sorting
+    for i, (prot_name, prot_entry) in enumerate(proteins):
         
         print(f'\rOn protein {i+1}/{plen} [{int((i+1) * 100 / plen)}%]', end='')
 
@@ -82,10 +103,16 @@ def make_database_set(db: Database, max_len: int) -> (list, list, list):
 
     print('\nSorting the set of protein masses...')
     
+    # arrays take less space than lists
     db_list_b, index_list_b, kmer_list_b = arr.array('f'), arr.array('i'), []
     db_list_y, index_list_y, kmer_list_y = arr.array('f'), arr.array('i'), []
+
+    # sort the keys to make sure that we are going through masses the correct way
     sorted_keys = sorted(db_dict_b.keys())
     for mz in sorted_keys:
+
+        # get all kmers associated with this mass, append it the b ion list, and keep track 
+        # of the kmers in the kmer list
         kmers = db_dict_b[mz]
         db_list_b.append(mz)
         offset = 0 if not len(index_list_b) else index_list_b[-1]
@@ -94,14 +121,16 @@ def make_database_set(db: Database, max_len: int) -> (list, list, list):
 
     sorted_keys = sorted(db_dict_y.keys())
     for mz in sorted_keys:
+
+        # get all kmers associated with this mass, append it the y ion list, and keep track 
+        # of the kmers in the kmer list
         kmers = db_dict_y[mz]
         db_list_y.append(mz)
         offset = 0 if not len(index_list_y) else index_list_y[-1]
         index_list_y.append(len(kmers) + offset)
         kmer_list_y += kmers
 
-    db = db._replace(kmers=kmer_set)
-    return db_list_b, index_list_b, kmer_list_b, db_list_y, index_list_y, kmer_list_y, db
+    return db_list_b, index_list_b, kmer_list_b, db_list_y, index_list_y, kmer_list_y, kmer_set
 
 def load_spectra(spectra_files: list, ppm_tol: int, peak_filter=0, relative_abundance_filter=0) -> (list, list, dict):
     '''
@@ -167,6 +196,165 @@ def load_spectra(spectra_files: list, ppm_tol: int, peak_filter=0, relative_abun
 
     return (all_spectra, boundaries, mz_mapping)
 
+def match_masses(spectra_boundaries: list, db: Database) -> (dict, dict, Database):
+    '''
+    Take in a list of boundaries from observed spectra and return a b and y
+    dictionary that maps boundaries -> kmers
+
+    Inputs:
+        spectra_boundaries: (list) lists with [lower_bound, upper_bound]
+        db:                 (Database) entries to look for kmers in
+    Outputs:
+        (dict, dict) mappings from boundaries -> kmers for (b, y) ions
+    '''
+
+    '''
+    We need to create mappings from boundaries -> kmers for both b and y ions
+    Emprically we found that ~300 proteins worth of kmers and floats takes ~4GB RAM
+    So in order to keep in down we need to batch it. Heres what we'll do
+    
+      1. Define a constant above for the number of proteins to have per batch
+      2. For the number of proteins in a batch
+        1. Pass those proteins to make_database_set (returns a list of b, y kmers with masses and indices)
+        2. Pass those lists ot merge
+        3. The results of that are mappings of boundaries -> kmers, add those to some constant mapping we have
+        4. Delete those old lists to clear memory
+        5. Repeat
+    
+    Adding each batch's results to our mapping will create a large mapping. We will return
+    that mapping and the updated database
+
+    '''
+    # keep track of all of the good mass matches and kmers
+    matched_masses_b, matched_masses_y, kmer_set = defaultdict(list), defaultdict(list), defaultdict(list)
+
+    # estimate the max len
+    max_len = predicted_len(spectra_boundaries[-1][1])
+
+    # calc the number of batches needed
+    num_batches = ceil(len(db.proteins) / BATCH_SIZE)
+
+    # create batches of proteins in the form of (prot name, prot entry)
+    kv_prots = [(k, v) for k, v in db.proteins.items()]
+    batched_prots = [kv_prots[i*BATCH_SIZE:(i+1)*BATCH_SIZE] for i in range(num_batches)]
+
+    # go through each batch set and create the list representation, merge, and keep good prots
+    for batch_num, batch_set in enumerate(batched_prots):
+
+        print(f'On batch {batch_num + 1}/{num_batches}\n', end='')
+
+        # create our list representation
+        batch_b_list, index_list_b, batch_kmer_b, batch_y_list, index_list_y, batch_kmer_y, batch_kmer_set = make_database_set(batch_set, max_len)
+
+        # find tha batch matched masses for both b and y ions
+        matched_masses_b_batch = merge(batch_b_list, index_list_b, batch_kmer_b, spectra_boundaries)
+        matched_masses_y_batch = merge(batch_y_list, index_list_y, batch_kmer_y, spectra_boundaries)
+
+        # add these these hits to our function scoped set of masses and to the kmer set
+        for k, v in matched_masses_b_batch.items():
+            matched_masses_b[k] += v 
+            kmer_set[k] += batch_kmer_set[k]
+
+        for k, v in matched_masses_y_batch.items():
+            matched_masses_y[k] += v 
+            kmer_set[k] += batch_kmer_set[k]
+
+    #update kmers in db to the kmer set
+    db = db._replace(kmers=kmer_set)
+
+    return (matched_masses_b, matched_masses_y, db)
+
+
+def id_spectrum(
+    spectrum: Spectrum, 
+    boundaries: list, 
+    db: Database,
+    mz_mapping: dict, 
+    matched_masses_b: dict, 
+    matched_masses_y: dict,
+    ppm_tolerance: int
+    ) -> Alignments:
+    '''
+    Create an alignment for a spectrum
+
+    Inputs:
+        spectrum:           (Spectrum) the spectrum to create an alignment for
+        boundaries:         (list) the list of boundaries for all observed spectra
+        db:                 (Database) holding all the records
+        mz_mapping:         (dict) the mapping from mass -> boundaries needed to retrieve kmers for a mass (boundary)
+        matched_masses_b:   (dict) the mapping from boundaries -> kmers for b ions
+        matched_masses_y:   (dict) the mapping from boundaries -> kmers for y ions
+        ppm_tolerance:      (int) the tolerance to allow for scoring algs
+    Outputs:
+        (Alignments) the created alignments for this spectrum
+    '''
+    b_hits, y_hits = [], []
+    for mz in spectrum.spectrum:
+
+        # get the correct boundary
+        mapped = mz_mapping[mz]
+        b = boundaries[mapped]
+        b = hashable_boundaries(b)
+
+        if b in matched_masses_b:
+            b_hits += matched_masses_b[b]
+
+        if b in matched_masses_y:
+            y_hits += matched_masses_y[b]
+
+    # remove any duplicates
+    b_hits = list(set(b_hits))
+    y_hits = list(set(y_hits))
+
+    # score and sort these results
+    b_results = sorted([
+        (
+            kmer, 
+            mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectra.gen_spectrum(kmer, ion='b'))
+        ) for kmer in b_hits], 
+        key=lambda x: (x[1], 1/len(x[0])), 
+        reverse=True
+    )
+    y_results = sorted([
+        (
+            kmer, 
+            mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectra.gen_spectrum(kmer, ion='y'))
+        ) for kmer in y_hits], 
+        key=lambda x: (x[1], 1/len(x[0])), 
+        reverse=True
+    )
+
+    # filter out the results
+    # 1. take all non-zero values 
+    # 2. either take the TOP_X or if > TOP_X have the same score, all of those values
+    filtered_b, filtered_y = [], []
+
+    # find the highest b and y scores
+    max_b_score = max([x[1] for x in b_results])
+    max_y_score = max([x[1] for x in y_results])
+
+    # count the number fo kmers that have the highest value
+    num_max_b = sum([1 for x in b_results if x[1] == max_b_score])
+    num_max_y = sum([1 for x in y_results if x[1] == max_y_score])
+
+    # if we have more than TOP_X number of the highest score, take all of them
+    keep_b_count = max(TOP_X, num_max_b)
+    keep_y_count = max(TOP_X, num_max_y)
+
+    # take the afformentioned number of results that > than zero
+    filtered_b = [x[0] for x in b_results[:keep_b_count] if x[1] > 0]
+    filtered_y = [x[0] for x in y_results[:keep_y_count] if x[1] > 0]
+
+    # create an alignment for the spectrum
+    return alignment.attempt_alignment(
+        spectrum, 
+        db, 
+        filtered_b, 
+        filtered_y, 
+        ppm_tolerance=ppm_tolerance, 
+        n=5
+    )
+
 
 def id_spectra(
     spectra_files: list, 
@@ -215,88 +403,13 @@ def id_spectra(
     )
     verbose and print('Done')
 
-    # build tree and graphs
-    build_st = time.time()
-    print('Making the protein mass set...')
-    max_len = predicted_len(boundaries[-1][1])
-    db_list_b, index_list_b, kmer_list_b, db_list_y, index_list_y, kmer_list_y, db = make_database_set(db, max_len)
-    print(f'Done. Length of the list: {len(db_list_b) + len(db_list_y)}')
-    print(f'Time to build: {round(time.time() - build_st, 4)} seconds')
+    # get the boundary -> kmer mappings for b and y ions
+    matched_masses_b, matched_masses_y, db = match_masses(boundaries, db)
 
-    merge_st  = time.time()
-    matched_masses_b = merge(db_list_b, index_list_b, kmer_list_b, boundaries, ppm_tolerance)
-    matched_masses_y = merge(db_list_y, index_list_y, kmer_list_y, boundaries, ppm_tolerance)
-    print(f'Time to do merge: {round(time.time() - merge_st, 4)} seconds')
-    # go through each spectrum, sort their results, and take the top X hits to try and align
+    # keep track of the alingment made for every spectrum
     results = {}
-
     for i, spectrum in enumerate(spectra):
         print(f'\rCreating an alignment for {i+1}/{len(spectra)} [{to_percent(i, len(spectra))}%]', end='')
-
-        b_hits, y_hits = [], []
-        for mz in spectrum.spectrum:
-
-            # get the correct boundary
-            mapped = mz_mapping[mz]
-            b = boundaries[mapped]
-            b = hashable_boundaries(b)
-
-            if b in matched_masses_b:
-                b_hits += matched_masses_b[b]
-
-            if b in matched_masses_y:
-                y_hits += matched_masses_y[b]
-
-        # remove any duplicates
-        b_hits = list(set(b_hits))
-        y_hits = list(set(y_hits))
-
-        # score and sort these results
-        b_results = sorted([
-            (
-                kmer, 
-                mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectrum(kmer, ion='b')['spectrum'])
-            ) for kmer in b_hits], 
-            key=lambda x: (x[1], 1/len(x[0])), 
-            reverse=True
-        )
-        y_results = sorted([
-            (
-                kmer, 
-                mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectrum(kmer, ion='y')['spectrum'])
-            ) for kmer in y_hits], 
-            key=lambda x: (x[1], 1/len(x[0])), 
-            reverse=True
-        )
-
-        # filter out the results
-        # 1. take all non-zero values 
-        # 2. either take the TOP_X or if > TOP_X have the same score, all of those values
-        filtered_b, filtered_y = [], []
-
-        # find the highest b and y scores
-        max_b_score = max([x[1] for x in b_results])
-        max_y_score = max([x[1] for x in y_results])
-
-        # count the number fo kmers that have the highest value
-        num_max_b = sum([1 for x in b_results if x[1] == max_b_score])
-        num_max_y = sum([1 for x in y_results if x[1] == max_y_score])
-
-        # if we have more than TOP_X number of the highest score, take all of them
-        keep_b_count = max(TOP_X, num_max_b)
-        keep_y_count = max(TOP_X, num_max_y)
-
-        # take the afformentioned number of results that > than zero
-        filtered_b = [x[0] for x in b_results[:keep_b_count] if x[1] > 0]
-        filtered_y = [x[0] for x in y_results[:keep_y_count] if x[1] > 0]
-
-        # create an alignment for the spectrum
-        results[i] = alignment.attempt_alignment(
-            spectrum, 
-            db, 
-            filtered_b, 
-            filtered_y, 
-            ppm_tolerance=ppm_tolerance, 
-            n=5
-        )
+        results[i] = id_spectrum(spectrum, boundaries, db, mz_mapping, matched_masses_b, matched_masses_y, ppm_tolerance)
+        
     return results

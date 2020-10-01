@@ -1,7 +1,7 @@
 from src.scoring import scoring
 from src.objects import Spectrum, SequenceAlignment, HybridSequenceAlignment, Database, Alignments
 from src.alignment import alignment_utils, hybrid_alignment
-from src.sequence import gen_spectra
+from src.gen_spectra import gen_spectra
 
 from src import utils
 from src import database
@@ -189,7 +189,7 @@ def attempt_alignment(
     precursor_tolerance=1,
     DEBUG=False, 
     is_last=False
-) -> list:
+) -> Alignments:
     '''
     Given a set of left and right (b and y ion) hits, try and overlap or extend one side to 
     explain the input spectrum
@@ -210,7 +210,7 @@ def attempt_alignment(
         ppm_tolerance:          (int) ppm tolerance to allow when scoring. Default=20
         precursor_tolerance:    (float) tolerance in Da to allow for a match. Default = 1
     Outputs:
-        attempted_alignments: (list) attempted alignemnts. Contains both or either of SequenceAlignment and HybridSequenceAlignment
+        (Alignments) attempted alignemnts. Contains both or either of SequenceAlignment and HybridSequenceAlignment
     '''
     global FIRST_ALIGN_TIME, AMBIGUOUS_REMOVAL_TIME, FILTER_TIME, PRECURSOR_MASS_TIME, OBJECTIFY_TIME
     global FIRST_ALIGN_COUNT, AMBIGUOUS_REMOVAL_COUNT, FILTER_COUNT, PRECURSOR_MASS_COUNT, OBJECTIFY_COUNT
@@ -308,7 +308,7 @@ def attempt_alignment(
         if aligned_pair[1] is not None:
 
             # get the hybrid score
-            t_score = b_score + y_score
+            t_score = scoring.hybrid_score(spectrum, aligned_pair[1], ppm_tolerance)
 
             alignments.append(
                 HybridSequenceAlignment(
@@ -325,7 +325,7 @@ def attempt_alignment(
 
         # if its not a hybrid sequence, make a SequenceAlignment object
         else:
-            t_score = scoring.hybrid_score(spectrum, aligned_pair[1], ppm_tolerance)
+            t_score = b_score + y_score
 
             alignments.append(
                 SequenceAlignment(
