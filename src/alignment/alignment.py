@@ -325,7 +325,7 @@ def attempt_alignment(
 
         # if its not a hybrid sequence, make a SequenceAlignment object
         else:
-            t_score = scoring.hybrid_score(observed, aligned_pair[1], ppm_tolerance)
+            t_score = scoring.hybrid_score(spectrum, aligned_pair[1], ppm_tolerance)
 
             alignments.append(
                 SequenceAlignment(
