@@ -41,6 +41,8 @@ std::vector<float> bIons(std::string sequence, int charge){
 std::vector<float> yIons(std::string sequence, int charge){
     std::vector<float> masses;
 
+    std::reverse(sequence.begin(), sequence.end());
+
     if (charge == 1 || charge == -1){
         float total = SINGLY_CHARGED_Y_BASE;
         for (char aa : sequence){

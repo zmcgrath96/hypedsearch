@@ -8,11 +8,23 @@ cpp_source_dir = './cppModules'
 
 extensions = [
     Extension(
-            name="cppModules.gen_spectra", 
-            sources=[f"{cpp_source_dir}/spectraGeneration/gen_spectra.pyx", f"{cpp_source_dir}/spectraGeneration/genSpectra.cpp"],
-            language="c++", 
-            extra_compile_args=["-std=c++11"]
-        )
+        name="cppModules.gen_spectra", 
+        sources=[
+            f"{cpp_source_dir}/spectraGeneration/gen_spectra.pyx",
+             f"{cpp_source_dir}/spectraGeneration/genSpectra.cpp"
+        ],
+        language="c++", 
+        extra_compile_args=["-std=c++11"]
+    ), 
+    Extension(
+        name="cppModules.map_spectra_masses", 
+        sources=[
+            f"{cpp_source_dir}/reduceSearchSpace/map_spectra_masses.pyx",
+            f"{cpp_source_dir}/reduceSearchSpace/mapSpectraMasses.cpp"
+        ],
+        language="c++", 
+        extra_compile_args=["-std=c++11"]
+    )
 ]
 
 setup(

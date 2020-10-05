@@ -3,13 +3,13 @@
 /**
  * Outward facing function for the caller. Does the merge search and mappings to map boundaries to kmers
  * 
- * @param boundaries    std::vector<float []>   vector of float arrays of length 2 of the form [lowerbound, upperbound]
+ * @param boundaries    std::vector<boundary>   vector of float arrays of length 2 of the form [lowerbound, upperbound]
  * @param proteins      std::vector<protein>    vector of protein objects needed for indexing
  * @param maxKmerLength int                     the maximum length kmer to allow for
  * 
  * @return mappings
 */
-mappings * mapBoundaries(std::vector<float []> boundaries, std::vector<protein> proteins, int maxKmerLength){
+mappings * mapBoundaries(std::vector<boundary> boundaries, std::vector<protein> proteins, int maxKmerLength){
     // create the internal mappings needed
     _internalMappings * iMaps = indexProteins(boundaries, proteins, maxKmerLength);
 
@@ -60,5 +60,16 @@ mappings * mapBoundaries(std::vector<float []> boundaries, std::vector<protein> 
 
     delete iMaps;
     return returnMappings;
+}
+
+/*------------- easy class stuff ----------------*/
+protein::protein(std::string name, std::string sequence){
+    this->name = name;
+    this->sequence = sequence;
+}
+
+boundary::boundary(float lowerBound, float upperBound){
+    this->lowerBound = lowerBound;
+    this->upperBound = upperBound;
 }
 

@@ -4,12 +4,12 @@
 /**
  * Turn a boundary set into a string to be able to hash
  * 
- * @param boundary  float []    an array of length 2 of [lowerbound, upperbound]
+ * @param boundary  boundary    an array of length 2 of [lowerbound, upperbound]
  * 
  * @return std::string of the form 'lowerbound-upperbound'
 */
-std::string hashifyBoundary(float boundary[]){
-    return std::to_string(boundary[0]) + "-" + std::to_string(boundary[1]);
+std::string hashifyBoundary(boundary boundary){
+    return std::to_string(boundary.lowerBound) + "-" + std::to_string(boundary.upperBound);
 }
 
 /**
@@ -28,7 +28,7 @@ std::unordered_map<std::string, std::vector<std::string>> mergeSearch(
     std::vector<float> masses, 
     std::vector<int> indices, 
     std::vector<std::string> kmers, 
-    std::vector<float []> boundaries
+    std::vector<boundary> boundaries
 ){
     // index into masses and boundaries respectively
     int m_i, b_i = 0;
@@ -40,14 +40,15 @@ std::unordered_map<std::string, std::vector<std::string>> mergeSearch(
 
         // if masses at m_i is inside our current boundaries[b_i], keep track of the 
         // kmers at this position and increment m_i
-        if (boundaries[b_i][0] <= masses[m_i] && masses[m_i] <= boundaries[b_i][1]){
+        if (boundaries[b_i].lowerBound <= masses[m_i] && masses[m_i] <= boundaries[b_i].upperBound){
             // get the string representation of the boundary for hashing
             std::string boundaryHash = hashifyBoundary(boundaries[b_i]);
 
             // get the kmers that need to be added from the kmer list
             std::vector<std::string> kmersToAdd;
 
-            // start index for getting kmers
+            // start index for getting kmers. If m_i is 0, start
+            // at 0, otherwise the end of the last range
             int startIndex = m_i == 0? 0: indices[m_i - 1];
 
             for (int i = startIndex; i < indices[m_i]; i ++){
@@ -55,15 +56,15 @@ std::unordered_map<std::string, std::vector<std::string>> mergeSearch(
             }
 
             // append our set of kmers to the set of kmers in the map
-            // vector1.insert( vector1.end(), vector2.begin(), vector2.end() );
-            matchedMasses[boundaryHash].insert(matchedMasses[boundaryHash].end(), kmersToAdd.begin(), kmersToAdd.end());
+            std::vector<std::string> entry = matchedMasses[boundaryHash];
+            entry.insert(entry.end(), kmersToAdd.begin(), kmersToAdd.end());
         
             // finally increment m_i
             m_i ++;
         }
 
         // if the upper bound is less than masses[m_i], increment b_i
-        else if (masses[m_i] > boundaries[b_i][1]) b_i ++;
+        else if (masses[m_i] > boundaries[b_i].upperBound) b_i ++;
 
         // the lower bound is greater than p_i, incrment p_i
         else m_i ++;
@@ -76,13 +77,13 @@ std::unordered_map<std::string, std::vector<std::string>> mergeSearch(
 /**
  * Create all the internal mappings needed for mergeSearch 
  * 
- * @param boundaries    std::vector<float []>   vector of float arrays of the form [lowerbound, upperbound]
+ * @param boundaries    std::vector<boundary>   vector of float arrays of the form [lowerbound, upperbound]
  * @param proteins      std::vector<protein>    vector of protein objects to index
  * @param maxKmerLength int                     max kmer length to consider
  * 
  * @return _internalMappings *
 */
-_internalMappings * indexProteins(std::vector<float []> boundaries, std::vector<protein> proteins, int maxKmerLength){
+_internalMappings * indexProteins(std::vector<boundary> boundaries, std::vector<protein> proteins, int maxKmerLength){
     // init  our return value
     _internalMappings * returnVal = new _internalMappings();
 
