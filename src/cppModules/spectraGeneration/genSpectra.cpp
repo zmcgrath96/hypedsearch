@@ -59,6 +59,9 @@ std::vector<float> yIons(std::string sequence, int charge){
         }
     }
 
+    // reverse it back since its reversed in place
+    std::reverse(sequence.begin(), sequence.end());
+
     return masses;
 } 
 

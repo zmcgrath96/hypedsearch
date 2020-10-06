@@ -27,7 +27,7 @@ END: Cython Metadata */
 #else
 #define CYTHON_ABI "0_29_21"
 #define CYTHON_HEX_VERSION 0x001D15F0
-#define CYTHON_FUTURE_DIVISION 0
+#define CYTHON_FUTURE_DIVISION 1
 #include <stddef.h>
 #ifndef offsetof
   #define offsetof(type, member) ( (size_t) & ((type*)0) -> member )
@@ -1164,7 +1164,7 @@ static const char __pyx_k_gen_spectrum[] = "gen_spectrum";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_cppModules_gen_spectra[] = "cppModules.gen_spectra";
 static const char __pyx_k_cppModules_spectraGeneration_gen[] = "cppModules/spectraGeneration/gen_spectra.pyx";
-static PyObject *__pyx_kp_s_;
+static PyObject *__pyx_kp_u_;
 static PyObject *__pyx_n_s_charge;
 static PyObject *__pyx_n_s_cline_in_traceback;
 static PyObject *__pyx_n_s_cppModules_gen_spectra;
@@ -1213,7 +1213,7 @@ static PyObject *__pyx_pw_10cppModules_11gen_spectra_1gen_spectrum(PyObject *__p
   {
     static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_sequence,&__pyx_n_s_ion,&__pyx_n_s_charge,&__pyx_n_s_sort,0};
     PyObject* values[4] = {0,0,0,0};
-    values[1] = ((PyObject *)__pyx_kp_s_);
+    values[1] = ((PyObject *)__pyx_kp_u_);
     values[2] = ((PyObject *)__pyx_int_neg_1);
     values[3] = ((PyObject *)Py_True);
     if (unlikely(__pyx_kwds)) {
@@ -1284,7 +1284,7 @@ static PyObject *__pyx_pw_10cppModules_11gen_spectra_1gen_spectrum(PyObject *__p
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sequence), (&PyString_Type), 1, "sequence", 1))) __PYX_ERR(0, 9, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sequence), (&PyUnicode_Type), 1, "sequence", 1))) __PYX_ERR(0, 9, __pyx_L1_error)
   __pyx_r = __pyx_pf_10cppModules_11gen_spectra_gen_spectrum(__pyx_self, __pyx_v_sequence, __pyx_v_ion, __pyx_v_charge, __pyx_v_sort);
 
   /* function exit code */
@@ -1300,7 +1300,7 @@ static PyObject *__pyx_pf_10cppModules_11gen_spectra_gen_spectrum(CYTHON_UNUSED 
   PyObject *__pyx_v_seq = NULL;
   PyObject *__pyx_v_i = NULL;
   std::vector<float>  __pyx_v_spec;
-  PyObject *__pyx_v_x = NULL;
+  PyObject *__pyx_7genexpr__pyx_v_x = NULL;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   Py_ssize_t __pyx_t_1;
@@ -1326,7 +1326,11 @@ static PyObject *__pyx_pf_10cppModules_11gen_spectra_gen_spectrum(CYTHON_UNUSED 
  *         return []
  * 
  */
-  __pyx_t_1 = PyObject_Length(__pyx_v_sequence); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 24, __pyx_L1_error)
+  if (unlikely(__pyx_v_sequence == Py_None)) {
+    PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
+    __PYX_ERR(0, 24, __pyx_L1_error)
+  }
+  __pyx_t_1 = __Pyx_PyUnicode_GET_LENGTH(__pyx_v_sequence); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 24, __pyx_L1_error)
   __pyx_t_2 = ((__pyx_t_1 == 0) != 0);
   if (__pyx_t_2) {
 
@@ -1360,7 +1364,7 @@ static PyObject *__pyx_pf_10cppModules_11gen_spectra_gen_spectrum(CYTHON_UNUSED 
  *     i = str.encode(ion)
  * 
  */
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)(&PyString_Type)), __pyx_n_s_encode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 27, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)(&PyUnicode_Type)), __pyx_n_s_encode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 27, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_5 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_4))) {
@@ -1387,7 +1391,7 @@ static PyObject *__pyx_pf_10cppModules_11gen_spectra_gen_spectrum(CYTHON_UNUSED 
  * 
  *     spec = genSpectra.genSpectrum(seq, i, charge, sort)
  */
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)(&PyString_Type)), __pyx_n_s_encode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 28, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)(&PyUnicode_Type)), __pyx_n_s_encode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_5 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_4))) {
@@ -1428,19 +1432,27 @@ static PyObject *__pyx_pf_10cppModules_11gen_spectra_gen_spectrum(CYTHON_UNUSED 
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 31, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_10 = __pyx_v_spec.begin();
-  for (;;) {
-    if (!(__pyx_t_10 != __pyx_v_spec.end())) break;
-    __pyx_t_11 = *__pyx_t_10;
-    ++__pyx_t_10;
-    __pyx_t_4 = PyFloat_FromDouble(__pyx_t_11); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 31, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_XDECREF_SET(__pyx_v_x, __pyx_t_4);
-    __pyx_t_4 = 0;
-    if (unlikely(__Pyx_ListComp_Append(__pyx_t_3, (PyObject*)__pyx_v_x))) __PYX_ERR(0, 31, __pyx_L1_error)
-  }
+  { /* enter inner scope */
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 31, __pyx_L6_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_10 = __pyx_v_spec.begin();
+    for (;;) {
+      if (!(__pyx_t_10 != __pyx_v_spec.end())) break;
+      __pyx_t_11 = *__pyx_t_10;
+      ++__pyx_t_10;
+      __pyx_t_4 = PyFloat_FromDouble(__pyx_t_11); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 31, __pyx_L6_error)
+      __Pyx_GOTREF(__pyx_t_4);
+      __Pyx_XDECREF_SET(__pyx_7genexpr__pyx_v_x, __pyx_t_4);
+      __pyx_t_4 = 0;
+      if (unlikely(__Pyx_ListComp_Append(__pyx_t_3, (PyObject*)__pyx_7genexpr__pyx_v_x))) __PYX_ERR(0, 31, __pyx_L6_error)
+    }
+    __Pyx_XDECREF(__pyx_7genexpr__pyx_v_x); __pyx_7genexpr__pyx_v_x = 0;
+    goto __pyx_L9_exit_scope;
+    __pyx_L6_error:;
+    __Pyx_XDECREF(__pyx_7genexpr__pyx_v_x); __pyx_7genexpr__pyx_v_x = 0;
+    goto __pyx_L1_error;
+    __pyx_L9_exit_scope:;
+  } /* exit inner scope */
   __pyx_r = ((PyObject*)__pyx_t_3);
   __pyx_t_3 = 0;
   goto __pyx_L0;
@@ -1463,7 +1475,7 @@ static PyObject *__pyx_pf_10cppModules_11gen_spectra_gen_spectrum(CYTHON_UNUSED 
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_seq);
   __Pyx_XDECREF(__pyx_v_i);
-  __Pyx_XDECREF(__pyx_v_x);
+  __Pyx_XDECREF(__pyx_7genexpr__pyx_v_x);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
@@ -1580,7 +1592,7 @@ static struct PyModuleDef __pyx_moduledef = {
 #endif
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
-  {&__pyx_kp_s_, __pyx_k_, sizeof(__pyx_k_), 0, 0, 1, 0},
+  {&__pyx_kp_u_, __pyx_k_, sizeof(__pyx_k_), 0, 1, 0, 0},
   {&__pyx_n_s_charge, __pyx_k_charge, sizeof(__pyx_k_charge), 0, 0, 1, 1},
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
   {&__pyx_n_s_cppModules_gen_spectra, __pyx_k_cppModules_gen_spectra, sizeof(__pyx_k_cppModules_gen_spectra), 0, 0, 1, 1},

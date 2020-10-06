@@ -20,7 +20,8 @@ extensions = [
         name="cppModules.map_spectra_masses", 
         sources=[
             f"{cpp_source_dir}/reduceSearchSpace/map_spectra_masses.pyx",
-            f"{cpp_source_dir}/reduceSearchSpace/mapSpectraMasses.cpp"
+            f"{cpp_source_dir}/reduceSearchSpace/mapSpectraMasses.cpp", 
+            f"{cpp_source_dir}/reduceSearchSpace/massSearch.cpp"
         ],
         language="c++", 
         extra_compile_args=["-std=c++11"]
@@ -30,6 +31,7 @@ extensions = [
 setup(
     name="cppModules",
     ext_modules=cythonize(
-        extensions
+        extensions,
+        language_level="3"
     )
 )

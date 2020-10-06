@@ -1,4 +1,5 @@
 #include "mapSpectraMasses.hpp"
+#include "massSearch.hpp"
 
 /**
  * Outward facing function for the caller. Does the merge search and mappings to map boundaries to kmers
@@ -24,14 +25,32 @@ mappings * mapBoundaries(std::vector<boundary> boundaries, std::vector<protein> 
     iMaps->bMassesToKmerIndices.clear();
 
     // do the y mappings second
-    returnMappings->matchedBMasses = mergeSearch(iMaps->bIonRefMasses, iMaps->bMassesToKmerIndices, iMaps->bKmers, boundaries);
+    returnMappings->matchedYMasses = mergeSearch(iMaps->yIonRefMasses, iMaps->yMassesToKmerIndices, iMaps->yKmers, boundaries);
 
     // delete teh y ioin stuff we don't need
     iMaps->yIonRefMasses.clear();
     iMaps->yMassesToKmerIndices.clear();
 
+    // // print the matche b masses
+    // std::cout << "\nmatched b masses:\n";
+    // for (auto entry: returnMappings->matchedBMasses){
+    //     std::cout << "range: " << entry.first << "| kmers: ";
+
+    //     for (std::string kmer: entry.second)std::cout<< kmer << ", ";
+    //     std::cout << "\n";
+    // }
+
+    // // print the matche b masses
+    // std::cout << "\n\nmatched y masses:\n";
+    // for (auto entry: returnMappings->matchedYMasses){
+    //     std::cout << "range: " << entry.first << "| kmers: ";
+
+    //     for (std::string kmer: entry.second)std::cout<< kmer << ", ";
+    //     std::cout << "\n";
+    // }
+
     // keep the kmers that we need from our kmerToProt mapping
-    for (auto const entry: returnMappings->matchedBMasses){
+    for (auto entry: returnMappings->matchedBMasses){
         // the second entry is our list of kmers
         std::vector<std::string> kmers = entry.second;
 
@@ -45,7 +64,7 @@ mappings * mapBoundaries(std::vector<boundary> boundaries, std::vector<protein> 
     }
 
     // keep the kmers that we need from our kmerToProt mapping
-    for (auto const entry: returnMappings->matchedYMasses){
+    for (auto entry: returnMappings->matchedYMasses){
         // the second entry is our list of kmers
         std::vector<std::string> kmers = entry.second;
 

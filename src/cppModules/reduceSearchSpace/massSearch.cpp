@@ -31,12 +31,13 @@ std::unordered_map<std::string, std::vector<std::string>> mergeSearch(
     std::vector<boundary> boundaries
 ){
     // index into masses and boundaries respectively
-    int m_i, b_i = 0;
+    int m_i = 0;
+    int b_i = 0;
 
     // keep track of masses that we have matched
     std::unordered_map<std::string, std::vector<std::string>> matchedMasses;
 
-    while (m_i < masses.size() && b_i < boundaries.size()){
+    while (m_i < (int)masses.size() && b_i < (int)boundaries.size()){
 
         // if masses at m_i is inside our current boundaries[b_i], keep track of the 
         // kmers at this position and increment m_i
@@ -56,8 +57,11 @@ std::unordered_map<std::string, std::vector<std::string>> mergeSearch(
             }
 
             // append our set of kmers to the set of kmers in the map
-            std::vector<std::string> entry = matchedMasses[boundaryHash];
-            entry.insert(entry.end(), kmersToAdd.begin(), kmersToAdd.end());
+            matchedMasses[boundaryHash].insert(
+                matchedMasses[boundaryHash].end(),
+                kmersToAdd.begin(),
+                kmersToAdd.end()
+            );
         
             // finally increment m_i
             m_i ++;
@@ -102,10 +106,10 @@ _internalMappings * indexProteins(std::vector<boundary> boundaries, std::vector<
                 // so then we would iteratively add pairs of 
                 // A, 100   AB, 250    ABC, 340    ABCD, 500
                 // to the bionmasskmers
-                for (int i = 0; i < spectrum.size(); i ++){
+                for (int i = 0; i < (int)spectrum.size(); i ++){
 
                     // get the correct substring from the kmer
-                    std::string kmerToAdd = ion == "b"? kmer.substr(0, i+1) : kmer.substr(kmer.size()-i-1, i+1);
+                    std::string kmerToAdd = ion == "b"? kmer.substr(0, i+1) : kmer.substr((int)kmer.size()-i-1, i+1);
 
                     // get the mass from the spectrum
                     float mz = spectrum[i];
@@ -132,8 +136,8 @@ _internalMappings * indexProteins(std::vector<boundary> boundaries, std::vector<
         protein prot = proteins[protNum];
 
         // do the first bit 
-        int edgeIterRange = maxKmerLength > prot.sequence.length() ?
-                                prot.sequence.length() : maxKmerLength;
+        int edgeIterRange = maxKmerLength > (int)prot.sequence.length() ?
+                                (int)prot.sequence.length() : maxKmerLength;
 
         // do the edges of the protein first
         for (int j = 0; j < edgeIterRange; j ++){
@@ -145,10 +149,10 @@ _internalMappings * indexProteins(std::vector<boundary> boundaries, std::vector<
         }
 
         // if the length of the protein is less than the max kmer length, continue
-        if (maxKmerLength > prot.sequence.length()) continue;
+        if (maxKmerLength > (int)prot.sequence.length()) continue;
 
         // otherwise do all the kmers in the middle
-        for (int j = 1; j < prot.sequence.length() - maxKmerLength; j ++){
+        for (int j = 1; j < (int)prot.sequence.length() - maxKmerLength; j ++){
             std::string kmer = prot.sequence.substr(j, maxKmerLength);
             addKmerLambda(kmer, prot.name);
         }
@@ -158,7 +162,7 @@ _internalMappings * indexProteins(std::vector<boundary> boundaries, std::vector<
     // all the keys in our b and y ion maps are sorted (http://www.cplusplus.com/reference/map/map/)
     // so we can just iterate through the values normally to create our parallel lists
 
-    for (auto const entry: bIonMassKmers){
+    for (auto entry: bIonMassKmers){
         float mass = entry.first;
         std::vector<std::string> kmers = entry.second;
 
@@ -166,17 +170,17 @@ _internalMappings * indexProteins(std::vector<boundary> boundaries, std::vector<
         returnVal->bIonRefMasses.push_back(mass);
 
         // get the offset needed for the index list
-        int offset = returnVal->bMassesToKmerIndices.size() == 0 ? 0 : returnVal->bMassesToKmerIndices.back();
+        int offset = (int)returnVal->bMassesToKmerIndices.size() == 0 ? 0 : returnVal->bMassesToKmerIndices.back();
 
         // append the next range of kmers to the massesToKmerIndices
-        returnVal->bMassesToKmerIndices.push_back(kmers.size() + offset);
+        returnVal->bMassesToKmerIndices.push_back((int)kmers.size() + offset);
 
         // append these kmers the the internal kmers of b returnval
         returnVal->bKmers.insert(returnVal->bKmers.end(), kmers.begin(), kmers.end());
     }
 
     // same thing for the y ion
-    for (auto const entry: yIonMassKmers){
+    for (auto entry: yIonMassKmers){
         float mass = entry.first;
         std::vector<std::string> kmers = entry.second;
 
@@ -184,15 +188,16 @@ _internalMappings * indexProteins(std::vector<boundary> boundaries, std::vector<
         returnVal->yIonRefMasses.push_back(mass);
 
         // get the offset needed for the index list
-        int offset = returnVal->yMassesToKmerIndices.size() == 0 ? 0 : returnVal->yMassesToKmerIndices.back();
+        int offset = (int)returnVal->yMassesToKmerIndices.size() == 0 ? 0 : returnVal->yMassesToKmerIndices.back();
 
         // append the next range of kmers to the massesToKmerIndices
-        returnVal->yMassesToKmerIndices.push_back(kmers.size() + offset);
+        returnVal->yMassesToKmerIndices.push_back((int)kmers.size() + offset);
 
         // append these kmers the the internal kmers of b returnval
         returnVal->yKmers.insert(returnVal->yKmers.end(), kmers.begin(), kmers.end());
     }
 
+    return returnVal;
 }
 
 
