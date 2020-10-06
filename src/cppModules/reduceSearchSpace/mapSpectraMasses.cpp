@@ -31,24 +31,6 @@ mappings * mapBoundaries(std::vector<boundary> boundaries, std::vector<protein> 
     iMaps->yIonRefMasses.clear();
     iMaps->yMassesToKmerIndices.clear();
 
-    // // print the matche b masses
-    // std::cout << "\nmatched b masses:\n";
-    // for (auto entry: returnMappings->matchedBMasses){
-    //     std::cout << "range: " << entry.first << "| kmers: ";
-
-    //     for (std::string kmer: entry.second)std::cout<< kmer << ", ";
-    //     std::cout << "\n";
-    // }
-
-    // // print the matche b masses
-    // std::cout << "\n\nmatched y masses:\n";
-    // for (auto entry: returnMappings->matchedYMasses){
-    //     std::cout << "range: " << entry.first << "| kmers: ";
-
-    //     for (std::string kmer: entry.second)std::cout<< kmer << ", ";
-    //     std::cout << "\n";
-    // }
-
     // keep the kmers that we need from our kmerToProt mapping
     for (auto entry: returnMappings->matchedBMasses){
         // the second entry is our list of kmers
