@@ -3,6 +3,7 @@
 from libcpp.string cimport string 
 from libcpp.vector cimport vector
 from libcpp.unordered_map cimport unordered_map
+from libcpp.unordered_set cimport unordered_set
 from cython.operator import dereference, postincrement
 
 from mapSpectraMasses cimport mappings, protein, boundary, mapBoundaries 
@@ -62,6 +63,7 @@ def map_boundaries(boundaries: list, proteins: list, max_kmer_length: int):
         (dict, dict, dict) dictonaries of 
         (range->bionmatches, range->yionmatches, kmer->source proteins)
     '''
+    print('Converting python objects to c++...')
     # turn boundaries into a vector of boundary objects
     cdef vector[boundary] bs 
     cdef boundary b
@@ -75,10 +77,11 @@ def map_boundaries(boundaries: list, proteins: list, max_kmer_length: int):
     for entry in proteins:
         p = protein(str.encode(entry.name), str.encode(entry.sequence))
         ps.push_back(p)
-
+    print('Done')
     # call map boundaries 
     cdef mappings * m = mapBoundaries(bs, ps, max_kmer_length)
 
+    print('\nConverting from c++ objects to python...')
     # convert from unordered_maps to dictionaries
     matched_b_masses, matched_y_masses, kmer_to_prots = {}, {}, {}
 
@@ -121,7 +124,7 @@ def map_boundaries(boundaries: list, proteins: list, max_kmer_length: int):
         postincrement(yIt)
 
     # finally kmer to protein
-    cdef unordered_map[string, vector[string]].iterator kIt = m.kmerToProts.begin()
+    cdef unordered_map[string, unordered_set[string]].iterator kIt = m.kmerToProts.begin()
     
     while(kIt != m.kmerToProts.end()):
         # get the key
@@ -162,5 +165,7 @@ def map_boundaries(boundaries: list, proteins: list, max_kmer_length: int):
             continue
         py_key = y_cpp_to_py[k]
         py_matched_y_masses[py_key] = list(set(v))
+
+    print('Done')
 
     return (py_matched_b_masses, py_matched_y_masses, kmer_to_prots)

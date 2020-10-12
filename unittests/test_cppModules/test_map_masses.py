@@ -219,6 +219,11 @@ class test_map_masses(unittest.TestCase):
     def test_map_spectra_masses(self):
         matched_b_masses, matched_y_masses, kmer_to_prots = map_spectra_masses.map_boundaries(self.boundaries, self.basic_prots, self.est_length)
 
+        # first make sure they're not empty
+        self.assertGreater(len(matched_b_masses), 0, 'Matched b masses should not be an empty dict')
+        self.assertGreater(len(matched_y_masses), 0, 'Matched y masses should not be an empty dict')
+        self.assertGreater(len(kmer_to_prots), 0, 'Kmer to protein mapping should not be an empty dict')
+
         # see if all of the keys are in correct mappings
         for k, v in matched_b_masses.items():
             self.assertIn(k, self.correct_mappings.keys(), 'Each key should be in the correct mappings')

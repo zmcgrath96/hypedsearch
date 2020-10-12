@@ -658,6 +658,7 @@ static CYTHON_INLINE float __PYX_NAN() {
     #endif
     
 #include <unordered_map>
+#include <unordered_set>
 #include "mapSpectraMasses.hpp"
 #ifdef _OPENMP
 #include <omp.h>
@@ -1435,6 +1436,8 @@ static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 
 /* Module declarations from 'libcpp.unordered_map' */
 
+/* Module declarations from 'libcpp.unordered_set' */
+
 /* Module declarations from 'mapSpectraMasses' */
 
 /* Module declarations from 'cppModules.map_spectra_masses' */
@@ -1449,6 +1452,7 @@ extern int __pyx_module_is_main_cppModules__map_spectra_masses;
 int __pyx_module_is_main_cppModules__map_spectra_masses = 0;
 
 /* Implementation of 'cppModules.map_spectra_masses' */
+static PyObject *__pyx_builtin_print;
 static PyObject *__pyx_builtin_sorted;
 static const char __pyx_k_[] = "-";
 static const char __pyx_k_b[] = "b";
@@ -1465,6 +1469,7 @@ static const char __pyx_k_c_i[] = "c_i";
 static const char __pyx_k_kIt[] = "kIt";
 static const char __pyx_k_key[] = "key";
 static const char __pyx_k_yIt[] = "yIt";
+static const char __pyx_k_Done[] = "Done";
 static const char __pyx_k_lBuB[] = "lBuB";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_name[] = "name";
@@ -1473,6 +1478,7 @@ static const char __pyx_k_cpp_b[] = "cpp_b";
 static const char __pyx_k_entry[] = "entry";
 static const char __pyx_k_inp_b[] = "inp_b";
 static const char __pyx_k_items[] = "items";
+static const char __pyx_k_print[] = "print";
 static const char __pyx_k_split[] = "split";
 static const char __pyx_k_value[] = "value";
 static const char __pyx_k_encode[] = "encode";
@@ -1504,9 +1510,14 @@ static const char __pyx_k_py_matched_y_masses[] = "py_matched_y_masses";
 static const char __pyx_k_map_boundaries_locals_lambda[] = "map_boundaries.<locals>.<lambda>";
 static const char __pyx_k_map_cpp_boundaries_to_inputs[] = "map_cpp_boundaries_to_inputs";
 static const char __pyx_k_cppModules_map_spectra_masses[] = "cppModules.map_spectra_masses";
+static const char __pyx_k_Converting_python_objects_to_c[] = "Converting python objects to c++...";
+static const char __pyx_k_Converting_from_c_objects_to_py[] = "\nConverting from c++ objects to python...";
 static const char __pyx_k_cppModules_reduceSearchSpace_map[] = "cppModules/reduceSearchSpace/map_spectra_masses.pyx";
 static const char __pyx_k_map_cpp_boundaries_to_inputs_loc[] = "map_cpp_boundaries_to_inputs.<locals>.<lambda>";
 static PyObject *__pyx_kp_u_;
+static PyObject *__pyx_kp_u_Converting_from_c_objects_to_py;
+static PyObject *__pyx_kp_u_Converting_python_objects_to_c;
+static PyObject *__pyx_n_u_Done;
 static PyObject *__pyx_n_s_b;
 static PyObject *__pyx_n_s_bIt;
 static PyObject *__pyx_n_s_b_cpp_to_py;
@@ -1548,6 +1559,7 @@ static PyObject *__pyx_n_s_max_kmer_length;
 static PyObject *__pyx_n_s_name;
 static PyObject *__pyx_n_s_name_2;
 static PyObject *__pyx_n_s_p;
+static PyObject *__pyx_n_s_print;
 static PyObject *__pyx_n_s_proteins;
 static PyObject *__pyx_n_s_ps;
 static PyObject *__pyx_n_s_py_key;
@@ -1572,14 +1584,17 @@ static PyObject *__pyx_float__002;
 static PyObject *__pyx_int_0;
 static PyObject *__pyx_int_1;
 static PyObject *__pyx_tuple__2;
+static PyObject *__pyx_tuple__3;
 static PyObject *__pyx_tuple__4;
-static PyObject *__pyx_tuple__6;
-static PyObject *__pyx_codeobj__3;
-static PyObject *__pyx_codeobj__5;
-static PyObject *__pyx_codeobj__7;
+static PyObject *__pyx_tuple__5;
+static PyObject *__pyx_tuple__7;
+static PyObject *__pyx_tuple__9;
+static PyObject *__pyx_codeobj__6;
+static PyObject *__pyx_codeobj__8;
+static PyObject *__pyx_codeobj__10;
 /* Late includes */
 
-/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":12
+/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":13
  * boundary_delta = .002
  * 
  * def hashable_boundaries(boundary: list) -> str:             # <<<<<<<<<<<<<<
@@ -1597,7 +1612,7 @@ static PyObject *__pyx_pw_10cppModules_18map_spectra_masses_1hashable_boundaries
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("hashable_boundaries (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_boundary), (&PyList_Type), 1, "boundary", 1))) __PYX_ERR(0, 12, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_boundary), (&PyList_Type), 1, "boundary", 1))) __PYX_ERR(0, 13, __pyx_L1_error)
   __pyx_r = __pyx_pf_10cppModules_18map_spectra_masses_hashable_boundaries(__pyx_self, ((PyObject*)__pyx_v_boundary));
 
   /* function exit code */
@@ -1622,7 +1637,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_hashable_boundaries(
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("hashable_boundaries", 0);
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":13
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":14
  * 
  * def hashable_boundaries(boundary: list) -> str:
  *     return '-'.join([str(x) for x in boundary])             # <<<<<<<<<<<<<<
@@ -1631,26 +1646,26 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_hashable_boundaries(
  */
   __Pyx_XDECREF(__pyx_r);
   { /* enter inner scope */
-    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L5_error)
+    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 14, __pyx_L5_error)
     __Pyx_GOTREF(__pyx_t_1);
     if (unlikely(__pyx_v_boundary == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-      __PYX_ERR(0, 13, __pyx_L5_error)
+      __PYX_ERR(0, 14, __pyx_L5_error)
     }
     __pyx_t_2 = __pyx_v_boundary; __Pyx_INCREF(__pyx_t_2); __pyx_t_3 = 0;
     for (;;) {
       if (__pyx_t_3 >= PyList_GET_SIZE(__pyx_t_2)) break;
       #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-      __pyx_t_4 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_4); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 13, __pyx_L5_error)
+      __pyx_t_4 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_4); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 14, __pyx_L5_error)
       #else
-      __pyx_t_4 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 13, __pyx_L5_error)
+      __pyx_t_4 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 14, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_4);
       #endif
       __Pyx_XDECREF_SET(__pyx_7genexpr__pyx_v_x, __pyx_t_4);
       __pyx_t_4 = 0;
-      __pyx_t_4 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_7genexpr__pyx_v_x); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 13, __pyx_L5_error)
+      __pyx_t_4 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_7genexpr__pyx_v_x); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 14, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_4);
-      if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_4))) __PYX_ERR(0, 13, __pyx_L5_error)
+      if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_4))) __PYX_ERR(0, 14, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     }
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -1661,14 +1676,14 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_hashable_boundaries(
     goto __pyx_L1_error;
     __pyx_L8_exit_scope:;
   } /* exit inner scope */
-  __pyx_t_2 = PyUnicode_Join(__pyx_kp_u_, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 13, __pyx_L1_error)
+  __pyx_t_2 = PyUnicode_Join(__pyx_kp_u_, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 14, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_r = ((PyObject*)__pyx_t_2);
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":12
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":13
  * boundary_delta = .002
  * 
  * def hashable_boundaries(boundary: list) -> str:             # <<<<<<<<<<<<<<
@@ -1690,7 +1705,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_hashable_boundaries(
   return __pyx_r;
 }
 
-/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":15
+/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":16
  *     return '-'.join([str(x) for x in boundary])
  * 
  * def map_cpp_boundaries_to_inputs(cpp_boundaries: list, input_boundaries: list) -> dict:             # <<<<<<<<<<<<<<
@@ -1734,11 +1749,11 @@ static PyObject *__pyx_pw_10cppModules_18map_spectra_masses_3map_cpp_boundaries_
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_input_boundaries)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("map_cpp_boundaries_to_inputs", 1, 2, 2, 1); __PYX_ERR(0, 15, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("map_cpp_boundaries_to_inputs", 1, 2, 2, 1); __PYX_ERR(0, 16, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "map_cpp_boundaries_to_inputs") < 0)) __PYX_ERR(0, 15, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "map_cpp_boundaries_to_inputs") < 0)) __PYX_ERR(0, 16, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -1751,14 +1766,14 @@ static PyObject *__pyx_pw_10cppModules_18map_spectra_masses_3map_cpp_boundaries_
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("map_cpp_boundaries_to_inputs", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 15, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("map_cpp_boundaries_to_inputs", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 16, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("cppModules.map_spectra_masses.map_cpp_boundaries_to_inputs", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_cpp_boundaries), (&PyList_Type), 1, "cpp_boundaries", 1))) __PYX_ERR(0, 15, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_input_boundaries), (&PyList_Type), 1, "input_boundaries", 1))) __PYX_ERR(0, 15, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_cpp_boundaries), (&PyList_Type), 1, "cpp_boundaries", 1))) __PYX_ERR(0, 16, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_input_boundaries), (&PyList_Type), 1, "input_boundaries", 1))) __PYX_ERR(0, 16, __pyx_L1_error)
   __pyx_r = __pyx_pf_10cppModules_18map_spectra_masses_2map_cpp_boundaries_to_inputs(__pyx_self, __pyx_v_cpp_boundaries, __pyx_v_input_boundaries);
 
   /* function exit code */
@@ -1770,7 +1785,7 @@ static PyObject *__pyx_pw_10cppModules_18map_spectra_masses_3map_cpp_boundaries_
   return __pyx_r;
 }
 
-/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":27
+/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":28
  *     cpp_to_py = {}
  * 
  *     hash_to_boundaries = lambda x: [float(x.split('-')[0]), float(x.split('-')[1])]             # <<<<<<<<<<<<<<
@@ -1804,7 +1819,7 @@ static PyObject *__pyx_lambda_funcdef_lambda(CYTHON_UNUSED PyObject *__pyx_self,
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("lambda", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_split); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 27, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_split); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -1818,16 +1833,16 @@ static PyObject *__pyx_lambda_funcdef_lambda(CYTHON_UNUSED PyObject *__pyx_self,
   }
   __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_kp_u_) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_kp_u_);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 27, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 27, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyNumber_Float(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 27, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyNumber_Float(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_split); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 27, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_split); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_t_4 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_3))) {
@@ -1841,16 +1856,16 @@ static PyObject *__pyx_lambda_funcdef_lambda(CYTHON_UNUSED PyObject *__pyx_self,
   }
   __pyx_t_2 = (__pyx_t_4) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_4, __pyx_kp_u_) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_kp_u_);
   __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 27, __pyx_L1_error)
+  if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_GetItemInt(__pyx_t_2, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 27, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetItemInt(__pyx_t_2, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyNumber_Float(__pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 27, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyNumber_Float(__pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyList_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 27, __pyx_L1_error)
+  __pyx_t_3 = PyList_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_1);
   PyList_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
@@ -1876,7 +1891,7 @@ static PyObject *__pyx_lambda_funcdef_lambda(CYTHON_UNUSED PyObject *__pyx_self,
   return __pyx_r;
 }
 
-/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":15
+/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":16
  *     return '-'.join([str(x) for x in boundary])
  * 
  * def map_cpp_boundaries_to_inputs(cpp_boundaries: list, input_boundaries: list) -> dict:             # <<<<<<<<<<<<<<
@@ -1905,7 +1920,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_2map_cpp_boundaries_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("map_cpp_boundaries_to_inputs", 0);
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":23
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":24
  *     are less than  .002 different and that is our hash mapping
  *     '''
  *     c_i, b_i = 0, 0             # <<<<<<<<<<<<<<
@@ -1921,31 +1936,31 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_2map_cpp_boundaries_
   __pyx_v_b_i = __pyx_t_2;
   __pyx_t_2 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":25
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":26
  *     c_i, b_i = 0, 0
  * 
  *     cpp_to_py = {}             # <<<<<<<<<<<<<<
  * 
  *     hash_to_boundaries = lambda x: [float(x.split('-')[0]), float(x.split('-')[1])]
  */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 25, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 26, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_v_cpp_to_py = ((PyObject*)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":27
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":28
  *     cpp_to_py = {}
  * 
  *     hash_to_boundaries = lambda x: [float(x.split('-')[0]), float(x.split('-')[1])]             # <<<<<<<<<<<<<<
  * 
  *     while c_i < len(cpp_boundaries) and b_i < len(input_boundaries):
  */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_10cppModules_18map_spectra_masses_28map_cpp_boundaries_to_inputs_lambda, 0, __pyx_n_s_map_cpp_boundaries_to_inputs_loc, NULL, __pyx_n_s_cppModules_map_spectra_masses, __pyx_d, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 27, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_10cppModules_18map_spectra_masses_28map_cpp_boundaries_to_inputs_lambda, 0, __pyx_n_s_map_cpp_boundaries_to_inputs_loc, NULL, __pyx_n_s_cppModules_map_spectra_masses, __pyx_d, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_v_hash_to_boundaries = __pyx_t_2;
   __pyx_t_2 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":29
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":30
  *     hash_to_boundaries = lambda x: [float(x.split('-')[0]), float(x.split('-')[1])]
  * 
  *     while c_i < len(cpp_boundaries) and b_i < len(input_boundaries):             # <<<<<<<<<<<<<<
@@ -1955,14 +1970,14 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_2map_cpp_boundaries_
   while (1) {
     if (unlikely(__pyx_v_cpp_boundaries == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-      __PYX_ERR(0, 29, __pyx_L1_error)
+      __PYX_ERR(0, 30, __pyx_L1_error)
     }
-    __pyx_t_4 = PyList_GET_SIZE(__pyx_v_cpp_boundaries); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 29, __pyx_L1_error)
-    __pyx_t_2 = PyInt_FromSsize_t(__pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 29, __pyx_L1_error)
+    __pyx_t_4 = PyList_GET_SIZE(__pyx_v_cpp_boundaries); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 30, __pyx_L1_error)
+    __pyx_t_2 = PyInt_FromSsize_t(__pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 30, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = PyObject_RichCompare(__pyx_v_c_i, __pyx_t_2, Py_LT); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 29, __pyx_L1_error)
+    __pyx_t_1 = PyObject_RichCompare(__pyx_v_c_i, __pyx_t_2, Py_LT); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 30, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 29, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 30, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (__pyx_t_5) {
     } else {
@@ -1971,20 +1986,20 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_2map_cpp_boundaries_
     }
     if (unlikely(__pyx_v_input_boundaries == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
-      __PYX_ERR(0, 29, __pyx_L1_error)
+      __PYX_ERR(0, 30, __pyx_L1_error)
     }
-    __pyx_t_4 = PyList_GET_SIZE(__pyx_v_input_boundaries); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 29, __pyx_L1_error)
-    __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 29, __pyx_L1_error)
+    __pyx_t_4 = PyList_GET_SIZE(__pyx_v_input_boundaries); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 30, __pyx_L1_error)
+    __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 30, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = PyObject_RichCompare(__pyx_v_b_i, __pyx_t_1, Py_LT); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 29, __pyx_L1_error)
+    __pyx_t_2 = PyObject_RichCompare(__pyx_v_b_i, __pyx_t_1, Py_LT); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 30, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 29, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 30, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __pyx_t_3 = __pyx_t_5;
     __pyx_L5_bool_binop_done:;
     if (!__pyx_t_3) break;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":30
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":31
  * 
  *     while c_i < len(cpp_boundaries) and b_i < len(input_boundaries):
  *         cpp_b = hash_to_boundaries(cpp_boundaries[c_i])             # <<<<<<<<<<<<<<
@@ -1993,17 +2008,17 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_2map_cpp_boundaries_
  */
     if (unlikely(__pyx_v_cpp_boundaries == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 30, __pyx_L1_error)
+      __PYX_ERR(0, 31, __pyx_L1_error)
     }
-    __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_v_cpp_boundaries, __pyx_v_c_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 30, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_v_cpp_boundaries, __pyx_v_c_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 31, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = __pyx_lambda_funcdef_lambda(__pyx_v_hash_to_boundaries, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 30, __pyx_L1_error)
+    __pyx_t_1 = __pyx_lambda_funcdef_lambda(__pyx_v_hash_to_boundaries, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 31, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_XDECREF_SET(__pyx_v_cpp_b, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":31
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":32
  *     while c_i < len(cpp_boundaries) and b_i < len(input_boundaries):
  *         cpp_b = hash_to_boundaries(cpp_boundaries[c_i])
  *         inp_b = input_boundaries[b_i]             # <<<<<<<<<<<<<<
@@ -2012,79 +2027,79 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_2map_cpp_boundaries_
  */
     if (unlikely(__pyx_v_input_boundaries == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 31, __pyx_L1_error)
+      __PYX_ERR(0, 32, __pyx_L1_error)
     }
-    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_input_boundaries, __pyx_v_b_i); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 31, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_input_boundaries, __pyx_v_b_i); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 32, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_inp_b, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":34
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":35
  * 
  *         # check to see if they are close enough
  *         if abs(cpp_b[0] - inp_b[0]) < boundary_delta and abs(cpp_b[1] - inp_b[1]) < boundary_delta:             # <<<<<<<<<<<<<<
  *             cpp_to_py[cpp_boundaries[c_i]] = hashable_boundaries(input_boundaries[b_i])
  * 
  */
-    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_cpp_b, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_cpp_b, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 35, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_inp_b, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_inp_b, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 35, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_6 = PyNumber_Subtract(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __pyx_t_6 = PyNumber_Subtract(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 35, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = __Pyx_PyNumber_Absolute(__pyx_t_6); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyNumber_Absolute(__pyx_t_6); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 35, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_boundary_delta); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_boundary_delta); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 35, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_1 = PyObject_RichCompare(__pyx_t_2, __pyx_t_6, Py_LT); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __pyx_t_1 = PyObject_RichCompare(__pyx_t_2, __pyx_t_6, Py_LT); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 35, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 35, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (__pyx_t_5) {
     } else {
       __pyx_t_3 = __pyx_t_5;
       goto __pyx_L8_bool_binop_done;
     }
-    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_cpp_b, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_cpp_b, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 35, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_6 = __Pyx_GetItemInt(__pyx_v_inp_b, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_GetItemInt(__pyx_v_inp_b, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 35, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_2 = PyNumber_Subtract(__pyx_t_1, __pyx_t_6); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __pyx_t_2 = PyNumber_Subtract(__pyx_t_1, __pyx_t_6); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 35, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PyNumber_Absolute(__pyx_t_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyNumber_Absolute(__pyx_t_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 35, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_boundary_delta); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_boundary_delta); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 35, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = PyObject_RichCompare(__pyx_t_6, __pyx_t_2, Py_LT); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __pyx_t_1 = PyObject_RichCompare(__pyx_t_6, __pyx_t_2, Py_LT); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 35, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 34, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 35, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_t_3 = __pyx_t_5;
     __pyx_L8_bool_binop_done:;
     if (__pyx_t_3) {
 
-      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":35
+      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":36
  *         # check to see if they are close enough
  *         if abs(cpp_b[0] - inp_b[0]) < boundary_delta and abs(cpp_b[1] - inp_b[1]) < boundary_delta:
  *             cpp_to_py[cpp_boundaries[c_i]] = hashable_boundaries(input_boundaries[b_i])             # <<<<<<<<<<<<<<
  * 
  *             # increment just c_i
  */
-      __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_hashable_boundaries); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 35, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_hashable_boundaries); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 36, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       if (unlikely(__pyx_v_input_boundaries == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 35, __pyx_L1_error)
+        __PYX_ERR(0, 36, __pyx_L1_error)
       }
-      __pyx_t_6 = __Pyx_PyObject_GetItem(__pyx_v_input_boundaries, __pyx_v_b_i); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 35, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyObject_GetItem(__pyx_v_input_boundaries, __pyx_v_b_i); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 36, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __pyx_t_7 = NULL;
       if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_2))) {
@@ -2099,32 +2114,32 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_2map_cpp_boundaries_
       __pyx_t_1 = (__pyx_t_7) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_7, __pyx_t_6) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_6);
       __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 35, __pyx_L1_error)
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 36, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       if (unlikely(__pyx_v_cpp_boundaries == Py_None)) {
         PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-        __PYX_ERR(0, 35, __pyx_L1_error)
+        __PYX_ERR(0, 36, __pyx_L1_error)
       }
-      __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_v_cpp_boundaries, __pyx_v_c_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 35, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_v_cpp_boundaries, __pyx_v_c_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 36, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      if (unlikely(PyDict_SetItem(__pyx_v_cpp_to_py, __pyx_t_2, __pyx_t_1) < 0)) __PYX_ERR(0, 35, __pyx_L1_error)
+      if (unlikely(PyDict_SetItem(__pyx_v_cpp_to_py, __pyx_t_2, __pyx_t_1) < 0)) __PYX_ERR(0, 36, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":38
+      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":39
  * 
  *             # increment just c_i
  *             c_i += 1             # <<<<<<<<<<<<<<
  * 
  *         # if cpp is lower than input, increment c_pp
  */
-      __pyx_t_1 = __Pyx_PyInt_AddObjC(__pyx_v_c_i, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 38, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyInt_AddObjC(__pyx_v_c_i, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 39, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF_SET(__pyx_v_c_i, __pyx_t_1);
       __pyx_t_1 = 0;
 
-      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":34
+      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":35
  * 
  *         # check to see if they are close enough
  *         if abs(cpp_b[0] - inp_b[0]) < boundary_delta and abs(cpp_b[1] - inp_b[1]) < boundary_delta:             # <<<<<<<<<<<<<<
@@ -2134,52 +2149,52 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_2map_cpp_boundaries_
       goto __pyx_L7;
     }
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":41
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":42
  * 
  *         # if cpp is lower than input, increment c_pp
  *         elif (cpp_b[0] - inp_b[0] + cpp_b[1] - inp_b[1]) < 0:             # <<<<<<<<<<<<<<
  *             c_i += 1
  * 
  */
-    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_cpp_b, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 41, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_cpp_b, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 42, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_inp_b, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 41, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_inp_b, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 42, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_6 = PyNumber_Subtract(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 41, __pyx_L1_error)
+    __pyx_t_6 = PyNumber_Subtract(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 42, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_cpp_b, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 41, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_cpp_b, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 42, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = PyNumber_Add(__pyx_t_6, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 41, __pyx_L1_error)
+    __pyx_t_1 = PyNumber_Add(__pyx_t_6, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 42, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_inp_b, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 41, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_inp_b, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 42, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_6 = PyNumber_Subtract(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 41, __pyx_L1_error)
+    __pyx_t_6 = PyNumber_Subtract(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 42, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = PyObject_RichCompare(__pyx_t_6, __pyx_int_0, Py_LT); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 41, __pyx_L1_error)
+    __pyx_t_2 = PyObject_RichCompare(__pyx_t_6, __pyx_int_0, Py_LT); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 42, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 41, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 42, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (__pyx_t_3) {
 
-      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":42
+      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":43
  *         # if cpp is lower than input, increment c_pp
  *         elif (cpp_b[0] - inp_b[0] + cpp_b[1] - inp_b[1]) < 0:
  *             c_i += 1             # <<<<<<<<<<<<<<
  * 
  *         # otherwise increment b_i
  */
-      __pyx_t_2 = __Pyx_PyInt_AddObjC(__pyx_v_c_i, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 42, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyInt_AddObjC(__pyx_v_c_i, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 43, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF_SET(__pyx_v_c_i, __pyx_t_2);
       __pyx_t_2 = 0;
 
-      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":41
+      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":42
  * 
  *         # if cpp is lower than input, increment c_pp
  *         elif (cpp_b[0] - inp_b[0] + cpp_b[1] - inp_b[1]) < 0:             # <<<<<<<<<<<<<<
@@ -2189,7 +2204,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_2map_cpp_boundaries_
       goto __pyx_L7;
     }
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":46
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":47
  *         # otherwise increment b_i
  *         else:
  *             b_i += 1             # <<<<<<<<<<<<<<
@@ -2197,7 +2212,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_2map_cpp_boundaries_
  *     return cpp_to_py
  */
     /*else*/ {
-      __pyx_t_2 = __Pyx_PyInt_AddObjC(__pyx_v_b_i, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 46, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyInt_AddObjC(__pyx_v_b_i, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 47, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF_SET(__pyx_v_b_i, __pyx_t_2);
       __pyx_t_2 = 0;
@@ -2205,7 +2220,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_2map_cpp_boundaries_
     __pyx_L7:;
   }
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":48
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":49
  *             b_i += 1
  * 
  *     return cpp_to_py             # <<<<<<<<<<<<<<
@@ -2217,7 +2232,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_2map_cpp_boundaries_
   __pyx_r = __pyx_v_cpp_to_py;
   goto __pyx_L0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":15
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":16
  *     return '-'.join([str(x) for x in boundary])
  * 
  * def map_cpp_boundaries_to_inputs(cpp_boundaries: list, input_boundaries: list) -> dict:             # <<<<<<<<<<<<<<
@@ -2245,7 +2260,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_2map_cpp_boundaries_
   return __pyx_r;
 }
 
-/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":50
+/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":51
  *     return cpp_to_py
  * 
  * def map_boundaries(boundaries: list, proteins: list, max_kmer_length: int):             # <<<<<<<<<<<<<<
@@ -2292,17 +2307,17 @@ static PyObject *__pyx_pw_10cppModules_18map_spectra_masses_5map_boundaries(PyOb
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_proteins)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("map_boundaries", 1, 3, 3, 1); __PYX_ERR(0, 50, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("map_boundaries", 1, 3, 3, 1); __PYX_ERR(0, 51, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_max_kmer_length)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("map_boundaries", 1, 3, 3, 2); __PYX_ERR(0, 50, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("map_boundaries", 1, 3, 3, 2); __PYX_ERR(0, 51, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "map_boundaries") < 0)) __PYX_ERR(0, 50, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "map_boundaries") < 0)) __PYX_ERR(0, 51, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -2317,14 +2332,14 @@ static PyObject *__pyx_pw_10cppModules_18map_spectra_masses_5map_boundaries(PyOb
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("map_boundaries", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 50, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("map_boundaries", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 51, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("cppModules.map_spectra_masses.map_boundaries", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_boundaries), (&PyList_Type), 1, "boundaries", 1))) __PYX_ERR(0, 50, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_proteins), (&PyList_Type), 1, "proteins", 1))) __PYX_ERR(0, 50, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_boundaries), (&PyList_Type), 1, "boundaries", 1))) __PYX_ERR(0, 51, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_proteins), (&PyList_Type), 1, "proteins", 1))) __PYX_ERR(0, 51, __pyx_L1_error)
   __pyx_r = __pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(__pyx_self, __pyx_v_boundaries, __pyx_v_proteins, __pyx_v_max_kmer_length);
 
   /* function exit code */
@@ -2336,7 +2351,7 @@ static PyObject *__pyx_pw_10cppModules_18map_spectra_masses_5map_boundaries(PyOb
   return __pyx_r;
 }
 
-/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":141
+/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":144
  *     # get our key mapping
  *     b_cpp_to_py = map_cpp_boundaries_to_inputs(
  *         sorted(cpp_b_masses_keys, key=lambda x: float(x.split('-')[0])),             # <<<<<<<<<<<<<<
@@ -2369,7 +2384,7 @@ static PyObject *__pyx_lambda_funcdef_lambda1(CYTHON_UNUSED PyObject *__pyx_self
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("lambda1", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_split); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 141, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_split); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 144, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -2383,13 +2398,13 @@ static PyObject *__pyx_lambda_funcdef_lambda1(CYTHON_UNUSED PyObject *__pyx_self
   }
   __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_kp_u_) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_kp_u_);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 141, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 144, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 141, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 144, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyNumber_Float(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 141, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyNumber_Float(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 144, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_r = __pyx_t_1;
@@ -2409,7 +2424,7 @@ static PyObject *__pyx_lambda_funcdef_lambda1(CYTHON_UNUSED PyObject *__pyx_self
   return __pyx_r;
 }
 
-/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":145
+/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":148
  *     )
  *     y_cpp_to_py = map_cpp_boundaries_to_inputs(
  *         sorted(cpp_y_masses_keys, key=lambda x: float(x.split('-')[0])),             # <<<<<<<<<<<<<<
@@ -2442,7 +2457,7 @@ static PyObject *__pyx_lambda_funcdef_lambda2(CYTHON_UNUSED PyObject *__pyx_self
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("lambda2", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_split); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 145, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_x, __pyx_n_s_split); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 148, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -2456,13 +2471,13 @@ static PyObject *__pyx_lambda_funcdef_lambda2(CYTHON_UNUSED PyObject *__pyx_self
   }
   __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_kp_u_) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_kp_u_);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 145, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 148, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 145, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 148, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyNumber_Float(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 145, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyNumber_Float(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 148, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_r = __pyx_t_1;
@@ -2482,7 +2497,7 @@ static PyObject *__pyx_lambda_funcdef_lambda2(CYTHON_UNUSED PyObject *__pyx_self
   return __pyx_r;
 }
 
-/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":50
+/* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":51
  *     return cpp_to_py
  * 
  * def map_boundaries(boundaries: list, proteins: list, max_kmer_length: int):             # <<<<<<<<<<<<<<
@@ -2545,7 +2560,18 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("map_boundaries", 0);
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":68
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":66
+ *         (range->bionmatches, range->yionmatches, kmer->source proteins)
+ *     '''
+ *     print('Converting python objects to c++...')             # <<<<<<<<<<<<<<
+ *     # turn boundaries into a vector of boundary objects
+ *     cdef vector[boundary] bs
+ */
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_print, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 66, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":70
  *     cdef vector[boundary] bs
  *     cdef boundary b
  *     for lBuB in boundaries:             # <<<<<<<<<<<<<<
@@ -2554,44 +2580,44 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
  */
   if (unlikely(__pyx_v_boundaries == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 68, __pyx_L1_error)
+    __PYX_ERR(0, 70, __pyx_L1_error)
   }
   __pyx_t_1 = __pyx_v_boundaries; __Pyx_INCREF(__pyx_t_1); __pyx_t_2 = 0;
   for (;;) {
     if (__pyx_t_2 >= PyList_GET_SIZE(__pyx_t_1)) break;
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-    __pyx_t_3 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_3); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 68, __pyx_L1_error)
+    __pyx_t_3 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_3); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 70, __pyx_L1_error)
     #else
-    __pyx_t_3 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 68, __pyx_L1_error)
+    __pyx_t_3 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 70, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     #endif
     __Pyx_XDECREF_SET(__pyx_v_lBuB, __pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":69
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":71
  *     cdef boundary b
  *     for lBuB in boundaries:
  *         b = boundary(lBuB[0], lBuB[1])             # <<<<<<<<<<<<<<
  *         bs.push_back(b)
  * 
  */
-    __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_lBuB, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 69, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_lBuB, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __pyx_PyFloat_AsFloat(__pyx_t_3); if (unlikely((__pyx_t_4 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 69, __pyx_L1_error)
+    __pyx_t_4 = __pyx_PyFloat_AsFloat(__pyx_t_3); if (unlikely((__pyx_t_4 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_lBuB, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 69, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_lBuB, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_5 = __pyx_PyFloat_AsFloat(__pyx_t_3); if (unlikely((__pyx_t_5 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 69, __pyx_L1_error)
+    __pyx_t_5 = __pyx_PyFloat_AsFloat(__pyx_t_3); if (unlikely((__pyx_t_5 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 71, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     try {
       __pyx_t_6 = boundary(__pyx_t_4, __pyx_t_5);
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      __PYX_ERR(0, 69, __pyx_L1_error)
+      __PYX_ERR(0, 71, __pyx_L1_error)
     }
     __pyx_v_b = __pyx_t_6;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":70
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":72
  *     for lBuB in boundaries:
  *         b = boundary(lBuB[0], lBuB[1])
  *         bs.push_back(b)             # <<<<<<<<<<<<<<
@@ -2602,10 +2628,10 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
       __pyx_v_bs.push_back(__pyx_v_b);
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      __PYX_ERR(0, 70, __pyx_L1_error)
+      __PYX_ERR(0, 72, __pyx_L1_error)
     }
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":68
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":70
  *     cdef vector[boundary] bs
  *     cdef boundary b
  *     for lBuB in boundaries:             # <<<<<<<<<<<<<<
@@ -2615,7 +2641,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":75
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":77
  *     cdef vector[protein] ps
  *     cdef protein p
  *     for entry in proteins:             # <<<<<<<<<<<<<<
@@ -2624,30 +2650,30 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
  */
   if (unlikely(__pyx_v_proteins == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 75, __pyx_L1_error)
+    __PYX_ERR(0, 77, __pyx_L1_error)
   }
   __pyx_t_1 = __pyx_v_proteins; __Pyx_INCREF(__pyx_t_1); __pyx_t_2 = 0;
   for (;;) {
     if (__pyx_t_2 >= PyList_GET_SIZE(__pyx_t_1)) break;
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-    __pyx_t_3 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_3); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 75, __pyx_L1_error)
+    __pyx_t_3 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_3); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 77, __pyx_L1_error)
     #else
-    __pyx_t_3 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 75, __pyx_L1_error)
+    __pyx_t_3 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 77, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     #endif
     __Pyx_XDECREF_SET(__pyx_v_entry, __pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":76
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":78
  *     cdef protein p
  *     for entry in proteins:
  *         p = protein(str.encode(entry.name), str.encode(entry.sequence))             # <<<<<<<<<<<<<<
  *         ps.push_back(p)
- * 
+ *     print('Done')
  */
-    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(((PyObject *)(&PyUnicode_Type)), __pyx_n_s_encode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 76, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(((PyObject *)(&PyUnicode_Type)), __pyx_n_s_encode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 78, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_entry, __pyx_n_s_name); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 76, __pyx_L1_error)
+    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_entry, __pyx_n_s_name); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 78, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     __pyx_t_9 = NULL;
     if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_7))) {
@@ -2662,14 +2688,14 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
     __pyx_t_3 = (__pyx_t_9) ? __Pyx_PyObject_Call2Args(__pyx_t_7, __pyx_t_9, __pyx_t_8) : __Pyx_PyObject_CallOneArg(__pyx_t_7, __pyx_t_8);
     __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 76, __pyx_L1_error)
+    if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 78, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    __pyx_t_10 = __pyx_convert_string_from_py_std__in_string(__pyx_t_3); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 76, __pyx_L1_error)
+    __pyx_t_10 = __pyx_convert_string_from_py_std__in_string(__pyx_t_3); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 78, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(((PyObject *)(&PyUnicode_Type)), __pyx_n_s_encode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 76, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(((PyObject *)(&PyUnicode_Type)), __pyx_n_s_encode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 78, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_entry, __pyx_n_s_sequence); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 76, __pyx_L1_error)
+    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_entry, __pyx_n_s_sequence); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 78, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     __pyx_t_9 = NULL;
     if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_7))) {
@@ -2684,34 +2710,34 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
     __pyx_t_3 = (__pyx_t_9) ? __Pyx_PyObject_Call2Args(__pyx_t_7, __pyx_t_9, __pyx_t_8) : __Pyx_PyObject_CallOneArg(__pyx_t_7, __pyx_t_8);
     __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 76, __pyx_L1_error)
+    if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 78, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    __pyx_t_11 = __pyx_convert_string_from_py_std__in_string(__pyx_t_3); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 76, __pyx_L1_error)
+    __pyx_t_11 = __pyx_convert_string_from_py_std__in_string(__pyx_t_3); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 78, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     try {
       __pyx_t_12 = protein(__pyx_t_10, __pyx_t_11);
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      __PYX_ERR(0, 76, __pyx_L1_error)
+      __PYX_ERR(0, 78, __pyx_L1_error)
     }
     __pyx_v_p = __pyx_t_12;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":77
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":79
  *     for entry in proteins:
  *         p = protein(str.encode(entry.name), str.encode(entry.sequence))
  *         ps.push_back(p)             # <<<<<<<<<<<<<<
- * 
+ *     print('Done')
  *     # call map boundaries
  */
     try {
       __pyx_v_ps.push_back(__pyx_v_p);
     } catch(...) {
       __Pyx_CppExn2PyErr();
-      __PYX_ERR(0, 77, __pyx_L1_error)
+      __PYX_ERR(0, 79, __pyx_L1_error)
     }
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":75
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":77
  *     cdef vector[protein] ps
  *     cdef protein p
  *     for entry in proteins:             # <<<<<<<<<<<<<<
@@ -2722,27 +2748,49 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":80
- * 
+ *         p = protein(str.encode(entry.name), str.encode(entry.sequence))
+ *         ps.push_back(p)
+ *     print('Done')             # <<<<<<<<<<<<<<
+ *     # call map boundaries
+ *     cdef mappings * m = mapBoundaries(bs, ps, max_kmer_length)
+ */
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_print, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 80, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":82
+ *     print('Done')
  *     # call map boundaries
  *     cdef mappings * m = mapBoundaries(bs, ps, max_kmer_length)             # <<<<<<<<<<<<<<
  * 
- *     # convert from unordered_maps to dictionaries
+ *     print('\nConverting from c++ objects to python...')
  */
-  __pyx_t_13 = __Pyx_PyInt_As_int(__pyx_v_max_kmer_length); if (unlikely((__pyx_t_13 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 80, __pyx_L1_error)
+  __pyx_t_13 = __Pyx_PyInt_As_int(__pyx_v_max_kmer_length); if (unlikely((__pyx_t_13 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 82, __pyx_L1_error)
   __pyx_v_m = mapBoundaries(__pyx_v_bs, __pyx_v_ps, __pyx_t_13);
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":83
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":84
+ *     cdef mappings * m = mapBoundaries(bs, ps, max_kmer_length)
  * 
+ *     print('\nConverting from c++ objects to python...')             # <<<<<<<<<<<<<<
+ *     # convert from unordered_maps to dictionaries
+ *     matched_b_masses, matched_y_masses, kmer_to_prots = {}, {}, {}
+ */
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_print, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 84, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":86
+ *     print('\nConverting from c++ objects to python...')
  *     # convert from unordered_maps to dictionaries
  *     matched_b_masses, matched_y_masses, kmer_to_prots = {}, {}, {}             # <<<<<<<<<<<<<<
  * 
  *     # first do b masses
  */
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 83, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 86, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 83, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 86, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_7 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 83, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 86, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __pyx_v_matched_b_masses = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
@@ -2751,7 +2799,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
   __pyx_v_kmer_to_prots = ((PyObject*)__pyx_t_7);
   __pyx_t_7 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":86
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":89
  * 
  *     # first do b masses
  *     cdef unordered_map[string, vector[string]].iterator bIt = m.matchedBMasses.begin()             # <<<<<<<<<<<<<<
@@ -2760,19 +2808,19 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
  */
   __pyx_v_bIt = __pyx_v_m->matchedBMasses.begin();
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":88
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":91
  *     cdef unordered_map[string, vector[string]].iterator bIt = m.matchedBMasses.begin()
  *     # keep track of the keys in order to map back to python
  *     cpp_b_masses_keys = []             # <<<<<<<<<<<<<<
  * 
  *     while(bIt != m.matchedBMasses.end()):
  */
-  __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 91, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __pyx_v_cpp_b_masses_keys = ((PyObject*)__pyx_t_7);
   __pyx_t_7 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":90
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":93
  *     cpp_b_masses_keys = []
  * 
  *     while(bIt != m.matchedBMasses.end()):             # <<<<<<<<<<<<<<
@@ -2783,28 +2831,28 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
     __pyx_t_14 = ((__pyx_v_bIt != __pyx_v_m->matchedBMasses.end()) != 0);
     if (!__pyx_t_14) break;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":92
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":95
  *     while(bIt != m.matchedBMasses.end()):
  *         # get the key
  *         key = dereference(bIt).first.decode()             # <<<<<<<<<<<<<<
  *         cpp_b_masses_keys.append(key)
  * 
  */
-    __pyx_t_7 = __Pyx_decode_cpp_string((*__pyx_v_bIt).first, 0, PY_SSIZE_T_MAX, NULL, NULL, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 92, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_decode_cpp_string((*__pyx_v_bIt).first, 0, PY_SSIZE_T_MAX, NULL, NULL, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 95, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_XDECREF_SET(__pyx_v_key, __pyx_t_7);
     __pyx_t_7 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":93
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":96
  *         # get the key
  *         key = dereference(bIt).first.decode()
  *         cpp_b_masses_keys.append(key)             # <<<<<<<<<<<<<<
  * 
  *         # get the value
  */
-    __pyx_t_15 = __Pyx_PyList_Append(__pyx_v_cpp_b_masses_keys, __pyx_v_key); if (unlikely(__pyx_t_15 == ((int)-1))) __PYX_ERR(0, 93, __pyx_L1_error)
+    __pyx_t_15 = __Pyx_PyList_Append(__pyx_v_cpp_b_masses_keys, __pyx_v_key); if (unlikely(__pyx_t_15 == ((int)-1))) __PYX_ERR(0, 96, __pyx_L1_error)
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":96
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":99
  * 
  *         # get the value
  *         value = [x.decode() for x in dereference(bIt).second]             # <<<<<<<<<<<<<<
@@ -2812,7 +2860,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
  *         # put it in my return dictionary
  */
     { /* enter inner scope */
-      __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 96, __pyx_L1_error)
+      __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 99, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
       __pyx_t_17 = &(*__pyx_v_bIt).second;
       __pyx_t_16 = __pyx_t_17->begin();
@@ -2821,25 +2869,25 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
         __pyx_t_11 = *__pyx_t_16;
         ++__pyx_t_16;
         __pyx_8genexpr1__pyx_v_x = __pyx_t_11;
-        __pyx_t_3 = __Pyx_decode_cpp_string(__pyx_8genexpr1__pyx_v_x, 0, PY_SSIZE_T_MAX, NULL, NULL, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 96, __pyx_L1_error)
+        __pyx_t_3 = __Pyx_decode_cpp_string(__pyx_8genexpr1__pyx_v_x, 0, PY_SSIZE_T_MAX, NULL, NULL, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 99, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
-        if (unlikely(__Pyx_ListComp_Append(__pyx_t_7, (PyObject*)__pyx_t_3))) __PYX_ERR(0, 96, __pyx_L1_error)
+        if (unlikely(__Pyx_ListComp_Append(__pyx_t_7, (PyObject*)__pyx_t_3))) __PYX_ERR(0, 99, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       }
     } /* exit inner scope */
     __Pyx_XDECREF_SET(__pyx_v_value, ((PyObject*)__pyx_t_7));
     __pyx_t_7 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":99
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":102
  * 
  *         # put it in my return dictionary
  *         matched_b_masses[key] = value             # <<<<<<<<<<<<<<
  * 
  *         # increment to the next element
  */
-    if (unlikely(PyDict_SetItem(__pyx_v_matched_b_masses, __pyx_v_key, __pyx_v_value) < 0)) __PYX_ERR(0, 99, __pyx_L1_error)
+    if (unlikely(PyDict_SetItem(__pyx_v_matched_b_masses, __pyx_v_key, __pyx_v_value) < 0)) __PYX_ERR(0, 102, __pyx_L1_error)
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":102
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":105
  * 
  *         # increment to the next element
  *         postincrement(bIt)             # <<<<<<<<<<<<<<
@@ -2849,7 +2897,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
     (void)((__pyx_v_bIt++));
   }
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":105
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":108
  * 
  *     # next y masses
  *     cdef unordered_map[string, vector[string]].iterator yIt = m.matchedYMasses.begin()             # <<<<<<<<<<<<<<
@@ -2858,19 +2906,19 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
  */
   __pyx_v_yIt = __pyx_v_m->matchedYMasses.begin();
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":107
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":110
  *     cdef unordered_map[string, vector[string]].iterator yIt = m.matchedYMasses.begin()
  *     # keep track of the keys in order to map back to python
  *     cpp_y_masses_keys = []             # <<<<<<<<<<<<<<
  * 
  *     while(yIt != m.matchedYMasses.end()):
  */
-  __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 110, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __pyx_v_cpp_y_masses_keys = ((PyObject*)__pyx_t_7);
   __pyx_t_7 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":109
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":112
  *     cpp_y_masses_keys = []
  * 
  *     while(yIt != m.matchedYMasses.end()):             # <<<<<<<<<<<<<<
@@ -2881,28 +2929,28 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
     __pyx_t_14 = ((__pyx_v_yIt != __pyx_v_m->matchedYMasses.end()) != 0);
     if (!__pyx_t_14) break;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":111
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":114
  *     while(yIt != m.matchedYMasses.end()):
  *         # get the key
  *         key = dereference(yIt).first.decode()             # <<<<<<<<<<<<<<
  *         cpp_y_masses_keys.append(key)
  * 
  */
-    __pyx_t_7 = __Pyx_decode_cpp_string((*__pyx_v_yIt).first, 0, PY_SSIZE_T_MAX, NULL, NULL, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 111, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_decode_cpp_string((*__pyx_v_yIt).first, 0, PY_SSIZE_T_MAX, NULL, NULL, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 114, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_XDECREF_SET(__pyx_v_key, __pyx_t_7);
     __pyx_t_7 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":112
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":115
  *         # get the key
  *         key = dereference(yIt).first.decode()
  *         cpp_y_masses_keys.append(key)             # <<<<<<<<<<<<<<
  * 
  *         # get the value
  */
-    __pyx_t_15 = __Pyx_PyList_Append(__pyx_v_cpp_y_masses_keys, __pyx_v_key); if (unlikely(__pyx_t_15 == ((int)-1))) __PYX_ERR(0, 112, __pyx_L1_error)
+    __pyx_t_15 = __Pyx_PyList_Append(__pyx_v_cpp_y_masses_keys, __pyx_v_key); if (unlikely(__pyx_t_15 == ((int)-1))) __PYX_ERR(0, 115, __pyx_L1_error)
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":115
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":118
  * 
  *         # get the value
  *         value = [x.decode() for x in dereference(yIt).second]             # <<<<<<<<<<<<<<
@@ -2910,7 +2958,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
  *         # put it in my return dictionary
  */
     { /* enter inner scope */
-      __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 115, __pyx_L1_error)
+      __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 118, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
       __pyx_t_17 = &(*__pyx_v_yIt).second;
       __pyx_t_16 = __pyx_t_17->begin();
@@ -2919,25 +2967,25 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
         __pyx_t_11 = *__pyx_t_16;
         ++__pyx_t_16;
         __pyx_8genexpr2__pyx_v_x = __pyx_t_11;
-        __pyx_t_3 = __Pyx_decode_cpp_string(__pyx_8genexpr2__pyx_v_x, 0, PY_SSIZE_T_MAX, NULL, NULL, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 115, __pyx_L1_error)
+        __pyx_t_3 = __Pyx_decode_cpp_string(__pyx_8genexpr2__pyx_v_x, 0, PY_SSIZE_T_MAX, NULL, NULL, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 118, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
-        if (unlikely(__Pyx_ListComp_Append(__pyx_t_7, (PyObject*)__pyx_t_3))) __PYX_ERR(0, 115, __pyx_L1_error)
+        if (unlikely(__Pyx_ListComp_Append(__pyx_t_7, (PyObject*)__pyx_t_3))) __PYX_ERR(0, 118, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       }
     } /* exit inner scope */
     __Pyx_XDECREF_SET(__pyx_v_value, ((PyObject*)__pyx_t_7));
     __pyx_t_7 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":118
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":121
  * 
  *         # put it in my return dictionary
  *         matched_y_masses[key] = value             # <<<<<<<<<<<<<<
  * 
  *         # increment to the next element
  */
-    if (unlikely(PyDict_SetItem(__pyx_v_matched_y_masses, __pyx_v_key, __pyx_v_value) < 0)) __PYX_ERR(0, 118, __pyx_L1_error)
+    if (unlikely(PyDict_SetItem(__pyx_v_matched_y_masses, __pyx_v_key, __pyx_v_value) < 0)) __PYX_ERR(0, 121, __pyx_L1_error)
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":121
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":124
  * 
  *         # increment to the next element
  *         postincrement(yIt)             # <<<<<<<<<<<<<<
@@ -2947,7 +2995,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
     (void)((__pyx_v_yIt++));
   }
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":124
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":127
  * 
  *     # finally kmer to protein
  *     cdef unordered_map[string, vector[string]].iterator kIt = m.kmerToProts.begin()             # <<<<<<<<<<<<<<
@@ -2956,7 +3004,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
  */
   __pyx_v_kIt = __pyx_v_m->kmerToProts.begin();
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":126
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":129
  *     cdef unordered_map[string, vector[string]].iterator kIt = m.kmerToProts.begin()
  * 
  *     while(kIt != m.kmerToProts.end()):             # <<<<<<<<<<<<<<
@@ -2967,19 +3015,19 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
     __pyx_t_14 = ((__pyx_v_kIt != __pyx_v_m->kmerToProts.end()) != 0);
     if (!__pyx_t_14) break;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":128
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":131
  *     while(kIt != m.kmerToProts.end()):
  *         # get the key
  *         key = dereference(kIt).first.decode()             # <<<<<<<<<<<<<<
  * 
  *         # get the value
  */
-    __pyx_t_7 = __Pyx_decode_cpp_string((*__pyx_v_kIt).first, 0, PY_SSIZE_T_MAX, NULL, NULL, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 128, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_decode_cpp_string((*__pyx_v_kIt).first, 0, PY_SSIZE_T_MAX, NULL, NULL, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 131, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_XDECREF_SET(__pyx_v_key, __pyx_t_7);
     __pyx_t_7 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":131
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":134
  * 
  *         # get the value
  *         value = [x.decode() for x in dereference(kIt).second]             # <<<<<<<<<<<<<<
@@ -2987,7 +3035,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
  *         # put it in my return dictionary
  */
     { /* enter inner scope */
-      __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 131, __pyx_L1_error)
+      __pyx_t_7 = PyList_New(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 134, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
       __pyx_t_17 = &(*__pyx_v_kIt).second;
       __pyx_t_16 = __pyx_t_17->begin();
@@ -2996,31 +3044,31 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
         __pyx_t_11 = *__pyx_t_16;
         ++__pyx_t_16;
         __pyx_8genexpr3__pyx_v_x = __pyx_t_11;
-        __pyx_t_3 = __Pyx_decode_cpp_string(__pyx_8genexpr3__pyx_v_x, 0, PY_SSIZE_T_MAX, NULL, NULL, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 131, __pyx_L1_error)
+        __pyx_t_3 = __Pyx_decode_cpp_string(__pyx_8genexpr3__pyx_v_x, 0, PY_SSIZE_T_MAX, NULL, NULL, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 134, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
-        if (unlikely(__Pyx_ListComp_Append(__pyx_t_7, (PyObject*)__pyx_t_3))) __PYX_ERR(0, 131, __pyx_L1_error)
+        if (unlikely(__Pyx_ListComp_Append(__pyx_t_7, (PyObject*)__pyx_t_3))) __PYX_ERR(0, 134, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       }
     } /* exit inner scope */
     __Pyx_XDECREF_SET(__pyx_v_value, ((PyObject*)__pyx_t_7));
     __pyx_t_7 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":134
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":137
  * 
  *         # put it in my return dictionary
  *         kmer_to_prots[key] = list(set(value))             # <<<<<<<<<<<<<<
  * 
  *         # increment to the next element
  */
-    __pyx_t_7 = PySet_New(__pyx_v_value); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 134, __pyx_L1_error)
+    __pyx_t_7 = PySet_New(__pyx_v_value); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 137, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_3 = PySequence_List(__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 134, __pyx_L1_error)
+    __pyx_t_3 = PySequence_List(__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 137, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    if (unlikely(PyDict_SetItem(__pyx_v_kmer_to_prots, __pyx_v_key, __pyx_t_3) < 0)) __PYX_ERR(0, 134, __pyx_L1_error)
+    if (unlikely(PyDict_SetItem(__pyx_v_kmer_to_prots, __pyx_v_key, __pyx_t_3) < 0)) __PYX_ERR(0, 137, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":137
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":140
  * 
  *         # increment to the next element
  *         postincrement(kIt)             # <<<<<<<<<<<<<<
@@ -3030,40 +3078,40 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
     (void)((__pyx_v_kIt++));
   }
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":140
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":143
  * 
  *     # get our key mapping
  *     b_cpp_to_py = map_cpp_boundaries_to_inputs(             # <<<<<<<<<<<<<<
  *         sorted(cpp_b_masses_keys, key=lambda x: float(x.split('-')[0])),
  *         boundaries
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_n_s_map_cpp_boundaries_to_inputs); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 140, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_n_s_map_cpp_boundaries_to_inputs); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 143, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":141
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":144
  *     # get our key mapping
  *     b_cpp_to_py = map_cpp_boundaries_to_inputs(
  *         sorted(cpp_b_masses_keys, key=lambda x: float(x.split('-')[0])),             # <<<<<<<<<<<<<<
  *         boundaries
  *     )
  */
-  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 141, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 144, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_v_cpp_b_masses_keys);
   __Pyx_GIVEREF(__pyx_v_cpp_b_masses_keys);
   PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_v_cpp_b_masses_keys);
-  __pyx_t_8 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 141, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 144, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
-  __pyx_t_9 = __Pyx_CyFunction_New(&__pyx_mdef_10cppModules_18map_spectra_masses_14map_boundaries_lambda1, 0, __pyx_n_s_map_boundaries_locals_lambda, NULL, __pyx_n_s_cppModules_map_spectra_masses, __pyx_d, NULL); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 141, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_CyFunction_New(&__pyx_mdef_10cppModules_18map_spectra_masses_14map_boundaries_lambda1, 0, __pyx_n_s_map_boundaries_locals_lambda, NULL, __pyx_n_s_cppModules_map_spectra_masses, __pyx_d, NULL); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 144, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
-  if (PyDict_SetItem(__pyx_t_8, __pyx_n_s_key, __pyx_t_9) < 0) __PYX_ERR(0, 141, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_8, __pyx_n_s_key, __pyx_t_9) < 0) __PYX_ERR(0, 144, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-  __pyx_t_9 = __Pyx_PyObject_Call(__pyx_builtin_sorted, __pyx_t_1, __pyx_t_8); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 141, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyObject_Call(__pyx_builtin_sorted, __pyx_t_1, __pyx_t_8); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 144, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":142
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":145
  *     b_cpp_to_py = map_cpp_boundaries_to_inputs(
  *         sorted(cpp_b_masses_keys, key=lambda x: float(x.split('-')[0])),
  *         boundaries             # <<<<<<<<<<<<<<
@@ -3085,7 +3133,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_7)) {
     PyObject *__pyx_temp[3] = {__pyx_t_8, __pyx_t_9, __pyx_v_boundaries};
-    __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_7, __pyx_temp+1-__pyx_t_13, 2+__pyx_t_13); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 140, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_7, __pyx_temp+1-__pyx_t_13, 2+__pyx_t_13); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 143, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
@@ -3094,14 +3142,14 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_7)) {
     PyObject *__pyx_temp[3] = {__pyx_t_8, __pyx_t_9, __pyx_v_boundaries};
-    __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_7, __pyx_temp+1-__pyx_t_13, 2+__pyx_t_13); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 140, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_7, __pyx_temp+1-__pyx_t_13, 2+__pyx_t_13); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 143, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
   } else
   #endif
   {
-    __pyx_t_1 = PyTuple_New(2+__pyx_t_13); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
+    __pyx_t_1 = PyTuple_New(2+__pyx_t_13); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 143, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     if (__pyx_t_8) {
       __Pyx_GIVEREF(__pyx_t_8); PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_8); __pyx_t_8 = NULL;
@@ -3112,7 +3160,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
     __Pyx_GIVEREF(__pyx_v_boundaries);
     PyTuple_SET_ITEM(__pyx_t_1, 1+__pyx_t_13, __pyx_v_boundaries);
     __pyx_t_9 = 0;
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_1, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 140, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_1, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 143, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
@@ -3120,40 +3168,40 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
   __pyx_v_b_cpp_to_py = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":144
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":147
  *         boundaries
  *     )
  *     y_cpp_to_py = map_cpp_boundaries_to_inputs(             # <<<<<<<<<<<<<<
  *         sorted(cpp_y_masses_keys, key=lambda x: float(x.split('-')[0])),
  *         boundaries
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_n_s_map_cpp_boundaries_to_inputs); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 144, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_n_s_map_cpp_boundaries_to_inputs); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 147, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":145
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":148
  *     )
  *     y_cpp_to_py = map_cpp_boundaries_to_inputs(
  *         sorted(cpp_y_masses_keys, key=lambda x: float(x.split('-')[0])),             # <<<<<<<<<<<<<<
  *         boundaries
  *     )
  */
-  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 145, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 148, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_v_cpp_y_masses_keys);
   __Pyx_GIVEREF(__pyx_v_cpp_y_masses_keys);
   PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_v_cpp_y_masses_keys);
-  __pyx_t_9 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 145, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 148, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
-  __pyx_t_8 = __Pyx_CyFunction_New(&__pyx_mdef_10cppModules_18map_spectra_masses_14map_boundaries_1lambda2, 0, __pyx_n_s_map_boundaries_locals_lambda, NULL, __pyx_n_s_cppModules_map_spectra_masses, __pyx_d, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 145, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_CyFunction_New(&__pyx_mdef_10cppModules_18map_spectra_masses_14map_boundaries_1lambda2, 0, __pyx_n_s_map_boundaries_locals_lambda, NULL, __pyx_n_s_cppModules_map_spectra_masses, __pyx_d, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 148, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
-  if (PyDict_SetItem(__pyx_t_9, __pyx_n_s_key, __pyx_t_8) < 0) __PYX_ERR(0, 145, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_9, __pyx_n_s_key, __pyx_t_8) < 0) __PYX_ERR(0, 148, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_sorted, __pyx_t_1, __pyx_t_9); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 145, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_sorted, __pyx_t_1, __pyx_t_9); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 148, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":146
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":149
  *     y_cpp_to_py = map_cpp_boundaries_to_inputs(
  *         sorted(cpp_y_masses_keys, key=lambda x: float(x.split('-')[0])),
  *         boundaries             # <<<<<<<<<<<<<<
@@ -3175,7 +3223,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_7)) {
     PyObject *__pyx_temp[3] = {__pyx_t_9, __pyx_t_8, __pyx_v_boundaries};
-    __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_7, __pyx_temp+1-__pyx_t_13, 2+__pyx_t_13); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 144, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_7, __pyx_temp+1-__pyx_t_13, 2+__pyx_t_13); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 147, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
@@ -3184,14 +3232,14 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_7)) {
     PyObject *__pyx_temp[3] = {__pyx_t_9, __pyx_t_8, __pyx_v_boundaries};
-    __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_7, __pyx_temp+1-__pyx_t_13, 2+__pyx_t_13); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 144, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_7, __pyx_temp+1-__pyx_t_13, 2+__pyx_t_13); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 147, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
   } else
   #endif
   {
-    __pyx_t_1 = PyTuple_New(2+__pyx_t_13); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 144, __pyx_L1_error)
+    __pyx_t_1 = PyTuple_New(2+__pyx_t_13); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 147, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     if (__pyx_t_9) {
       __Pyx_GIVEREF(__pyx_t_9); PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_9); __pyx_t_9 = NULL;
@@ -3202,7 +3250,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
     __Pyx_GIVEREF(__pyx_v_boundaries);
     PyTuple_SET_ITEM(__pyx_t_1, 1+__pyx_t_13, __pyx_v_boundaries);
     __pyx_t_8 = 0;
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_1, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 144, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_1, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 147, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
@@ -3210,23 +3258,23 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
   __pyx_v_y_cpp_to_py = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":150
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":153
  * 
  *     # remap to a NEW dictionary
  *     py_matched_b_masses, py_matched_y_masses = {}, {}             # <<<<<<<<<<<<<<
  * 
  *     for k, v in matched_b_masses.items():
  */
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 150, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 153, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_7 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 150, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 153, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __pyx_v_py_matched_b_masses = ((PyObject*)__pyx_t_3);
   __pyx_t_3 = 0;
   __pyx_v_py_matched_y_masses = ((PyObject*)__pyx_t_7);
   __pyx_t_7 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":152
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":155
  *     py_matched_b_masses, py_matched_y_masses = {}, {}
  * 
  *     for k, v in matched_b_masses.items():             # <<<<<<<<<<<<<<
@@ -3234,7 +3282,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
  *             continue
  */
   __pyx_t_2 = 0;
-  __pyx_t_3 = __Pyx_dict_iterator(__pyx_v_matched_b_masses, 1, __pyx_n_s_items, (&__pyx_t_18), (&__pyx_t_13)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_dict_iterator(__pyx_v_matched_b_masses, 1, __pyx_n_s_items, (&__pyx_t_18), (&__pyx_t_13)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 155, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_7);
   __pyx_t_7 = __pyx_t_3;
@@ -3242,7 +3290,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
   while (1) {
     __pyx_t_19 = __Pyx_dict_iter_next(__pyx_t_7, __pyx_t_18, &__pyx_t_2, &__pyx_t_3, &__pyx_t_1, NULL, __pyx_t_13);
     if (unlikely(__pyx_t_19 == 0)) break;
-    if (unlikely(__pyx_t_19 == -1)) __PYX_ERR(0, 152, __pyx_L1_error)
+    if (unlikely(__pyx_t_19 == -1)) __PYX_ERR(0, 155, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_k, __pyx_t_3);
@@ -3250,18 +3298,18 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
     __Pyx_XDECREF_SET(__pyx_v_v, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":153
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":156
  * 
  *     for k, v in matched_b_masses.items():
  *         if k not in b_cpp_to_py:             # <<<<<<<<<<<<<<
  *             continue
  *         py_key = b_cpp_to_py[k]
  */
-    __pyx_t_14 = (__Pyx_PySequence_ContainsTF(__pyx_v_k, __pyx_v_b_cpp_to_py, Py_NE)); if (unlikely(__pyx_t_14 < 0)) __PYX_ERR(0, 153, __pyx_L1_error)
+    __pyx_t_14 = (__Pyx_PySequence_ContainsTF(__pyx_v_k, __pyx_v_b_cpp_to_py, Py_NE)); if (unlikely(__pyx_t_14 < 0)) __PYX_ERR(0, 156, __pyx_L1_error)
     __pyx_t_20 = (__pyx_t_14 != 0);
     if (__pyx_t_20) {
 
-      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":154
+      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":157
  *     for k, v in matched_b_masses.items():
  *         if k not in b_cpp_to_py:
  *             continue             # <<<<<<<<<<<<<<
@@ -3270,7 +3318,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
  */
       goto __pyx_L19_continue;
 
-      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":153
+      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":156
  * 
  *     for k, v in matched_b_masses.items():
  *         if k not in b_cpp_to_py:             # <<<<<<<<<<<<<<
@@ -3279,37 +3327,37 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
  */
     }
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":155
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":158
  *         if k not in b_cpp_to_py:
  *             continue
  *         py_key = b_cpp_to_py[k]             # <<<<<<<<<<<<<<
  *         py_matched_b_masses[py_key] = list(set(v))
  * 
  */
-    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_b_cpp_to_py, __pyx_v_k); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 155, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_b_cpp_to_py, __pyx_v_k); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 158, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_py_key, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":156
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":159
  *             continue
  *         py_key = b_cpp_to_py[k]
  *         py_matched_b_masses[py_key] = list(set(v))             # <<<<<<<<<<<<<<
  * 
  *     del matched_b_masses
  */
-    __pyx_t_1 = PySet_New(__pyx_v_v); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 156, __pyx_L1_error)
+    __pyx_t_1 = PySet_New(__pyx_v_v); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 159, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = PySequence_List(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 156, __pyx_L1_error)
+    __pyx_t_3 = PySequence_List(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 159, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (unlikely(PyDict_SetItem(__pyx_v_py_matched_b_masses, __pyx_v_py_key, __pyx_t_3) < 0)) __PYX_ERR(0, 156, __pyx_L1_error)
+    if (unlikely(PyDict_SetItem(__pyx_v_py_matched_b_masses, __pyx_v_py_key, __pyx_t_3) < 0)) __PYX_ERR(0, 159, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_L19_continue:;
   }
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":158
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":161
  *         py_matched_b_masses[py_key] = list(set(v))
  * 
  *     del matched_b_masses             # <<<<<<<<<<<<<<
@@ -3319,7 +3367,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
   __Pyx_DECREF(__pyx_v_matched_b_masses);
   __pyx_v_matched_b_masses = NULL;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":160
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":163
  *     del matched_b_masses
  * 
  *     for k, v in matched_y_masses.items():             # <<<<<<<<<<<<<<
@@ -3327,7 +3375,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
  *             continue
  */
   __pyx_t_18 = 0;
-  __pyx_t_3 = __Pyx_dict_iterator(__pyx_v_matched_y_masses, 1, __pyx_n_s_items, (&__pyx_t_2), (&__pyx_t_13)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_dict_iterator(__pyx_v_matched_y_masses, 1, __pyx_n_s_items, (&__pyx_t_2), (&__pyx_t_13)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 163, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_7);
   __pyx_t_7 = __pyx_t_3;
@@ -3335,7 +3383,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
   while (1) {
     __pyx_t_19 = __Pyx_dict_iter_next(__pyx_t_7, __pyx_t_2, &__pyx_t_18, &__pyx_t_3, &__pyx_t_1, NULL, __pyx_t_13);
     if (unlikely(__pyx_t_19 == 0)) break;
-    if (unlikely(__pyx_t_19 == -1)) __PYX_ERR(0, 160, __pyx_L1_error)
+    if (unlikely(__pyx_t_19 == -1)) __PYX_ERR(0, 163, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_k, __pyx_t_3);
@@ -3343,18 +3391,18 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
     __Pyx_XDECREF_SET(__pyx_v_v, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":161
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":164
  * 
  *     for k, v in matched_y_masses.items():
  *         if k not in y_cpp_to_py:             # <<<<<<<<<<<<<<
  *             continue
  *         py_key = y_cpp_to_py[k]
  */
-    __pyx_t_20 = (__Pyx_PySequence_ContainsTF(__pyx_v_k, __pyx_v_y_cpp_to_py, Py_NE)); if (unlikely(__pyx_t_20 < 0)) __PYX_ERR(0, 161, __pyx_L1_error)
+    __pyx_t_20 = (__Pyx_PySequence_ContainsTF(__pyx_v_k, __pyx_v_y_cpp_to_py, Py_NE)); if (unlikely(__pyx_t_20 < 0)) __PYX_ERR(0, 164, __pyx_L1_error)
     __pyx_t_14 = (__pyx_t_20 != 0);
     if (__pyx_t_14) {
 
-      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":162
+      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":165
  *     for k, v in matched_y_masses.items():
  *         if k not in y_cpp_to_py:
  *             continue             # <<<<<<<<<<<<<<
@@ -3363,7 +3411,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
  */
       goto __pyx_L22_continue;
 
-      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":161
+      /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":164
  * 
  *     for k, v in matched_y_masses.items():
  *         if k not in y_cpp_to_py:             # <<<<<<<<<<<<<<
@@ -3372,43 +3420,54 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
  */
     }
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":163
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":166
  *         if k not in y_cpp_to_py:
  *             continue
  *         py_key = y_cpp_to_py[k]             # <<<<<<<<<<<<<<
  *         py_matched_y_masses[py_key] = list(set(v))
  * 
  */
-    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_y_cpp_to_py, __pyx_v_k); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_y_cpp_to_py, __pyx_v_k); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 166, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_XDECREF_SET(__pyx_v_py_key, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":164
+    /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":167
  *             continue
  *         py_key = y_cpp_to_py[k]
  *         py_matched_y_masses[py_key] = list(set(v))             # <<<<<<<<<<<<<<
  * 
- *     return (py_matched_b_masses, py_matched_y_masses, kmer_to_prots)
+ *     print('Done')
  */
-    __pyx_t_1 = PySet_New(__pyx_v_v); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 164, __pyx_L1_error)
+    __pyx_t_1 = PySet_New(__pyx_v_v); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 167, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = PySequence_List(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 164, __pyx_L1_error)
+    __pyx_t_3 = PySequence_List(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 167, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (unlikely(PyDict_SetItem(__pyx_v_py_matched_y_masses, __pyx_v_py_key, __pyx_t_3) < 0)) __PYX_ERR(0, 164, __pyx_L1_error)
+    if (unlikely(PyDict_SetItem(__pyx_v_py_matched_y_masses, __pyx_v_py_key, __pyx_t_3) < 0)) __PYX_ERR(0, 167, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_L22_continue:;
   }
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":166
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":169
  *         py_matched_y_masses[py_key] = list(set(v))
+ * 
+ *     print('Done')             # <<<<<<<<<<<<<<
+ * 
+ *     return (py_matched_b_masses, py_matched_y_masses, kmer_to_prots)
+ */
+  __pyx_t_7 = __Pyx_PyObject_Call(__pyx_builtin_print, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 169, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_7);
+  __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":171
+ *     print('Done')
  * 
  *     return (py_matched_b_masses, py_matched_y_masses, kmer_to_prots)             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_7 = PyTuple_New(3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 166, __pyx_L1_error)
+  __pyx_t_7 = PyTuple_New(3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 171, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_INCREF(__pyx_v_py_matched_b_masses);
   __Pyx_GIVEREF(__pyx_v_py_matched_b_masses);
@@ -3423,7 +3482,7 @@ static PyObject *__pyx_pf_10cppModules_18map_spectra_masses_4map_boundaries(CYTH
   __pyx_t_7 = 0;
   goto __pyx_L0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":50
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":51
  *     return cpp_to_py
  * 
  * def map_boundaries(boundaries: list, proteins: list, max_kmer_length: int):             # <<<<<<<<<<<<<<
@@ -3823,6 +3882,9 @@ static struct PyModuleDef __pyx_moduledef = {
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_u_, __pyx_k_, sizeof(__pyx_k_), 0, 1, 0, 0},
+  {&__pyx_kp_u_Converting_from_c_objects_to_py, __pyx_k_Converting_from_c_objects_to_py, sizeof(__pyx_k_Converting_from_c_objects_to_py), 0, 1, 0, 0},
+  {&__pyx_kp_u_Converting_python_objects_to_c, __pyx_k_Converting_python_objects_to_c, sizeof(__pyx_k_Converting_python_objects_to_c), 0, 1, 0, 0},
+  {&__pyx_n_u_Done, __pyx_k_Done, sizeof(__pyx_k_Done), 0, 1, 0, 1},
   {&__pyx_n_s_b, __pyx_k_b, sizeof(__pyx_k_b), 0, 0, 1, 1},
   {&__pyx_n_s_bIt, __pyx_k_bIt, sizeof(__pyx_k_bIt), 0, 0, 1, 1},
   {&__pyx_n_s_b_cpp_to_py, __pyx_k_b_cpp_to_py, sizeof(__pyx_k_b_cpp_to_py), 0, 0, 1, 1},
@@ -3864,6 +3926,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_name, __pyx_k_name, sizeof(__pyx_k_name), 0, 0, 1, 1},
   {&__pyx_n_s_name_2, __pyx_k_name_2, sizeof(__pyx_k_name_2), 0, 0, 1, 1},
   {&__pyx_n_s_p, __pyx_k_p, sizeof(__pyx_k_p), 0, 0, 1, 1},
+  {&__pyx_n_s_print, __pyx_k_print, sizeof(__pyx_k_print), 0, 0, 1, 1},
   {&__pyx_n_s_proteins, __pyx_k_proteins, sizeof(__pyx_k_proteins), 0, 0, 1, 1},
   {&__pyx_n_s_ps, __pyx_k_ps, sizeof(__pyx_k_ps), 0, 0, 1, 1},
   {&__pyx_n_s_py_key, __pyx_k_py_key, sizeof(__pyx_k_py_key), 0, 0, 1, 1},
@@ -3881,7 +3944,8 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_sorted = __Pyx_GetBuiltinName(__pyx_n_s_sorted); if (!__pyx_builtin_sorted) __PYX_ERR(0, 141, __pyx_L1_error)
+  __pyx_builtin_print = __Pyx_GetBuiltinName(__pyx_n_s_print); if (!__pyx_builtin_print) __PYX_ERR(0, 66, __pyx_L1_error)
+  __pyx_builtin_sorted = __Pyx_GetBuiltinName(__pyx_n_s_sorted); if (!__pyx_builtin_sorted) __PYX_ERR(0, 144, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -3891,41 +3955,74 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":12
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":66
+ *         (range->bionmatches, range->yionmatches, kmer->source proteins)
+ *     '''
+ *     print('Converting python objects to c++...')             # <<<<<<<<<<<<<<
+ *     # turn boundaries into a vector of boundary objects
+ *     cdef vector[boundary] bs
+ */
+  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_u_Converting_python_objects_to_c); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 66, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__2);
+  __Pyx_GIVEREF(__pyx_tuple__2);
+
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":80
+ *         p = protein(str.encode(entry.name), str.encode(entry.sequence))
+ *         ps.push_back(p)
+ *     print('Done')             # <<<<<<<<<<<<<<
+ *     # call map boundaries
+ *     cdef mappings * m = mapBoundaries(bs, ps, max_kmer_length)
+ */
+  __pyx_tuple__3 = PyTuple_Pack(1, __pyx_n_u_Done); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 80, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__3);
+  __Pyx_GIVEREF(__pyx_tuple__3);
+
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":84
+ *     cdef mappings * m = mapBoundaries(bs, ps, max_kmer_length)
+ * 
+ *     print('\nConverting from c++ objects to python...')             # <<<<<<<<<<<<<<
+ *     # convert from unordered_maps to dictionaries
+ *     matched_b_masses, matched_y_masses, kmer_to_prots = {}, {}, {}
+ */
+  __pyx_tuple__4 = PyTuple_Pack(1, __pyx_kp_u_Converting_from_c_objects_to_py); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(0, 84, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__4);
+  __Pyx_GIVEREF(__pyx_tuple__4);
+
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":13
  * boundary_delta = .002
  * 
  * def hashable_boundaries(boundary: list) -> str:             # <<<<<<<<<<<<<<
  *     return '-'.join([str(x) for x in boundary])
  * 
  */
-  __pyx_tuple__2 = PyTuple_Pack(2, __pyx_n_s_boundary, __pyx_n_s_x); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 12, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__2);
-  __Pyx_GIVEREF(__pyx_tuple__2);
-  __pyx_codeobj__3 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__2, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cppModules_reduceSearchSpace_map, __pyx_n_s_hashable_boundaries, 12, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__3)) __PYX_ERR(0, 12, __pyx_L1_error)
+  __pyx_tuple__5 = PyTuple_Pack(2, __pyx_n_s_boundary, __pyx_n_s_x); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 13, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__5);
+  __Pyx_GIVEREF(__pyx_tuple__5);
+  __pyx_codeobj__6 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__5, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cppModules_reduceSearchSpace_map, __pyx_n_s_hashable_boundaries, 13, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__6)) __PYX_ERR(0, 13, __pyx_L1_error)
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":15
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":16
  *     return '-'.join([str(x) for x in boundary])
  * 
  * def map_cpp_boundaries_to_inputs(cpp_boundaries: list, input_boundaries: list) -> dict:             # <<<<<<<<<<<<<<
  *     '''
  *     Since c++ treats floats slightyly different than python, we need to convert
  */
-  __pyx_tuple__4 = PyTuple_Pack(8, __pyx_n_s_cpp_boundaries, __pyx_n_s_input_boundaries, __pyx_n_s_c_i, __pyx_n_s_b_i, __pyx_n_s_cpp_to_py, __pyx_n_s_hash_to_boundaries, __pyx_n_s_cpp_b, __pyx_n_s_inp_b); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(0, 15, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__4);
-  __Pyx_GIVEREF(__pyx_tuple__4);
-  __pyx_codeobj__5 = (PyObject*)__Pyx_PyCode_New(2, 0, 8, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__4, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cppModules_reduceSearchSpace_map, __pyx_n_s_map_cpp_boundaries_to_inputs, 15, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__5)) __PYX_ERR(0, 15, __pyx_L1_error)
+  __pyx_tuple__7 = PyTuple_Pack(8, __pyx_n_s_cpp_boundaries, __pyx_n_s_input_boundaries, __pyx_n_s_c_i, __pyx_n_s_b_i, __pyx_n_s_cpp_to_py, __pyx_n_s_hash_to_boundaries, __pyx_n_s_cpp_b, __pyx_n_s_inp_b); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 16, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__7);
+  __Pyx_GIVEREF(__pyx_tuple__7);
+  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(2, 0, 8, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cppModules_reduceSearchSpace_map, __pyx_n_s_map_cpp_boundaries_to_inputs, 16, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 16, __pyx_L1_error)
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":50
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":51
  *     return cpp_to_py
  * 
  * def map_boundaries(boundaries: list, proteins: list, max_kmer_length: int):             # <<<<<<<<<<<<<<
  *     '''
  *     Perform a merge search of boundaries on the list of input proteins and keep
  */
-  __pyx_tuple__6 = PyTuple_Pack(30, __pyx_n_s_boundaries, __pyx_n_s_proteins, __pyx_n_s_max_kmer_length, __pyx_n_s_bs, __pyx_n_s_b, __pyx_n_s_lBuB, __pyx_n_s_ps, __pyx_n_s_p, __pyx_n_s_entry, __pyx_n_s_m, __pyx_n_s_matched_b_masses, __pyx_n_s_matched_y_masses, __pyx_n_s_kmer_to_prots, __pyx_n_s_bIt, __pyx_n_s_cpp_b_masses_keys, __pyx_n_s_key, __pyx_n_s_value, __pyx_n_s_yIt, __pyx_n_s_cpp_y_masses_keys, __pyx_n_s_kIt, __pyx_n_s_b_cpp_to_py, __pyx_n_s_y_cpp_to_py, __pyx_n_s_py_matched_b_masses, __pyx_n_s_py_matched_y_masses, __pyx_n_s_k, __pyx_n_s_v, __pyx_n_s_py_key, __pyx_n_s_x, __pyx_n_s_x, __pyx_n_s_x); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 50, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__6);
-  __Pyx_GIVEREF(__pyx_tuple__6);
-  __pyx_codeobj__7 = (PyObject*)__Pyx_PyCode_New(3, 0, 30, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__6, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cppModules_reduceSearchSpace_map, __pyx_n_s_map_boundaries, 50, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__7)) __PYX_ERR(0, 50, __pyx_L1_error)
+  __pyx_tuple__9 = PyTuple_Pack(30, __pyx_n_s_boundaries, __pyx_n_s_proteins, __pyx_n_s_max_kmer_length, __pyx_n_s_bs, __pyx_n_s_b, __pyx_n_s_lBuB, __pyx_n_s_ps, __pyx_n_s_p, __pyx_n_s_entry, __pyx_n_s_m, __pyx_n_s_matched_b_masses, __pyx_n_s_matched_y_masses, __pyx_n_s_kmer_to_prots, __pyx_n_s_bIt, __pyx_n_s_cpp_b_masses_keys, __pyx_n_s_key, __pyx_n_s_value, __pyx_n_s_yIt, __pyx_n_s_cpp_y_masses_keys, __pyx_n_s_kIt, __pyx_n_s_b_cpp_to_py, __pyx_n_s_y_cpp_to_py, __pyx_n_s_py_matched_b_masses, __pyx_n_s_py_matched_y_masses, __pyx_n_s_k, __pyx_n_s_v, __pyx_n_s_py_key, __pyx_n_s_x, __pyx_n_s_x, __pyx_n_s_x); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 51, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__9);
+  __Pyx_GIVEREF(__pyx_tuple__9);
+  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(3, 0, 30, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cppModules_reduceSearchSpace_map, __pyx_n_s_map_boundaries, 51, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) __PYX_ERR(0, 51, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -4209,49 +4306,49 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":10
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":11
  * from mapSpectraMasses cimport mappings, protein, boundary, mapBoundaries
  * 
  * boundary_delta = .002             # <<<<<<<<<<<<<<
  * 
  * def hashable_boundaries(boundary: list) -> str:
  */
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_boundary_delta, __pyx_float__002) < 0) __PYX_ERR(0, 10, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_boundary_delta, __pyx_float__002) < 0) __PYX_ERR(0, 11, __pyx_L1_error)
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":12
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":13
  * boundary_delta = .002
  * 
  * def hashable_boundaries(boundary: list) -> str:             # <<<<<<<<<<<<<<
  *     return '-'.join([str(x) for x in boundary])
  * 
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_10cppModules_18map_spectra_masses_1hashable_boundaries, NULL, __pyx_n_s_cppModules_map_spectra_masses); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 12, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_10cppModules_18map_spectra_masses_1hashable_boundaries, NULL, __pyx_n_s_cppModules_map_spectra_masses); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_hashable_boundaries, __pyx_t_1) < 0) __PYX_ERR(0, 12, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_hashable_boundaries, __pyx_t_1) < 0) __PYX_ERR(0, 13, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":15
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":16
  *     return '-'.join([str(x) for x in boundary])
  * 
  * def map_cpp_boundaries_to_inputs(cpp_boundaries: list, input_boundaries: list) -> dict:             # <<<<<<<<<<<<<<
  *     '''
  *     Since c++ treats floats slightyly different than python, we need to convert
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_10cppModules_18map_spectra_masses_3map_cpp_boundaries_to_inputs, NULL, __pyx_n_s_cppModules_map_spectra_masses); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 15, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_10cppModules_18map_spectra_masses_3map_cpp_boundaries_to_inputs, NULL, __pyx_n_s_cppModules_map_spectra_masses); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 16, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_map_cpp_boundaries_to_inputs, __pyx_t_1) < 0) __PYX_ERR(0, 15, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_map_cpp_boundaries_to_inputs, __pyx_t_1) < 0) __PYX_ERR(0, 16, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":50
+  /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":51
  *     return cpp_to_py
  * 
  * def map_boundaries(boundaries: list, proteins: list, max_kmer_length: int):             # <<<<<<<<<<<<<<
  *     '''
  *     Perform a merge search of boundaries on the list of input proteins and keep
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_10cppModules_18map_spectra_masses_5map_boundaries, NULL, __pyx_n_s_cppModules_map_spectra_masses); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 50, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_10cppModules_18map_spectra_masses_5map_boundaries, NULL, __pyx_n_s_cppModules_map_spectra_masses); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 51, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_map_boundaries, __pyx_t_1) < 0) __PYX_ERR(0, 50, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_map_boundaries, __pyx_t_1) < 0) __PYX_ERR(0, 51, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "cppModules/reduceSearchSpace/map_spectra_masses.pyx":1
