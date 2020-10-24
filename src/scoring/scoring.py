@@ -1,7 +1,8 @@
 from src.scoring import mass_comparisons
-from src.gen_spectra import gen_spectra
 from src.objects import Spectrum
 from src.utils import ppm_to_da
+
+from src import gen_spectra
 
 import numpy as np
 from bisect import bisect

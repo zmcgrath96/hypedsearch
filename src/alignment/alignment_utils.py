@@ -1,8 +1,8 @@
 from src.objects import Database, Spectrum
-from src.gen_spectra import gen_spectra
 from src.scoring import scoring
 
 from src import database
+from src import gen_spectra
 
 import re
 import math

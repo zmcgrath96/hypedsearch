@@ -253,11 +253,17 @@ def match_masses(spectra_boundaries: list, db: Database) -> (dict, dict, Databas
         # add these these hits to our function scoped set of masses and to the kmer set
         for k, v in matched_masses_b_batch.items():
             matched_masses_b[k] += v 
-            kmer_set[k] += batch_kmer_set[k]
+            
+            # add all kmers to kmer set
+            for kmer in v:
+                kmer_set[kmer] += batch_kmer_set[kmer]
 
         for k, v in matched_masses_y_batch.items():
             matched_masses_y[k] += v 
-            kmer_set[k] += batch_kmer_set[k]
+
+            # add all kmers to kmer set
+            for kmer in v:
+                kmer_set[kmer] += batch_kmer_set[kmer]
 
     #update kmers in db to the kmer set
     db = db._replace(kmers=kmer_set)
@@ -389,9 +395,10 @@ def id_spectra(
     '''
     # build/load the database
     verbose and print('Loading database...')
-    db: Database
     db = database.build(database_file)
     verbose and print('Done')
+
+    print(f'Number of proteins: {len(db.proteins)}')
     
     # load all of the spectra
     verbose and print('Loading spectra...')

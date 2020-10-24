@@ -1,10 +1,10 @@
 from src.scoring import scoring
 from src.objects import Spectrum, SequenceAlignment, HybridSequenceAlignment, Database, Alignments
 from src.alignment import alignment_utils, hybrid_alignment
-from src.gen_spectra import gen_spectra
 
 from src import utils
 from src import database
+from src import gen_spectra
 
 import math
 import re

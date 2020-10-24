@@ -30,8 +30,12 @@ def build(fasta_file: str) -> Database:
     '''
     db = Database(fasta_file)
 
+    # pull the name out
+    get_name = lambda x: x.split('|')[-1].split()[0]
+
     for entry in fasta.read(fasta_file):
-        db.proteins[entry.description] = entry
+        p_name = get_name(entry.description)
+        db.proteins[p_name] = entry
 
     return db
 
