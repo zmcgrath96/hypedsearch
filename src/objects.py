@@ -1,26 +1,5 @@
 from collections import namedtuple
 
-from src.tree import Tree
-
-'''
-Database:
-    Holds proteins, fasta file, protein tree, and kmer masses 
-
-    Properties:
-        fasta_file:     (str) the name of the input fasta file
-        proteins:       (dict) the key: value pairs of proteins where keys are the 
-                                entry number and the value is a named tuple of 
-                                ('description', 'sequence')
-        tree:           (Tree) the tree the contains sequences keyed by the source proteins
-        b_hits:         (list) string sequences of the b ion hits
-        y_hits:         (list) string sequences of the y ion hits
-'''
-Database = namedtuple(
-    'Database', 
-    ['fasta_file', 'proteins', 'kmers', 'b_hits', 'y_hits'], 
-    defaults=['', {}, {}, [], []]
-)
-
 '''
 Spectrum:
     Holds information regarding an MS or MS/MS spectrum
@@ -104,4 +83,22 @@ Alignments = namedtuple(
     'Alignments', 
     ['spectrum', 'alignments'], 
     defaults=[Spectrum([], [], 0, 0, 0.0, ''), []]
+)
+
+'''
+Digest
+    contains basic information of what a digest does
+
+    Properties:
+        start:      (list) tuples of the form (char, char) whre the first entry is what 
+                    amino acid could start a valid digest and the second is either
+                    L to cut to the left of it or R to cut to the right of it
+        end:        (list) tuples of the form (char, char) whre the first entry is what 
+                    amino acid could start a valid digest and the second is either
+                    L to cut to the left of it or R to cut to the right of it
+'''
+digest = namedtuple(
+    'digest',
+    ['start', 'end'],
+    defaults=[[], []]
 )

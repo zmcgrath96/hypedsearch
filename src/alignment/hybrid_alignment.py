@@ -1,4 +1,5 @@
-from src.objects import Database, Spectrum
+from src.objects import Spectrum
+from src.database import Database
 from src.utils import all_perms_of_s
 from src.scoring import scoring
 from src.alignment import alignment_utils
@@ -22,7 +23,7 @@ def __replace_ambiguous_hybrid(hybrid: tuple, db: Database, observed: Spectrum) 
     nonhyb = hybrid[0]
 
     # see if the sequence exists as a non hybrid. If so, return that
-    if len(database.get_proteins_with_subsequence(db, nonhyb)):
+    if len(db.get_proteins_with_subsequence(nonhyb)):
         return ((nonhyb, None))
 
     # Try replacing all L with I and vice versa
@@ -36,7 +37,7 @@ def __replace_ambiguous_hybrid(hybrid: tuple, db: Database, observed: Spectrum) 
     for p in possible:
 
         # if this permutation exists as a nonhybrid, return it
-        if len(database.get_proteins_with_subsequence(db, p)):
+        if len(db.get_proteins_with_subsequence(p)):
             return ((p, None))
 
     # if we didn't find a sequence that could be found in the database, 

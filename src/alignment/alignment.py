@@ -1,6 +1,7 @@
 from src.scoring import scoring
-from src.objects import Spectrum, SequenceAlignment, HybridSequenceAlignment, Database, Alignments
+from src.objects import Spectrum, SequenceAlignment, HybridSequenceAlignment, Alignments
 from src.alignment import alignment_utils, hybrid_alignment
+from src.database import Database
 
 from src import utils
 from src import database
@@ -145,12 +146,12 @@ def align_b_y(b_results: list, y_results: list, db: Database) -> list:
     for b_seq in b_results:
 
         # get all the b proteins
-        b_proteins = database.get_proteins_with_subsequence(db, b_seq)
+        b_proteins = db.get_proteins_with_subsequence(b_seq)
 
         for y_seq in y_results:
 
             # ge the y proteins
-            y_proteins = database.get_proteins_with_subsequence(db, y_seq)
+            y_proteins = db.get_proteins_with_subsequence(y_seq)
             
             # the sequence is from the same protein, try and overlap it
             if any([x in y_proteins for x in b_proteins]):
@@ -162,12 +163,14 @@ def align_b_y(b_results: list, y_results: list, db: Database) -> list:
                 for sp in shared_prots:
 
                     # get the sequence from the entry for alignment
-                    prot_seq = database.get_entry_by_name(db, sp).sequence
+                    prot_seqs = db.get_protein(sp)
+                    
+                    for seq in prot_seqs:
 
-                    # append any alignments made from these 2 sequences
-                    spec_alignments.append(
-                        same_protein_alignment(b_seq, y_seq, prot_seq)
-                    )
+                        # append any alignments made from these 2 sequences
+                        spec_alignments.append(
+                            same_protein_alignment(b_seq, y_seq, seq)
+                        )
                 
                 # try just a dumb hybrid too to make sure
                 spec_alignments.append((f'{b_seq}{y_seq}', f'{b_seq}-{y_seq}'))
