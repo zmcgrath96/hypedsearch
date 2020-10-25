@@ -32,6 +32,8 @@ def set_args(args) -> dict:
     verbose = stringtobool(args.verbose) if not use_params else params.VERBOSE
     peak_filter = args.peak_filter if not use_params else params.PEAK_FILTER
     relative_abundance_filter = args.rel_abund_filter if not use_params else params.RELATIVE_ABUNDANCE_FILTER
+    digest = args.digest if not use_params else params.DIGEST
+    missed_cleavages = args.missed_cleavages if not use_params else params.MISSED_CLEAVAGES
     debug = params.DEBUG
 
     ############## Argument checking ################
@@ -57,6 +59,8 @@ def set_args(args) -> dict:
         'verbose': verbose, 
         'peak_filter': peak_filter, 
         'relative_abundance_filter': relative_abundance_filter,
+        'digest': digest, 
+        'missed_cleavages': missed_cleavages,
         'DEBUG': debug
     }
 
@@ -81,6 +85,8 @@ if __name__ == '__main__':
     parser.add_argument('--precursor-tolerance', dest='precursor_tolerance', type=float, default=1, help='The mass (in Da) tolerance to accept when matching precursor masses. Default=1')
     parser.add_argument('--peak-filter', dest='peak_filter', type=int, default=0, help='The number of peaks to take from a spectrum. The most abundant peaks will be taken. Leave blank if you want no filter or to use relative abundance filter. Defualt=0')
     parser.add_argument('--abundance_filter', dest='rel_abund_filter', type=float, default=0.0, help='Take only peaks from a spectrum where the abundance of the peak is >= the percentage give. Leave blank if you want no filter or to use peak filter. Default=0.0')
+    parser.add_argument('--digest', dest='digest', type=str, default='', help='The digest performed. Default=None')
+    parser.add_argument('--missed_cleavages', dest='missed_cleavages', type=int, default=0, help='Number of missed cleavages allowed. Default=0')
     parser.add_argument('--verbose', dest='verbose', type=bool, default=True, help='Extra printing to console during run. Default=True')
     args = parser.parse_args()
     main(args)

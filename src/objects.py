@@ -105,3 +105,17 @@ Alignments = namedtuple(
     ['spectrum', 'alignments'], 
     defaults=[Spectrum([], [], 0, 0, 0.0, ''), []]
 )
+
+'''
+DatabaseEntry
+    Tuple that mimics pyteomics input
+
+    Properties:
+        sequence:       (str) the protein sequence
+        description:    (str) the name
+'''
+DatabaseEntry = namedtuple(
+    'DatabaseEntry', 
+    ['sequence', 'description'],
+    defaults=['', '']
+)

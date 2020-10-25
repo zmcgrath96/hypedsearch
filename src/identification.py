@@ -4,6 +4,7 @@ from src.cppModules import gen_spectra
 from src.alignment import alignment
 from src.utils import ppm_to_da, to_percent, overlap_intervals, predicted_len
 from src.scoring import scoring, mass_comparisons
+from src.preprocessing import digestion
 from src import database
 
 from math import ceil
@@ -243,8 +244,10 @@ def match_masses(spectra_boundaries: list, db: Database) -> (dict, dict, Databas
 
         print(f'On batch {batch_num + 1}/{num_batches}\n', end='')
 
+        extended_batch_set = [(k, entry) for (k, v) in batch_set for entry in v]
+
         # create our list representation
-        batch_b_list, index_list_b, batch_kmer_b, batch_y_list, index_list_y, batch_kmer_y, batch_kmer_set = make_database_set(batch_set, max_len)
+        batch_b_list, index_list_b, batch_kmer_b, batch_y_list, index_list_y, batch_kmer_y, batch_kmer_set = make_database_set(extended_batch_set, max_len)
 
         # find tha batch matched masses for both b and y ions
         matched_masses_b_batch = merge(batch_b_list, index_list_b, batch_kmer_b, spectra_boundaries)
@@ -373,6 +376,8 @@ def id_spectra(
     relative_abundance_filter=0.0,
     ppm_tolerance=20, 
     precursor_tolerance=1, 
+    digest='',
+    missed_cleavages=0,
     DEBUG=False
 ) -> dict:
     '''
@@ -398,7 +403,9 @@ def id_spectra(
     db = database.build(database_file)
     verbose and print('Done')
 
-    print(f'Number of proteins: {len(db.proteins)}')
+    verbose and print('Performing digest...')
+    db = digestion.digest(db, digest, missed_cleavages)
+    print('Done.')
     
     # load all of the spectra
     verbose and print('Loading spectra...')

@@ -27,6 +27,8 @@ def run(args: dict) -> None:
             peak_filter:                (int) the number of peaks to filter by 
             relative_abundance_filter:  (float) the percentage of the total abundance a peak must
                                             be to pass the filter
+            digest:                     (str) the digest performed
+            missed_cleavages:           (int) the number of missed cleavages allowed in digest
             verbose:                    (bool) extra printing
             DEBUG:                      (bool) debuging print messages. Default=False
     Outputs:
@@ -49,6 +51,8 @@ def run(args: dict) -> None:
         precursor_tolerance=args['precursor_tolerance'],
         peak_filter=args['peak_filter'],
         relative_abundance_filter=args['relative_abundance_filter'],
+        digest=args['digest'], 
+        missed_cleavages=args['missed_cleavages'],
         verbose=True, 
         DEBUG=args['DEBUG']
     )

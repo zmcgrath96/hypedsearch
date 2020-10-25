@@ -162,12 +162,14 @@ def align_b_y(b_results: list, y_results: list, db: Database) -> list:
                 for sp in shared_prots:
 
                     # get the sequence from the entry for alignment
-                    prot_seq = database.get_entry_by_name(db, sp).sequence
+                    prot_seqs = database.get_entry_by_name(db, sp)
 
-                    # append any alignments made from these 2 sequences
-                    spec_alignments.append(
-                        same_protein_alignment(b_seq, y_seq, prot_seq)
-                    )
+                    for prot_entry in prot_seqs:
+
+                        # append any alignments made from these 2 sequences
+                        spec_alignments.append(
+                            same_protein_alignment(b_seq, y_seq, prot_entry.sequence)
+                        )
                 
                 # try just a dumb hybrid too to make sure
                 spec_alignments.append((f'{b_seq}{y_seq}', f'{b_seq}-{y_seq}'))

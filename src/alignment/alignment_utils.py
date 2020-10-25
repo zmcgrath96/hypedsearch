@@ -88,61 +88,68 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
                 left_seq, right_seq = __split_hybrid(sequence)
                 
                 # get the left and right protein sequences
-                left_prot = database.get_entry_by_name(db, l_p).sequence
-                right_prot = database.get_entry_by_name(db, r_p).sequence
-                
-                # get the aas to the right of the left sequence
-                left_append = [x[1] for x in __get_surrounding_amino_acids(left_prot, left_seq, gap)]
-                
-                # get the aas to the left of the right sequence
-                right_prepend = [x[0] for x in __get_surrounding_amino_acids(right_prot, right_seq, gap)]
-                
-                # slowly add each set of amino acids
-                for to_append in left_append:
-                    for to_prepend in right_prepend:
+                left_seqs = database.get_entry_by_name(db, l_p)
+                right_seqs = database.get_entry_by_name(db, r_p)
+
+                for left_prot in left_seqs:
+                    for right_prot in right_seqs:
+
+                        # get the aas to the right of the left sequence
+                        left_append = [x[1] for x in __get_surrounding_amino_acids(left_prot.sequence, left_seq, gap)]
                         
-                        # slowly add each
-                        for i in range(len(to_append) + 1):
-                            for j in range(len(to_prepend) + 1):
+                        # get the aas to the left of the right sequence
+                        right_prepend = [x[0] for x in __get_surrounding_amino_acids(right_prot.sequence, right_seq, gap)]
+                        
+                        # slowly add each set of amino acids
+                        for to_append in left_append:
+                            for to_prepend in right_prepend:
                                 
-                                new_left = left_seq + to_append[:i]
-                                new_right = ('' if j == 0 else to_prepend[-j:]) + right_seq
-                                
-                                # create the new sequence and get the new precursor mass
-                                new_seq = align_overlaps(new_left, new_right)
-                                
-                                new_prec = gen_spectra.get_precursor(new_seq.replace('(', '').replace(')', '').replace('-', ''))
-                                
-                                # find the precursor distance, and if its close enough, keep it 
-                                pd = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
-                                
-                                if pd <= tolerance:
-                                    filled_in.append(new_seq)
+                                # slowly add each
+                                for i in range(len(to_append) + 1):
+                                    for j in range(len(to_prepend) + 1):
+                                        
+                                        new_left = left_seq + to_append[:i]
+                                        new_right = ('' if j == 0 else to_prepend[-j:]) + right_seq
+                                        
+                                        # create the new sequence and get the new precursor mass
+                                        new_seq = align_overlaps(new_left, new_right)
+                                        
+                                        new_prec = gen_spectra.get_precursor(new_seq.replace('(', '').replace(')', '').replace('-', ''))
+                                        
+                                        # find the precursor distance, and if its close enough, keep it 
+                                        pd = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
+                                        
+                                        if pd <= tolerance:
+                                            filled_in.append(new_seq)
         
     # if its nonhybrid, try left and right side
     else:
         for p in parents[0]:
 
             # get the parent sequence
-            p_seq = database.get_entry_by_name(db, p).sequence
+            entries = database.get_entry_by_name(db, p)
 
-            # get the flanking amino acid pairs
-            for flanking_pair in __get_surrounding_amino_acids(p_seq, sequence, gap):
+            for entry in entries:
 
-                # go through all possible combinations of the flanking pairs
-                for i in range(gap + 1):
-                    for j in range(gap - i + 1):
+                p_seq = entry.sequence
 
-                        # get the new sequence and its precursor mass. Add it to filled in list
-                        new_seq = flanking_pair[0][gap-i:] + sequence + flanking_pair[1][:j]
+                # get the flanking amino acid pairs
+                for flanking_pair in __get_surrounding_amino_acids(p_seq, sequence, gap):
 
-                        new_prec = gen_spectra.get_precursor(new_seq)
+                    # go through all possible combinations of the flanking pairs
+                    for i in range(gap + 1):
+                        for j in range(gap - i + 1):
 
-                        # get the precursor distance, and if it is close enough, keep it
-                        p_d = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
+                            # get the new sequence and its precursor mass. Add it to filled in list
+                            new_seq = flanking_pair[0][gap-i:] + sequence + flanking_pair[1][:j]
 
-                        if p_d <= tolerance:
-                            filled_in.append(new_seq)
+                            new_prec = gen_spectra.get_precursor(new_seq)
+
+                            # get the precursor distance, and if it is close enough, keep it
+                            p_d = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
+
+                            if p_d <= tolerance:
+                                filled_in.append(new_seq)
     return filled_in
 
 def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3, tolerance=1) -> list:

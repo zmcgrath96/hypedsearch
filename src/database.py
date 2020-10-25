@@ -1,5 +1,5 @@
 from pyteomics import fasta
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 from src.objects import Database
 
@@ -30,13 +30,16 @@ def build(fasta_file: str) -> Database:
     '''
     db = Database(fasta_file)
 
+    prots = defaultdict(list)
+
     # pull the name out
     get_name = lambda x: x.split('|')[-1].split()[0]
 
     for entry in fasta.read(fasta_file):
         p_name = get_name(entry.description)
-        db.proteins[p_name] = entry
+        prots[p_name].append(entry)
 
+    db = db._replace(proteins=prots)
     return db
 
 
