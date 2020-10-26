@@ -382,3 +382,15 @@ def predicted_len(max_mass: float) -> int:
         (int) predicted length
     '''
     return math.ceil(max_mass / (57.021464))
+
+def hashable_boundaries(boundaries: list) -> str:
+    '''
+    Turn a lower and upper bound into a string in order 
+    to hash
+
+    Inputs:
+        boundaries:     (list) [lower_bound: float, upper_bound: float]
+    Outputs:
+        (str) <lower_bound>-<upper_bound>
+    '''
+    return '-'.join([str(x) for x in boundaries])
