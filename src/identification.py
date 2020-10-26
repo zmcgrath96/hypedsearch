@@ -1,5 +1,5 @@
 from src.file_io import mzML
-from src.objects import Database, Spectrum, Alignments
+from src.objects import Database, Spectrum, Alignments, MPSpectrumID
 from src.cppModules import gen_spectra
 from src.alignment import alignment
 from src.utils import ppm_to_da, to_percent, overlap_intervals, predicted_len
@@ -15,6 +15,8 @@ from typing import Iterable
 import bisect
 import time
 import array as arr
+import multiprocessing as mp
+import copy
 
 # top results to keep for creating an alignment
 TOP_X = 50
@@ -276,11 +278,9 @@ def match_masses(spectra_boundaries: list, db: Database) -> (dict, dict, Databas
 
 def id_spectrum(
     spectrum: Spectrum, 
-    boundaries: list, 
     db: Database,
-    mz_mapping: dict, 
-    matched_masses_b: dict, 
-    matched_masses_y: dict,
+    b_hits: dict, 
+    y_hits: dict,
     ppm_tolerance: int
     ) -> Alignments:
     '''
@@ -297,23 +297,6 @@ def id_spectrum(
     Outputs:
         (Alignments) the created alignments for this spectrum
     '''
-    b_hits, y_hits = [], []
-    for mz in spectrum.spectrum:
-
-        # get the correct boundary
-        mapped = mz_mapping[mz]
-        b = boundaries[mapped]
-        b = hashable_boundaries(b)
-
-        if b in matched_masses_b:
-            b_hits += matched_masses_b[b]
-
-        if b in matched_masses_y:
-            y_hits += matched_masses_y[b]
-
-    # remove any duplicates
-    b_hits = list(set(b_hits))
-    y_hits = list(set(y_hits))
 
     # score and sort these results
     b_results = sorted([
@@ -421,9 +404,83 @@ def id_spectra(
     matched_masses_b, matched_masses_y, db = match_masses(boundaries, db)
 
     # keep track of the alingment made for every spectrum
-    results = {}
+    print('Initializing other processors...')
+    results = mp.Manager().dict()
+
+    # start up processes and queue for parallelizing things
+    q = mp.Manager().Queue()
+    num_processes = max(1, mp.cpu_count() - 1)
+    ps = [
+        mp.Process(
+            target=mp_id_spectrum, 
+            args=(q, copy.deepcopy(db)._replace(b_hits={}, y_hits={}), results)
+        ) for _ in range(num_processes) 
+    ]
+    for p in ps:
+        p.start()
+    print('Done.')
+
     for i, spectrum in enumerate(spectra):
-        print(f'\rCreating an alignment for {i+1}/{len(spectra)} [{to_percent(i, len(spectra))}%]', end='')
-        results[i] = id_spectrum(spectrum, boundaries, db, mz_mapping, matched_masses_b, matched_masses_y, ppm_tolerance)
+        # get b and y hits
+        b_hits, y_hits = [], []
+        for mz in spectrum.spectrum:
+
+            # get the correct boundary
+            mapped = mz_mapping[mz]
+            b = boundaries[mapped]
+            b = hashable_boundaries(b)
+
+            if b in matched_masses_b:
+                b_hits += matched_masses_b[b]
+
+            if b in matched_masses_y:
+                y_hits += matched_masses_y[b]
+
+        # create a named tuple to put in the database
+        o = MPSpectrumID(b_hits, y_hits, spectrum, i, ppm_tolerance, 5)
+        q.put(o)
+
+    while len(results) < len(spectra):
+        print(f'\rCreating an alignment for {len(results)}/{len(spectra)} [{to_percent(len(results), len(spectra))}%]', end='')
+        time.sleep(1)
+
+    # now send 'exit' message to all our processes
+    [q.put('exit') for _ in range(num_processes)]
+
+    # join them
+    for p in ps:
+        p.join()
         
     return results
+
+def mp_id_spectrum(input_q: mp.Queue, reduced_db_cp: Database, results: dict) -> None:
+    '''
+    Multiprocessing function for id a spectrum. Each entry in the 
+    input_q must be an object of some type with values
+        b_hits: list of kmers
+        y_hits: list of kmers
+        spectrum: Spectrum
+        spectrum_id: int
+        db: Database
+        ppm_tolerance: int
+        n: int
+
+    Stores all results in the results dict
+    '''
+    while True:
+
+        # wait to get something from the input queue
+        next_entry = input_q.get(True)
+
+        # if it says 'exit', quit
+        if next_entry == 'exit':
+            return 
+
+        # otherwise run id spectrum 
+        results[next_entry.spectrum_id] = id_spectrum(
+            next_entry.spectrum, 
+            reduced_db_cp, 
+            next_entry.b_hits, 
+            next_entry.y_hits, 
+            next_entry.ppm_tolerance
+        )
