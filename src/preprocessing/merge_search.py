@@ -1,6 +1,6 @@
 from src.utils import hashable_boundaries, predicted_len
 from src.objects import Database
-from src import gen_spectra
+from src.cppModules import gen_spectra
 
 from collections import defaultdict
 from typing import Iterable
