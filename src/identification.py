@@ -188,9 +188,6 @@ def id_spectra(
     db = database.build(database_file)
     verbose and print('Done')
 
-    verbose and print('Performing digest...')
-    db = digestion.digest(db, digest, missed_cleavages)
-    print('Done.')
     
     # load all of the spectra
     verbose and print('Loading spectra...')
