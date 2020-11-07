@@ -1,5 +1,5 @@
 from src.scoring import scoring
-from src.objects import Spectrum, SequenceAlignment, HybridSequenceAlignment, Database, Alignments
+from src.objects import Spectrum, SequenceAlignment, HybridSequenceAlignment, Database, Alignments, DEVFallOffEntry
 from src.alignment import alignment_utils, hybrid_alignment
 
 from src import utils
@@ -190,7 +190,9 @@ def attempt_alignment(
     ppm_tolerance=20, 
     precursor_tolerance=1,
     DEBUG=False, 
-    is_last=False
+    is_last=False, 
+    truth=None, 
+    fall_off=None
 ) -> Alignments:
     '''
     Given a set of left and right (b and y ion) hits, try and overlap or extend one side to 
@@ -217,9 +219,35 @@ def attempt_alignment(
     global FIRST_ALIGN_TIME, AMBIGUOUS_REMOVAL_TIME, FILTER_TIME, PRECURSOR_MASS_TIME, OBJECTIFY_TIME
     global FIRST_ALIGN_COUNT, AMBIGUOUS_REMOVAL_COUNT, FILTER_COUNT, PRECURSOR_MASS_COUNT, OBJECTIFY_COUNT
 
+    # if we are in dev mode this removes the need for extra long ifs
+    DEV = truth is not None and fall_off is not None
+
     # run the first round of alignments
     st = time.time()
     a = align_b_y(b_hits, y_hits, db)
+
+    # if we have truth and fall_off, check for them
+    if DEV:
+        # we want to make b and y seqs out of the alignments because we want to give the benefit of the doubt
+        # since we can fill in precursor
+        b_seqs = [x[0] for x in a]
+        y_seqs = [x[0] for x in a]
+
+        # get the id, the sequnce, and if its a hybrid
+        _id = spectrum.id
+        is_hybrid = truth[_id]['hybrid']
+        truth_seq = truth[_id]['sequence']
+
+        if not utils.DEV_contains_truth_parts(truth_seq, is_hybrid, b_seqs, y_seqs):
+
+            fall_off[_id] = DEVFallOffEntry(
+                is_hybrid, 
+                truth_seq, 
+                'first_alignment_round'
+            )
+
+            # exit the alignment
+            return Alignments(spectrum, [])
 
     FIRST_ALIGN_COUNT += len(a)
     FIRST_ALIGN_TIME += time.time() - st
@@ -252,6 +280,24 @@ def attempt_alignment(
     PRECURSOR_MASS_TIME += time.time() - st
     DEBUG and print(f'Filling in precursor took {time.time() - st} for {len(a)} sequences')
 
+    # check to see if we no longer have the match. At this point we should
+    if DEV:
+
+        # get the id, the sequnce, and if its a hybrid
+        _id = spectrum.id
+        is_hybrid = truth[_id]['hybrid']
+        truth_seq = truth[_id]['sequence']
+
+        if not utils.DEV_contains_truth_exact(truth_seq, is_hybrid, precursor_matches):
+
+            fall_off[_id] = DEVFallOffEntry(
+                is_hybrid, 
+                truth_seq, 
+                'precursor_filling'
+            )
+
+            # exit the alignment
+            return Alignments(spectrum, [])
 
     # seperate the hybrids from the non hybrids for later analysis
     nonhyba, hyba = [], []
@@ -266,6 +312,27 @@ def attempt_alignment(
     # hybrid sequences
     st = time.time()
     updated_hybrids = [] if len(hyba) == 0 else hybrid_alignment.replace_ambiguous_hybrids(hyba, db, spectrum)
+
+    # check to see if we lost the match, but only if the sequence is a hybrid
+    if DEV and truth[spectrum.id]['hybrid']:
+
+        # get the id, the sequnce, and if its a hybrid
+        _id = spectrum.id
+        is_hybrid = truth[_id]['hybrid']
+        truth_seq = truth[_id]['sequence']
+
+        # updated hybrids is a list of [(nonhyb, hybrid)]. Do the first value because sometimes the 
+        # second value is none because its no longer a hybrid
+        if not utils.DEV_contains_truth_exact(truth_seq, is_hybrid, [x[0] for x in updated_hybrids]):
+
+            fall_off[_id] = DEVFallOffEntry(
+                is_hybrid, 
+                truth_seq, 
+                'removing_ambiguous_hybrids'
+            )
+
+            # exit the alignment
+            return Alignments(spectrum, [])
 
     AMBIGUOUS_REMOVAL_COUNT += len(updated_hybrids)
     AMBIGUOUS_REMOVAL_TIME += time.time() - st
@@ -343,10 +410,7 @@ def attempt_alignment(
     OBJECTIFY_TIME += time.time() - st
     DEBUG and print(f'Time to make into objects took {time.time() - st}')
 
-    # print()
-    # for a in sorted(alignments, key=lambda x: x.total_score, reverse=True)[:10]:
-    #     print(f'{a.sequence} \t total: {a.total_score} \t b: {a.b_score} \t y: {a.y_score} \t hybrid: {"True" if len(a) == 8 else "False"}')
-
+    # write the time log to file
     if is_last:
         with open(TIME_LOG_FILE, 'w') as o:
             o.write(f'Total result filtering time: {FILTER_TIME}s \t seconds/op: {FILTER_TIME/FILTER_COUNT}s\n')
@@ -355,11 +419,34 @@ def attempt_alignment(
             o.write(f'Matching precursor matches time: {PRECURSOR_MASS_TIME}s \t seconds/op: {PRECURSOR_MASS_TIME/PRECURSOR_MASS_COUNT}s\n')
             o.write(f'Turning matches into objects time: {OBJECTIFY_TIME} \t seconds/op: {OBJECTIFY_TIME/OBJECTIFY_COUNT}\n')
 
+    # get only the top n alignments
+    top_n_alignments = sorted(
+        alignments, 
+        key=lambda x: (x.total_score, x.b_score, x.y_score, 1/x.precursor_distance), 
+        reverse=True
+    )[:n]
+
+    # check to see if we lost the sequence
+    if DEV:
+
+        # get the id, the sequnce, and if its a hybrid
+        _id = spectrum.id
+        is_hybrid = truth[_id]['hybrid']
+        truth_seq = truth[_id]['sequence']
+
+        # the sequence is in x.sequence
+        if not utils.DEV_contains_truth_exact(truth_seq, is_hybrid, [x.sequence for x in top_n_alignments]):
+
+            fall_off[_id] = DEVFallOffEntry(
+                is_hybrid, 
+                truth_seq, 
+                'taking_top_n_alignments'
+            )
+
+            # exit the alignment
+            return Alignments(spectrum, [])
+
     return Alignments(
         spectrum, 
-        sorted(
-            alignments, 
-            key=lambda x: (x.total_score, x.b_score, x.y_score, 1/x.precursor_distance), 
-            reverse=True
-        )[:n]
+        top_n_alignments
     )

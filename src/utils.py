@@ -394,3 +394,82 @@ def hashable_boundaries(boundaries: list) -> str:
         (str) <lower_bound>-<upper_bound>
     '''
     return '-'.join([str(x) for x in boundaries])
+
+def DEV_contains_truth_parts(truth_seq: str, hybrid: bool, b_seqs: list, y_seqs: list) -> bool:
+    '''
+    DEV FUNCTION ONLY
+
+    Determines if a set of b and y sequences can potentially create the truth. If so, 
+    True is returned, otherwise False
+
+    Inputs:
+        truth_seq:  (str)   the truth sequence trying to find
+        hybrid:     (bool)  True if the truth is a hybrid
+        b_seqs:     (list)  k-mers identified from the b ion score
+        y_seqs:     (list)  k-mers identified from the y ion score
+    Outputs:
+        True if the truth could be constructructed from current set of seqs, False otherwise
+    '''
+    has_left = False
+    has_right = False
+
+    # if the sequence is hybrid, replace all I and L with B
+    if hybrid:
+        truth_seq = truth_seq.replace('I', 'B').replace('L', 'B')
+
+        b_seqs = [x.replace('I', 'B').replace('L', 'B') for x in b_seqs]
+        y_seqs = [x.replace('I', 'B').replace('L', 'B') for x in y_seqs]
+
+    # see if any of the b seqs match the first bit of the sequence
+    has_left = any(
+        [x == truth_seq[:len(x)] for x in b_seqs if len(x) > 1]
+    )
+
+    has_right = any(
+        [x == truth_seq[-len(x):] for x in y_seqs if len(x) > 1]
+    )
+
+    # if its a hybrid, both left and right must be true, otherwise just one will do 
+    if hybrid:
+        return has_left and has_right
+
+    return has_left or has_right
+
+
+def DEV_contains_truth_exact(truth_seq: str, hybrid: bool, seqs: list) -> bool:
+    '''
+    DEV FUNCTION ONLY
+
+    Determines of the truth sequence is held in the list of sequences. If so, 
+    True is returned, otherwise False
+
+    Inputs:
+        truth_seq:  (str)   the truth sequence trying to find
+        hybrid:     (bool)  True if the truth is a hybrid
+        seqs:       (list)  sequences to look through
+    Outputs:
+        True if the truth is in current set of seqs, False otherwise
+    '''
+
+    # if hybrid, replace all L and I with B, and also remove any - or ()
+    if hybrid:
+        truth_seq = truth_seq \
+                        .replace('I', 'B') \
+                        .replace('L', 'B') \
+                        .replace('-', '') \
+                        .replace('(', '') \
+                        .replace(')', '')
+
+        seqs = [
+            x \
+                .replace('I', 'B') \
+                .replace('L', 'B') \
+                .replace('-', '') \
+                .replace('(', '') \
+                .replace(')', '')
+            for x in seqs
+        ]
+
+    contains_exact = any([x == truth_seq for x in seqs])
+
+    return contains_exact

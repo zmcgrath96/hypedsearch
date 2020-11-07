@@ -137,3 +137,19 @@ MPSpectrumID = namedtuple(
     ['b_hits', 'y_hits', 'spectrum', 'spectrum_id', 'ppm_tolerance', 'n'],
     defaults=[[], [], None, -1, 0, 0]
 )
+
+'''
+DEVFallOffEntry
+    Tuple for holding data about when an alignments drops off the components that 
+    could make it equal to the truth sequence. 
+
+    Properties:
+        hybrid:             (bool)
+        truth_sequence:     (str)
+        fall_off_operation: (str)
+'''
+DEVFallOffEntry = namedtuple(
+    'DEVFallOffEntry', 
+    ['hybrid', 'truth_sequence', 'fall_off_operation'], 
+    defaults=[False, '', '']
+)

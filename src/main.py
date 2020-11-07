@@ -35,6 +35,7 @@ def set_args(args) -> dict:
     digest = args.digest if not use_params else params.DIGEST
     missed_cleavages = args.missed_cleavages if not use_params else params.MISSED_CLEAVAGES
     debug = params.DEBUG
+    truth_set = params.TRUTH_SET
 
     ############## Argument checking ################
     if not utils.is_dir(spectra_folder):
@@ -61,7 +62,8 @@ def set_args(args) -> dict:
         'relative_abundance_filter': relative_abundance_filter,
         'digest': digest, 
         'missed_cleavages': missed_cleavages,
-        'DEBUG': debug
+        'DEBUG': debug, 
+        'truth_set': truth_set
     }
 
 ##############################################################
@@ -75,8 +77,8 @@ def main(args: object) -> None:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Tool for identifying proteins, both hybrid and non hybrid from MS/MS data')
 
-    parser.add_argument('--spectra_folder', dest='spectra_folder', type=str, default='./', help='Path to folder containing spectra files.')
-    parser.add_argument('--database_file', dest='database_file', type=str, default='./', help='Path to .fasta file containing proteins')
+    parser.add_argument('--spectra-folder', dest='spectra_folder', type=str, default='./', help='Path to folder containing spectra files.')
+    parser.add_argument('--database-file', dest='database_file', type=str, default='./', help='Path to .fasta file containing proteins')
     parser.add_argument('--output-dir', dest='output_dir', type=str, default='~/', help='Directory to save all figures. Default=~/')
     parser.add_argument('--params', dest='params', type=bool, default=False, help='Use the params.py file adjacent to main.py instead of using command line arguments. Default=False')
     parser.add_argument('--min-peptide-len', dest='min_peptide_len', type=int, default=5, help='Minimum peptide length to consider. Default=5')
@@ -84,9 +86,9 @@ if __name__ == '__main__':
     parser.add_argument('--tolerance', dest='tolerance', type=int, default=20, help='ppm tolerance to allow in search. Deafult=20')
     parser.add_argument('--precursor-tolerance', dest='precursor_tolerance', type=float, default=1, help='The mass (in Da) tolerance to accept when matching precursor masses. Default=1')
     parser.add_argument('--peak-filter', dest='peak_filter', type=int, default=0, help='The number of peaks to take from a spectrum. The most abundant peaks will be taken. Leave blank if you want no filter or to use relative abundance filter. Defualt=0')
-    parser.add_argument('--abundance_filter', dest='rel_abund_filter', type=float, default=0.0, help='Take only peaks from a spectrum where the abundance of the peak is >= the percentage give. Leave blank if you want no filter or to use peak filter. Default=0.0')
+    parser.add_argument('--abundance-filter', dest='rel_abund_filter', type=float, default=0.0, help='Take only peaks from a spectrum where the abundance of the peak is >= the percentage give. Leave blank if you want no filter or to use peak filter. Default=0.0')
     parser.add_argument('--digest', dest='digest', type=str, default='', help='The digest performed. Default=None')
-    parser.add_argument('--missed_cleavages', dest='missed_cleavages', type=int, default=0, help='Number of missed cleavages allowed. Default=0')
+    parser.add_argument('--missed-cleavages', dest='missed_cleavages', type=int, default=0, help='Number of missed cleavages allowed. Default=0')
     parser.add_argument('--verbose', dest='verbose', type=bool, default=True, help='Extra printing to console during run. Default=True')
     args = parser.parse_args()
     main(args)

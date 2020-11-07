@@ -40,3 +40,11 @@ DIGEST = 'trypsin'
 VERBOSE = True
 # Extra extra printing options for debugging the application
 DEBUG = False
+
+######################### DEV PARAMS #########################
+# "truth" set json file that has the "truth" sequence for every 
+# spectrum. Should be keyed by some id param that is extracted by the tool 
+# to check where the correct value falls off at. Format of the json is simple:
+# {spectrum_id: {'sequence': str, 'hybrid': bool}}
+# if the param is left blank or the file cannot be found, it is not used
+TRUTH_SET = ''

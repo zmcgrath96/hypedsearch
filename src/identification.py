@@ -1,14 +1,17 @@
-from src.objects import Database, Spectrum, Alignments, MPSpectrumID
+from src.objects import Database, Spectrum, Alignments, MPSpectrumID, DEVFallOffEntry
 from src.cppModules import gen_spectra
 from src.alignment import alignment
-from src.utils import ppm_to_da, to_percent, overlap_intervals, hashable_boundaries
+from src.utils import ppm_to_da, to_percent, overlap_intervals, hashable_boundaries, is_json, is_file
+from src import utils
 from src.scoring import scoring, mass_comparisons
 from src.preprocessing import digestion, merge_search, preprocessing_utils
 from src import database
+from src.file_io import JSON
 
 import time
 import multiprocessing as mp
 import copy
+import json
 
 # top results to keep for creating an alignment
 TOP_X = 50
@@ -18,7 +21,9 @@ def id_spectrum(
     db: Database,
     b_hits: dict, 
     y_hits: dict,
-    ppm_tolerance: int
+    ppm_tolerance: int, 
+    truth=None, 
+    fall_off=None
     ) -> Alignments:
     '''
     Create an alignment for a spectrum
@@ -74,6 +79,26 @@ def id_spectrum(
     filtered_b = [x[0] for x in b_results[:keep_b_count] if x[1] > 0]
     filtered_y = [x[0] for x in y_results[:keep_y_count] if x[1] > 0]
 
+    # if fall off and truth are not none, check to see that we can still make the truth seq
+    if truth is not None and fall_off is not None:
+
+        # pull out id, hybrid, and truth seq to make it easier
+        _id = spectrum.id
+        truth_seq = truth[_id]['sequence']
+        is_hybrid = truth[_id]['hybrid']
+
+        if not utils.DEV_contains_truth_parts(truth_seq, is_hybrid, filtered_b, filtered_y):
+
+            # make dev fall off object and add to fall off
+            fall_off[_id] = DEVFallOffEntry(
+                is_hybrid, 
+                truth_seq, 
+                'top_x_filtering'
+            )
+
+            # skip this entry all together
+            return Alignments(spectrum, [])
+
     # create an alignment for the spectrum
     return alignment.attempt_alignment(
         spectrum, 
@@ -81,7 +106,9 @@ def id_spectrum(
         filtered_b, 
         filtered_y, 
         ppm_tolerance=ppm_tolerance, 
-        n=5
+        n=5, 
+        truth=truth, 
+        fall_off=fall_off
     )
 
 
@@ -98,7 +125,9 @@ def id_spectra(
     precursor_tolerance=1, 
     digest='',
     missed_cleavages=0,
-    DEBUG=False
+    DEBUG=False, 
+    truth_set='', 
+    output_dir=''
 ) -> dict:
     '''
     Run a scoring and alignment on each spectra passed in and give spectra a sequence of 
@@ -118,6 +147,34 @@ def id_spectra(
         All information is keyed by the spectrum file name with scan number appended 
         and the values are list of boundariesequenceAligment objects
     '''
+    DEV = False
+    truth = None
+
+    # for dev use only. If a truth set is passed in, we can check where results
+    # drop off. 
+    if is_json(truth_set) and is_file(truth_set):
+        DEV = True
+        print(
+            '''
+DEV set to True. 
+Tracking when correct answer falls off. 
+Results are stored in a json named 'fall_off.json' in the specified output directory
+File will be of the form
+
+    {
+        spectrum_id: {
+            hybrid: bool, 
+            truth_sequence: str, 
+            fall_off_operation: str, 
+        }
+    }
+            '''
+        )
+        # load in the truth set
+        truth = json.load(open(truth_set, 'r'))
+
+    fall_off = None
+
     # build/load the database
     verbose and print('Loading database...')
     db = database.build(database_file)
@@ -141,19 +198,26 @@ def id_spectra(
     print('Initializing other processors...')
     results = mp.Manager().dict()
 
+    if DEV:
+        fall_off = mp.Manager().dict()
+        truth = mp.Manager().dict(truth)
+
     # start up processes and queue for parallelizing things
     q = mp.Manager().Queue()
     num_processes = max(1, mp.cpu_count() - 1)
     ps = [
         mp.Process(
             target=mp_id_spectrum, 
-            args=(q, copy.deepcopy(db)._replace(b_hits={}, y_hits={}), results)
+            args=(q, copy.deepcopy(db)._replace(b_hits={}, y_hits={}), results, fall_off, truth)
         ) for _ in range(num_processes) 
     ]
+
+    # start each of the process
     for p in ps:
         p.start()
     print('Done.')
 
+    # go through and id all spectra
     for i, spectrum in enumerate(spectra):
         # get b and y hits
         b_hits, y_hits = [], []
@@ -184,10 +248,28 @@ def id_spectra(
     # join them
     for p in ps:
         p.join()
+
+    # if we have set DEV, we need to dump this to a json
+    if DEV:
+        output_dir = output_dir + '/' if output_dir[-1] != '/' else output_dir
+
+        safe_write_fall_off = {}
+
+        # we need to convert all our DEVFallOffEntries to dicts
+        for k, v in fall_off.items():
+            safe_write_fall_off[k] = v._asdict()
+
+        JSON.save_dict(output_dir + 'fall_off.json', safe_write_fall_off)
         
     return results
 
-def mp_id_spectrum(input_q: mp.Queue, reduced_db_cp: Database, results: dict) -> None:
+def mp_id_spectrum(
+    input_q: mp.Queue, 
+    reduced_db_cp: Database, 
+    results: dict, 
+    fall_off=None, 
+    truth=None
+    ) -> None:
     '''
     Multiprocessing function for id a spectrum. Each entry in the 
     input_q must be an object of some type with values
@@ -210,11 +292,35 @@ def mp_id_spectrum(input_q: mp.Queue, reduced_db_cp: Database, results: dict) ->
         if next_entry == 'exit':
             return 
 
+        # if fall off is not none, see if we have the correct value in here
+        if truth is not None and fall_off is not None:
+
+            # pull out the id to make it easier
+            _id = next_entry.spectrum.id 
+
+            # pull out the truth sequence and the hybrid bool 
+            truth_seq = truth[_id]['sequence']
+            is_hybrid = truth[_id]['hybrid']
+
+            # see if we still have the correct results
+            if not utils.DEV_contains_truth_parts(truth_seq, is_hybrid, next_entry.b_hits, next_entry.y_hits):
+                
+                # create the fall off dev object
+                fall_off[_id] = DEVFallOffEntry(
+                    is_hybrid, truth_seq, 'mass_matching'
+                )
+            
+                # add an empty entry to the results
+                results[_id] = Alignments(next_entry.spectrum, [])
+                continue
+
         # otherwise run id spectrum 
         results[next_entry.spectrum_id] = id_spectrum(
             next_entry.spectrum, 
             reduced_db_cp, 
             next_entry.b_hits, 
             next_entry.y_hits, 
-            next_entry.ppm_tolerance
+            next_entry.ppm_tolerance, 
+            truth, 
+            fall_off
         )

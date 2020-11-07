@@ -54,7 +54,9 @@ def run(args: dict) -> None:
         digest=args['digest'], 
         missed_cleavages=args['missed_cleavages'],
         verbose=True, 
-        DEBUG=args['DEBUG']
+        DEBUG=args['DEBUG'], 
+        truth_set=args['truth_set'], 
+        output_dir=args['output_dir']
     )
     print('\nFinished search. Writting results to {}...'.format(args['output_dir']))
     summary.generate(matched_spectra, args['output_dir'])
