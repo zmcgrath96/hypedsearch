@@ -147,9 +147,10 @@ DEVFallOffEntry
         hybrid:             (bool)
         truth_sequence:     (str)
         fall_off_operation: (str)
+        meta_data:          (dict) any extra info for the operation
 '''
 DEVFallOffEntry = namedtuple(
     'DEVFallOffEntry', 
-    ['hybrid', 'truth_sequence', 'fall_off_operation'], 
-    defaults=[False, '', '']
+    ['hybrid', 'truth_sequence', 'fall_off_operation', 'meta_data'], 
+    defaults=[False, '', '', {}]
 )

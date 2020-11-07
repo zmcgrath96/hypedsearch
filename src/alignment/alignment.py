@@ -240,10 +240,16 @@ def attempt_alignment(
 
         if not utils.DEV_contains_truth_parts(truth_seq, is_hybrid, b_seqs, y_seqs):
 
+            # add metadata about what what the alignments were
+            metadata = {
+                'alignments': a
+            }
+
             fall_off[_id] = DEVFallOffEntry(
                 is_hybrid, 
                 truth_seq, 
-                'first_alignment_round'
+                'first_alignment_round', 
+                metadata
             )
 
             # exit the alignment
@@ -290,10 +296,18 @@ def attempt_alignment(
 
         if not utils.DEV_contains_truth_exact(truth_seq, is_hybrid, precursor_matches):
 
+            # add metadata about wwhat we had before filling in precursor and 
+            # what we ended up after
+            metadata = {
+                'sequences_before_precursor_filling': a, 
+                'sequences_after_precursor_filling': precursor_matches
+            }
+
             fall_off[_id] = DEVFallOffEntry(
                 is_hybrid, 
                 truth_seq, 
-                'precursor_filling'
+                'precursor_filling', 
+                metadata
             )
 
             # exit the alignment
@@ -325,10 +339,17 @@ def attempt_alignment(
         # second value is none because its no longer a hybrid
         if not utils.DEV_contains_truth_exact(truth_seq, is_hybrid, [x[0] for x in updated_hybrids]):
 
+            # add some metadata about what we had before and after ambiguous changing
+            metadata = {
+                'before_ambiguous_removal': hyba, 
+                'after_ambiguous_removal': updated_hybrids
+            }
+
             fall_off[_id] = DEVFallOffEntry(
                 is_hybrid, 
                 truth_seq, 
-                'removing_ambiguous_hybrids'
+                'removing_ambiguous_hybrids', 
+                metadata
             )
 
             # exit the alignment
@@ -420,11 +441,12 @@ def attempt_alignment(
             o.write(f'Turning matches into objects time: {OBJECTIFY_TIME} \t seconds/op: {OBJECTIFY_TIME/OBJECTIFY_COUNT}\n')
 
     # get only the top n alignments
-    top_n_alignments = sorted(
+    sorted_alignments = sorted(
         alignments, 
         key=lambda x: (x.total_score, x.b_score, x.y_score, 1/x.precursor_distance), 
         reverse=True
-    )[:n]
+    )
+    top_n_alignments = sorted_alignments[:n]
 
     # check to see if we lost the sequence
     if DEV:
@@ -437,10 +459,17 @@ def attempt_alignment(
         # the sequence is in x.sequence
         if not utils.DEV_contains_truth_exact(truth_seq, is_hybrid, [x.sequence for x in top_n_alignments]):
 
+            # add some metadata about which ones were accepted and which ones werent
+            metadata = {
+                'top_n': top_n_alignments, 
+                'not_top_n': sorted_alignments[n:]
+            }
+
             fall_off[_id] = DEVFallOffEntry(
                 is_hybrid, 
                 truth_seq, 
-                'taking_top_n_alignments'
+                'taking_top_n_alignments', 
+                metadata
             )
 
             # exit the alignment

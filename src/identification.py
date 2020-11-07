@@ -89,11 +89,22 @@ def id_spectrum(
 
         if not utils.DEV_contains_truth_parts(truth_seq, is_hybrid, filtered_b, filtered_y):
 
+            # add some metadata about what we kept and what fell off
+            metadata = {
+                'top_x_b_hits': filtered_b, 
+                'top_x_y_hits': filtered_y, 
+                'excluded_b_hits': [x[0] for x in b_results[keep_b_count:]],
+                'excluded_y_hits': [x[0] for x in y_results[keep_y_count:]], 
+                'cut_off_b_score': b_results[keep_b_count - 1][1], 
+                'cut_off_y_score': y_results[keep_y_count - 1][1]
+            }
+
             # make dev fall off object and add to fall off
             fall_off[_id] = DEVFallOffEntry(
                 is_hybrid, 
                 truth_seq, 
-                'top_x_filtering'
+                'top_x_filtering', 
+                metadata
             )
 
             # skip this entry all together
@@ -304,10 +315,16 @@ def mp_id_spectrum(
 
             # see if we still have the correct results
             if not utils.DEV_contains_truth_parts(truth_seq, is_hybrid, next_entry.b_hits, next_entry.y_hits):
+
+                # add some metadata. Add the b and y hits we DID have
+                metadata = {
+                    'initial_b_candidates': next_entry.b_hits, 
+                    'initial_y_candidates': next_entry.y_hits
+                }
                 
                 # create the fall off dev object
                 fall_off[_id] = DEVFallOffEntry(
-                    is_hybrid, truth_seq, 'mass_matching'
+                    is_hybrid, truth_seq, 'mass_matching', metadata
                 )
             
                 # add an empty entry to the results
