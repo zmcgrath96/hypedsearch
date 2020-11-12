@@ -413,9 +413,26 @@ def DEV_contains_truth_parts(truth_seq: str, hybrid: bool, b_seqs: list, y_seqs:
     has_left = False
     has_right = False
 
+    left_half = ''
+    right_half = ''
+
     # if the sequence is hybrid, replace all I and L with B
     if hybrid:
-        truth_seq = truth_seq.replace('I', 'B').replace('L', 'B')
+        
+        # split into left and right halves for later 
+        if '-' in truth_seq:
+            left_half = truth_seq.split('-')[0]
+            right_half = truth_seq.split('-')[1]
+
+        elif '(' in truth_seq and ')' in truth_seq:
+            left_half = truth_seq.split(')')[0].replace('(', '')
+            right_half = truth_seq.split('(')[1].replace(')', '')
+
+        else: 
+            left_half = truth_seq[:2]
+            right_half = truth_seq[-2:]
+
+        truth_seq = truth_seq.replace('I', 'B').replace('L', 'B').replace('-', '').replace('(', '').replace(')', '')
 
         b_seqs = [x.replace('I', 'B').replace('L', 'B') for x in b_seqs]
         y_seqs = [x.replace('I', 'B').replace('L', 'B') for x in y_seqs]
@@ -431,6 +448,17 @@ def DEV_contains_truth_parts(truth_seq: str, hybrid: bool, b_seqs: list, y_seqs:
 
     # if its a hybrid, both left and right must be true, otherwise just one will do 
     if hybrid:
+        
+        # if we dont' have complete matches, thats ok. If we can get the halves 
+        # of the "truth" in some longer b or y seq, thats good enough
+        if not has_left:
+            left_half = left_half.replace('I', 'B').replace('L', 'B')
+            has_left = any([left_half == x[:len(left_half)] for x in b_seqs])
+
+        if not has_right:
+            right_half = right_half.replace('I', 'B').replace('L', 'B')
+            has_right = any([right_half == x[-len(right_half):] for x in y_seqs])
+
         return has_left and has_right
 
     return has_left or has_right
