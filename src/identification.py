@@ -22,6 +22,7 @@ def id_spectrum(
     b_hits: dict, 
     y_hits: dict,
     ppm_tolerance: int, 
+    precursor_tolerance: int, 
     truth=None, 
     fall_off=None
     ) -> Alignments:
@@ -36,9 +37,12 @@ def id_spectrum(
         matched_masses_b:   (dict) the mapping from boundaries -> kmers for b ions
         matched_masses_y:   (dict) the mapping from boundaries -> kmers for y ions
         ppm_tolerance:      (int) the tolerance to allow for scoring algs
+        precursor_tolerance:(int) the toleraence to allow when matching precursor
     Outputs:
         (Alignments) the created alignments for this spectrum
     '''
+    # convert the ppm tolerance of the precursor to an int for the rest of the time
+    precursor_tolerance = utils.ppm_to_da(spectrum.precursor_mass, precursor_tolerance)
 
     # score and sort these results
     b_results = sorted([
@@ -117,6 +121,7 @@ def id_spectrum(
         filtered_b, 
         filtered_y, 
         ppm_tolerance=ppm_tolerance, 
+        precursor_tolerance=precursor_tolerance,
         n=5, 
         truth=truth, 
         fall_off=fall_off
@@ -133,7 +138,7 @@ def id_spectra(
     peak_filter=0, 
     relative_abundance_filter=0.0,
     ppm_tolerance=20, 
-    precursor_tolerance=1, 
+    precursor_tolerance=10, 
     digest='',
     missed_cleavages=0,
     DEBUG=False, 
@@ -144,7 +149,7 @@ def id_spectra(
     Run a scoring and alignment on each spectra passed in and give spectra a sequence of 
     Amino Acids that best describes the spectrum
 
-    indicesnputs:
+    Inputs:
         spectra_files:          (list of strings) of file names of spectra
         database_file:          (string) full path to a .fasta database
     kwargs: 
@@ -152,7 +157,7 @@ def id_spectra(
         min_peptide_len:        (int) minimum length sequence to consider for alignment. Default=5
         max_peptide_len:        (int) maximum length sequence to consider for alignemtn. Default=20
         ppm_tolerance:          (int) tolerance for ppm to include in search. Default=20
-        precursor_tolerance:    (float) the tolerance to allow when matching precusor masses. Default=1
+        precursor_tolerance:    (int) the tolerance to allow when matching precusor masses. Default=10
     Outputs:
         dict containing the results. 
         All information is keyed by the spectrum file name with scan number appended 
@@ -246,7 +251,7 @@ File will be of the form
                 y_hits += matched_masses_y[b]
 
         # create a named tuple to put in the database
-        o = MPSpectrumID(b_hits, y_hits, spectrum, i, ppm_tolerance, 5)
+        o = MPSpectrumID(b_hits, y_hits, spectrum, i, ppm_tolerance, precursor_tolerance, 5)
         q.put(o)
 
     while len(results) < len(spectra):
@@ -338,6 +343,7 @@ def mp_id_spectrum(
             next_entry.b_hits, 
             next_entry.y_hits, 
             next_entry.ppm_tolerance, 
+            next_entry.precursor_tolerance,
             truth, 
             fall_off
         )

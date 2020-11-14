@@ -203,7 +203,7 @@ def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3, tolerance=1) 
                 if pd <= tolerance:
                     attempted.append(new_seq)
 
-      # otherwise, just take up to gap off from the left and the right
+    # otherwise, just take up to gap off from the left and the right
     else:
         for i in range(1, gap):
             new_seq1 = sequence[i:]

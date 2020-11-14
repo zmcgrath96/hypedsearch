@@ -126,16 +126,17 @@ MPSpectrumID
     Tuple for passing params to the processes during identification
 
     Properties:
-        b_hits:         (list)  kmers
-        y_hits:         (list)  kmers
-        spectrum:       (Spectrum)
-        spectrum_id:    (int)
-        ppm_tolerance:  (int)
-        n:              (int)
+        b_hits:                 (list)  kmers
+        y_hits:                 (list)  kmers
+        spectrum:               (Spectrum)
+        spectrum_id:            (int)
+        ppm_tolerance:          (int)
+        precursor_tolerance:    (int)
+        n:                      (int)
 '''
 MPSpectrumID = namedtuple(
     'MPSpectrumID', 
-    ['b_hits', 'y_hits', 'spectrum', 'spectrum_id', 'ppm_tolerance', 'n'],
+    ['b_hits', 'y_hits', 'spectrum', 'spectrum_id', 'ppm_tolerance', 'precursor_tolerance', 'n'],
     defaults=[[], [], None, -1, 0, 0]
 )
 

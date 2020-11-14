@@ -22,8 +22,8 @@ def run(args: dict) -> None:
             output_dir:                 (str) full path the the directory to save output to
             min_peptide_len:            (int) minimum peptide length to consider
             max_peptide_len:            (int) maximum peptide length to consider
-            tolerance:                  (float) the ppm tolerance to allow in search
-            precursor_tolerance:        (float) the tolerance (in Da) to allow when matching precursors
+            tolerance:                  (int) the ppm tolerance to allow in search
+            precursor_tolerance:        (int) the ppm tolerance to allow when matching precursors
             peak_filter:                (int) the number of peaks to filter by 
             relative_abundance_filter:  (float) the percentage of the total abundance a peak must
                                             be to pass the filter

@@ -248,7 +248,9 @@ def attempt_alignment(
 
             # add metadata about what what the alignments were
             metadata = {
-                'alignments': a
+                'alignments': a, 
+                'before_alignments_b': b_seqs, 
+                'before_alignments_y': y_seqs
             }
 
             fall_off[_id] = DEVFallOffEntry(
@@ -307,7 +309,9 @@ def attempt_alignment(
             metadata = {
                 'sequences_before_precursor_filling': a, 
                 'sequences_after_precursor_filling': precursor_matches, 
-                'observed_precursor_mass': spectrum.precursor_mass
+                'observed_precursor_mass': spectrum.precursor_mass, 
+                'observed_percursor_charge': spectrum.precursor_charge, 
+                'allowed_gap': allowed_gap
             }
 
             fall_off[_id] = DEVFallOffEntry(

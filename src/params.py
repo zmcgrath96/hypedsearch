@@ -14,7 +14,7 @@ MAX_PEPTIDE_LEN = 30
 # tolerance (in ppm) to allow when matching m/z peaks
 PPM_TOLERANCE = 20
 # tolerance (in Da) to allow when matching precursor masses
-PRECURSOR_TOLERANCE = 3
+PRECURSOR_TOLERANCE = 10
 #-----------------------------------------------------------
 # NOTE: when using the filtering options below (either the peak
 # filtering or the abundance filtering), only set 1 of the values.
