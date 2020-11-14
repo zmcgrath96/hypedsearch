@@ -3,6 +3,7 @@ from src.scoring import scoring
 
 from src import database
 from src import gen_spectra
+from src import utils
 
 import re
 import math
@@ -388,3 +389,56 @@ def get_parents(seq: str, db: Database) -> (list, list):
 
     # otherwise just look up the one for the full sequence
     return (get_sources(seq), None)
+
+def extend_non_hybrid(seq: str, spectrum: Spectrum, ion: str, db: Database) -> list:
+    '''
+    Extend a non hybrid sequence to try and match the correct length. 
+    b ions will be extended to the right, and y ions to the left
+
+    Inputs:
+        seq:        (str) sequence to be extended
+        spectrum:   (Spectrum) the observed spectrum
+        ion:        (str) the ion type of the sequence to extend. Either 'b' or 'y'
+        db:         (Database)
+    Outputs:
+        (list) all possible extensions of the sequence
+    '''
+    extensions = []
+
+    # first estimate the extension length
+    extension_len = utils.predicted_len_precursor(spectrum, seq) - len(seq)
+
+    # if the extension length <= 0, return the sequence 
+    if extension_len <= 0:
+        return [seq]
+
+    # if we are going to add 3 times the current length of it, give up, not worth it
+    if extension_len >= len(seq) * 3:
+        return []
+
+    # get the sources
+    parents, _ = get_parents(seq, db)
+
+    # go through each parent
+    for parent in parents:
+
+        # get the entry. entry has 'description' and 'sequence' properties
+        entry = database.get_entry_by_name(db, parent)[0]
+
+        # get all occurances
+        seq_idxes = [m.start() for m in re.finditer(seq, entry.sequence)]
+        
+        # go through all of the indices and extend
+        for seq_idx in seq_idxes:
+            
+            # extend to left
+            if 'y' in ion:
+                min_idx = max(0, seq_idx - extension_len)
+                extensions.append(entry.sequence[min_idx:len(seq) + seq_idx])
+
+            # extend to the right
+            else:
+                max_idx = min(len(seq), seq_idx + len(seq) + extension_len)
+                extensions.append(entry.sequence[seq_idx:max_idx])
+
+    return extensions

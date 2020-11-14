@@ -4,6 +4,9 @@ from itertools import product
 import numpy as np
 from collections import namedtuple
 
+from src.objects import Spectrum
+from src import gen_spectra
+
 import math
 
 def make_valid_dir_string(dir_path: str) -> str:
@@ -382,6 +385,25 @@ def predicted_len(max_mass: float) -> int:
         (int) predicted length
     '''
     return math.ceil(max_mass / (57.021464))
+
+def predicted_len_precursor(spectrum: Spectrum, sequence: str) -> int:
+    '''
+    Make a prediction of the peptide length give a spectrum and the current 
+    sequence. 
+
+    Inputs:
+        spectrum: (Spectrum)
+        sequence: (str)
+    Outputs:
+        int
+    '''
+    # first get the theoretical precursor of the sequence
+    theoretical_prec = gen_spectra.get_precursor(sequence, spectrum.precursor_charge)
+
+    # now we can estimate length   spec/seq = real/theory
+    estimated_len = int(len(sequence) * (spectrum.precursor_mass / theoretical_prec))
+
+    return estimated_len
 
 def hashable_boundaries(boundaries: list) -> str:
     '''

@@ -123,7 +123,7 @@ def same_protein_alignment(seq1: str, seq2: str, parent_sequence: str) -> (str, 
     nonhybrid_alignments.sort(key=lambda x: len(x))
     return (nonhybrid_alignments[0], None)
 
-def align_b_y(b_results: list, y_results: list, db: Database) -> list:
+def align_b_y(b_results: list, y_results: list, spectrum: Spectrum, db: Database) -> list:
     '''
     Take 2 lists of sequences: one from the N terminus side (b_results) and 
     one from the C terminus side (y_results). Lookup the sequences in the database.
@@ -134,13 +134,19 @@ def align_b_y(b_results: list, y_results: list, db: Database) -> list:
     Inputs:
         b_results:  (list of str) sequences found from b hits
         y_results:  (list of str) sequences fround from y hits
+        spectrum:   (Spectrum) observed
         db:         (Database) source of the sequences
     Outputs:
         (list) tuples of aligned sequences. First entry is the nonhybrid, second (if hybrid)
                 has the hybrid characters -(). If not hybrid, it is None
     '''
-    # try and create an alignment from each b and y sequence. Add all of the individual ones to start off with
-    spec_alignments = [(seq, None) for seq in b_results + y_results]
+    # try and create an alignment from each extended b and y ion sequence
+    spec_alignments = []
+    #[item for sublist in t for item in sublist]
+    for seq in b_results:
+        spec_alignments += [(x, None) for x in alignment_utils.extend_non_hybrid(seq, spectrum, 'b', db)]
+    for seq in y_results:
+        spec_alignments += [(x, None) for x in alignment_utils.extend_non_hybrid(seq, spectrum, 'y', db)]
 
     for b_seq in b_results:
 
@@ -224,7 +230,7 @@ def attempt_alignment(
 
     # run the first round of alignments
     st = time.time()
-    a = align_b_y(b_hits, y_hits, db)
+    a = align_b_y(b_hits, y_hits, spectrum, db)
 
     # if we have truth and fall_off, check for them
     if DEV:
@@ -465,8 +471,8 @@ def attempt_alignment(
 
             # add some metadata about which ones were accepted and which ones werent
             metadata = {
-                'top_n': top_n_alignments, 
-                'not_top_n': sorted_alignments[n:]
+                'top_n': [x._asdict() for x in top_n_alignments], 
+                'not_top_n': [x._asdict() for x in sorted_alignments[n:]]
             }
 
             fall_off[_id] = DEVFallOffEntry(
