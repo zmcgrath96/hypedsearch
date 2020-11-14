@@ -300,7 +300,8 @@ def attempt_alignment(
             # what we ended up after
             metadata = {
                 'sequences_before_precursor_filling': a, 
-                'sequences_after_precursor_filling': precursor_matches
+                'sequences_after_precursor_filling': precursor_matches, 
+                'observed_precursor_mass': spectrum.precursor_mass
             }
 
             fall_off[_id] = DEVFallOffEntry(
@@ -373,7 +374,10 @@ def attempt_alignment(
         tracker[aligned_pair[0]] = True
 
         # get the precursor distance. If its too big, continue
-        p_d = scoring.precursor_distance(spectrum.precursor_mass, gen_spectra.get_precursor(aligned_pair[0]))
+        p_d = scoring.precursor_distance(
+            spectrum.precursor_mass, 
+            gen_spectra.get_precursor(aligned_pair[0], spectrum.precursor_charge)
+        )
 
         # get the final score of these sequences
         b_score = scoring.score_sequence(

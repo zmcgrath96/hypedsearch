@@ -1,4 +1,4 @@
-from src.constants import AMINO_ACIDS, WATER_MASS, SINGLY_CHARGED_B_BASE, SINGLY_CHARGED_Y_BASE, DOUBLY_CHARGED_B_BASE, DOUBLY_CHARGED_Y_BASE, INTEGER_ORDERED_AMINO_ACIDS
+from src.constants import AMINO_ACIDS, WATER_MASS, SINGLY_CHARGED_B_BASE, SINGLY_CHARGED_Y_BASE, DOUBLY_CHARGED_B_BASE, DOUBLY_CHARGED_Y_BASE, INTEGER_ORDERED_AMINO_ACIDS, PROTON_MASS
 
 import numpy as np
 
@@ -85,7 +85,7 @@ def calc_masses(sequence: str, charge=None, ion=None) -> (list, float):
         total +=  AMINO_ACIDS[sequence[i]]
 
     pre_mz_charge = 2 if charge is None else charge
-    pre_mz = (total+pre_mz_charge*1.0072764)/pre_mz_charge   
+    pre_mz = (total+pre_mz_charge*PROTON_MASS)/pre_mz_charge   
     
     if ion is None or ion == 'b': 
         masses += b_ions(sequence, charge=charge)
@@ -102,7 +102,7 @@ def max_mass(seqeunce: str, ion: str, charge: int) -> float:
     Inputs:
         sequence:   (str) the sequence to generate the max mass for
         ion:        (str) the ion type for which we calculate the mass. Options: 'b', 'y'
-        charge:     (int) the charge to calculate the mass for. Options: 1, 2
+        charge:     (int) the charge to calculate the mass for. Options are: [1, 2]
     Outputs:
         (float) the maximum mass
     '''
@@ -111,23 +111,19 @@ def max_mass(seqeunce: str, ion: str, charge: int) -> float:
         total = SINGLY_CHARGED_Y_BASE if charge == 1 else DOUBLY_CHARGED_Y_BASE
         total += sum([AMINO_ACIDS[aa] for aa in seqeunce])
 
-        # divide by 2 if doubly charged
-        if charge == 2:
-            total /= 2
-        return total
+        # divide by charge
+        mz = total / charge
+        return mz
 
     # otherwise do the b
     total = SINGLY_CHARGED_B_BASE if charge == 1 else DOUBLY_CHARGED_B_BASE
     total += sum([AMINO_ACIDS[aa] for aa in seqeunce])
 
-    # divide by 2 if doubly
-    if charge == 2:
-        total /= 2
-    
-    return total
+    # divide by charge
+    mz = total / charge
+    return mz
 
-
-def get_precursor(sequence: str, charge=2) -> float:
+def get_precursor(sequence: str, charge=1) -> float:
     '''
     Calculate JUST the precursor mass of the input sequence at the charge provided.
 
@@ -141,9 +137,8 @@ def get_precursor(sequence: str, charge=2) -> float:
     total = WATER_MASS
     for aa in sequence:
         total +=  AMINO_ACIDS[aa]
-
-    pre_mz_charge = 2 if charge is None else charge
-    return (total+pre_mz_charge*1.0072764)/pre_mz_charge  
+    # proton mass is 1.00...
+    return (total + charge * PROTON_MASS) / charge  
 
 
 def gen_spectrum(sequence: str, charge=None, ion=None) -> list:

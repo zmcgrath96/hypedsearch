@@ -114,7 +114,10 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
                                         # create the new sequence and get the new precursor mass
                                         new_seq = align_overlaps(new_left, new_right)
                                         
-                                        new_prec = gen_spectra.get_precursor(new_seq.replace('(', '').replace(')', '').replace('-', ''))
+                                        new_prec = gen_spectra.get_precursor(
+                                            new_seq.replace('(', '').replace(')', '').replace('-', ''), 
+                                            spectrum.precursor_charge
+                                        )
                                         
                                         # find the precursor distance, and if its close enough, keep it 
                                         pd = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
@@ -143,7 +146,7 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
                             # get the new sequence and its precursor mass. Add it to filled in list
                             new_seq = flanking_pair[0][gap-i:] + sequence + flanking_pair[1][:j]
 
-                            new_prec = gen_spectra.get_precursor(new_seq)
+                            new_prec = gen_spectra.get_precursor(new_seq, spectrum.precursor_charge)
 
                             # get the precursor distance, and if it is close enough, keep it
                             p_d = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
@@ -187,7 +190,10 @@ def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3, tolerance=1) 
                 new_seq = align_overlaps(new_left, new_right)
                 
                 # get the new precursor
-                new_prec = gen_spectra.get_precursor(new_seq.replace('-', '').replace('(', '').replace(')', ''))
+                new_prec = gen_spectra.get_precursor(
+                    new_seq.replace('-', '').replace('(', '').replace(')', ''),
+                    spectrum.precursor_charge
+                )
                 
                 # get the new precursor distance
                 pd = scoring.precursor_distance(spectrum.precursor_mass, new_prec)
@@ -203,8 +209,8 @@ def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3, tolerance=1) 
             new_seq2 = sequence[:-i]
             
             # cacluate the new precurosrs and add to attempted if within the tolerance
-            new_prec1 = gen_spectra.get_precursor(new_seq1)
-            new_prec2 = gen_spectra.get_precursor(new_seq2)
+            new_prec1 = gen_spectra.get_precursor(new_seq1, spectrum.precursor_charge)
+            new_prec2 = gen_spectra.get_precursor(new_seq2, spectrum.precursor_charge)
             
             pd1 = scoring.precursor_distance(spectrum.precursor_mass, new_prec1)
             pd2 = scoring.precursor_distance(spectrum.precursor_mass, new_prec2)
@@ -317,7 +323,7 @@ def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
     clean_seq = sequence.replace('-', '').replace('(', '').replace(')', '')
 
     # get the theoretical precursor mass
-    theory_precrusor = gen_spectra.get_precursor(clean_seq)
+    theory_precrusor = gen_spectra.get_precursor(clean_seq, spectrum.precursor_charge)
 
     # get the precursor distance 
     p_d = scoring.precursor_distance(spectrum.precursor_mass, theory_precrusor)

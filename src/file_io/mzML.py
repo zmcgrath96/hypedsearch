@@ -105,22 +105,18 @@ def read(filename: str, peak_filter=0, relative_abundance_filter=0) -> list:
         # get the total intensity
         ti = sum(abundances)
 
-        # get the precursor
+        # get the precursor and its charge
+        # we will assume its the first entry in the list
         precursor = None
-        precursor_list = content['precursorList']['precursor']
-        for p in precursor_list:
-            for selected_ion in p['selectedIonList']['selectedIon']:
-                charge_state = int(selected_ion['charge state'])
+        precursor_charge = 0
 
-                # we want to make the precursor the doubly charged
-                # find the factor to take it to 2
-                multiplier = charge_state / 2
+        if not len(content['precursorList']['precursor']) or not len(content['precursorList']['precursor'][0]['selectedIonList']['selectedIon']):
+            precursor = max(masses)
+            precursor_charge = 1
 
-                precursor = float(selected_ion['selected ion m/z']) * multiplier
-            
-        precursor = precursor if precursor is not None else max(masses)/2
-
-        masses = [round(x, 4) for x in masses]
+        else:
+            precursor = float(content['precursorList']['precursor'][0]['selectedIonList']['selectedIon'][0]['selected ion m/z'])
+            precursor_charge = int(content['precursorList']['precursor'][0]['selectedIonList']['selectedIon'][0]['charge state'])
 
         # get the id
         id_ = content.get('id', '')
@@ -132,6 +128,7 @@ def read(filename: str, peak_filter=0, relative_abundance_filter=0) -> list:
             int(content['ms level']),
             int(content['index']),
             precursor,
+            precursor_charge,
             filename, 
             id_
         ))
