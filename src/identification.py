@@ -141,6 +141,7 @@ def id_spectra(
     precursor_tolerance=10, 
     digest='',
     missed_cleavages=0,
+    cores=1,
     DEBUG=False, 
     truth_set='', 
     output_dir=''
@@ -158,6 +159,7 @@ def id_spectra(
         max_peptide_len:        (int) maximum length sequence to consider for alignemtn. Default=20
         ppm_tolerance:          (int) tolerance for ppm to include in search. Default=20
         precursor_tolerance:    (int) the tolerance to allow when matching precusor masses. Default=10
+        cores:                  (int) the number of cores allowed to use
     Outputs:
         dict containing the results. 
         All information is keyed by the spectrum file name with scan number appended 
@@ -211,59 +213,102 @@ File will be of the form
     matched_masses_b, matched_masses_y, db = merge_search.match_masses(boundaries, db, max_peptide_len)
 
     # keep track of the alingment made for every spectrum
-    print('Initializing other processors...')
-    results = mp.Manager().dict()
+    results = {}
 
     if DEV:
+        fall_off = {}
         fall_off = mp.Manager().dict()
         truth = mp.Manager().dict(truth)
 
-    # start up processes and queue for parallelizing things
-    q = mp.Manager().Queue()
-    num_processes = max(1, mp.cpu_count() - 1)
-    ps = [
-        mp.Process(
-            target=mp_id_spectrum, 
-            args=(q, copy.deepcopy(db)._replace(b_hits={}, y_hits={}), results, fall_off, truth)
-        ) for _ in range(num_processes) 
-    ]
+    # if we only get 1 core, don't do the multiporcessing bit
+    if cores == 1:
+        # go through and id all spectra
+        for i, spectrum in enumerate(spectra):
 
-    # start each of the process
-    for p in ps:
-        p.start()
-    print('Done.')
+            print(f'Creating alignment for spectrum {i+1}/{len(spectra)} [{to_percent(i+1, len(spectra))}%]', end='\r')
 
-    # go through and id all spectra
-    for i, spectrum in enumerate(spectra):
-        # get b and y hits
-        b_hits, y_hits = [], []
-        for mz in spectrum.spectrum:
+            # get b and y hits
+            b_hits, y_hits = [], []
+            for mz in spectrum.spectrum:
 
-            # get the correct boundary
-            mapped = mz_mapping[mz]
-            b = boundaries[mapped]
-            b = hashable_boundaries(b)
+                # get the correct boundary
+                mapped = mz_mapping[mz]
+                b = boundaries[mapped]
+                b = hashable_boundaries(b)
 
-            if b in matched_masses_b:
-                b_hits += matched_masses_b[b]
+                if b in matched_masses_b:
+                    b_hits += matched_masses_b[b]
 
-            if b in matched_masses_y:
-                y_hits += matched_masses_y[b]
+                if b in matched_masses_y:
+                    y_hits += matched_masses_y[b]
 
-        # create a named tuple to put in the database
-        o = MPSpectrumID(b_hits, y_hits, spectrum, i, ppm_tolerance, precursor_tolerance, 5)
-        q.put(o)
+            # pass it into id_spectrum
+            results[spectrum.id] = id_spectrum(
+                spectrum, 
+                db, 
+                b_hits, 
+                y_hits, 
+                ppm_tolerance, 
+                precursor_tolerance,
+                truth, 
+                fall_off
+            )
 
-    while len(results) < len(spectra):
-        print(f'\rCreating an alignment for {len(results)}/{len(spectra)} [{to_percent(len(results), len(spectra))}%]', end='')
-        time.sleep(1)
+    else:
 
-    # now send 'exit' message to all our processes
-    [q.put('exit') for _ in range(num_processes)]
+        print('Initializing other processors...')
+        results = mp.Manager().dict()
 
-    # join them
-    for p in ps:
-        p.join()
+        if DEV:
+            fall_off = mp.Manager().dict()
+            truth = mp.Manager().dict(truth)
+
+        # start up processes and queue for parallelizing things
+        q = mp.Manager().Queue()
+        num_processes = cores
+        ps = [
+            mp.Process(
+                target=mp_id_spectrum, 
+                args=(q, copy.deepcopy(db)._replace(b_hits={}, y_hits={}), results, fall_off, truth)
+            ) for _ in range(num_processes) 
+        ]
+
+        # start each of the process
+        for p in ps:
+            p.start()
+        print('Done.')
+
+        # go through and id all spectra
+        for i, spectrum in enumerate(spectra):
+            # get b and y hits
+            b_hits, y_hits = [], []
+            for mz in spectrum.spectrum:
+
+                # get the correct boundary
+                mapped = mz_mapping[mz]
+                b = boundaries[mapped]
+                b = hashable_boundaries(b)
+
+                if b in matched_masses_b:
+                    b_hits += matched_masses_b[b]
+
+                if b in matched_masses_y:
+                    y_hits += matched_masses_y[b]
+
+            # create a named tuple to put in the database
+            o = MPSpectrumID(b_hits, y_hits, spectrum, i, ppm_tolerance, precursor_tolerance, 5)
+            q.put(o)
+
+        while len(results) < len(spectra):
+            print(f'\rCreating an alignment for {len(results)}/{len(spectra)} [{to_percent(len(results), len(spectra))}%]', end='')
+            time.sleep(1)
+
+        # now send 'exit' message to all our processes
+        [q.put('exit') for _ in range(num_processes)]
+
+        # join them
+        for p in ps:
+            p.join()
 
     # if we have set DEV, we need to dump this to a json
     if DEV:

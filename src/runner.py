@@ -11,6 +11,8 @@ from os import walk
 from src import identification
 from src import summary
 
+import multiprocessing as mp
+
 def run(args: dict) -> None:
     '''
     Executing function for the program
@@ -30,6 +32,7 @@ def run(args: dict) -> None:
             digest:                     (str) the digest performed
             missed_cleavages:           (int) the number of missed cleavages allowed in digest
             verbose:                    (bool) extra printing
+            cores:                      (int) the number of cores allowed to use
             DEBUG:                      (bool) debuging print messages. Default=False
     Outputs:
         None
@@ -43,6 +46,10 @@ def run(args: dict) -> None:
             spectra_files.append(args['spectra_folder'] + fname)
         break
 
+    # make sure cores is: 1 <= cores <= cpu cores
+    cores = max(1, args['cores'])
+    cores = min(cores, mp.cpu_count() - 1)
+
     matched_spectra = identification.id_spectra(
         spectra_files, args['database_file'], 
         min_peptide_len=args['min_peptide_len'], 
@@ -55,6 +62,7 @@ def run(args: dict) -> None:
         missed_cleavages=args['missed_cleavages'],
         verbose=True, 
         DEBUG=args['DEBUG'], 
+        cores=cores,
         truth_set=args['truth_set'], 
         output_dir=args['output_dir']
     )

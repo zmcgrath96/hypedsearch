@@ -34,6 +34,7 @@ def set_args(args) -> dict:
     relative_abundance_filter = args.rel_abund_filter if not use_params else params.RELATIVE_ABUNDANCE_FILTER
     digest = args.digest if not use_params else params.DIGEST
     missed_cleavages = args.missed_cleavages if not use_params else params.MISSED_CLEAVAGES
+    cores = args.cores if not use_params else params.CORES
     debug = params.DEBUG
     truth_set = params.TRUTH_SET
 
@@ -63,6 +64,7 @@ def set_args(args) -> dict:
         'digest': digest, 
         'missed_cleavages': missed_cleavages,
         'DEBUG': debug, 
+        'cores': cores,
         'truth_set': truth_set
     }
 
@@ -90,5 +92,6 @@ if __name__ == '__main__':
     parser.add_argument('--digest', dest='digest', type=str, default='', help='The digest performed. Default=None')
     parser.add_argument('--missed-cleavages', dest='missed_cleavages', type=int, default=0, help='Number of missed cleavages allowed. Default=0')
     parser.add_argument('--verbose', dest='verbose', type=bool, default=True, help='Extra printing to console during run. Default=True')
+    parser.add_argument('--cores', dest='cores', type=int, default=1, help='The number of cores allowed to use when searching. Uses at least 1 and at most the number of available cores. Default=1')
     args = parser.parse_args()
     main(args)

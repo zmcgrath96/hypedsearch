@@ -118,6 +118,8 @@ def make_database_set(proteins: list, max_len: int) -> (list, list, list):
         index_list_y.append(len(kmers) + offset)
         kmer_list_y += kmers
 
+    print('Done')
+
     return db_list_b, index_list_b, kmer_list_b, db_list_y, index_list_y, kmer_list_y, kmer_set
 
 

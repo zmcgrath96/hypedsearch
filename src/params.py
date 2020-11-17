@@ -40,6 +40,8 @@ DIGEST = 'trypsin'
 VERBOSE = True
 # Extra extra printing options for debugging the application
 DEBUG = False
+# the number of cores to allow in the search. Should either be a number 
+CORES = 1
 
 ######################### DEV PARAMS #########################
 # "truth" set json file that has the "truth" sequence for every 
