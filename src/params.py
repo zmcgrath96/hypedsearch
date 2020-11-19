@@ -49,4 +49,4 @@ CORES = 1
 # to check where the correct value falls off at. Format of the json is simple:
 # {spectrum_id: {'sequence': str, 'hybrid': bool}}
 # if the param is left blank or the file cannot be found, it is not used
-TRUTH_SET = ''
+TRUTH_SET = '/Users/zacharymcgrath/Desktop/Experiment output/fall_off/specmil_truth_set.json'
