@@ -268,7 +268,7 @@ def attempt_alignment(
     DEBUG and print(f'First alignment round took {time.time() - st} time resulting in {len(a)} alignments')
 
     # get the predicted length of the sequence and allow for a 25% gap to be filled in
-    predicted_len = utils.predicted_len(max(spectrum.spectrum))
+    predicted_len = utils.predicted_len(spectrum.precursor_mass, spectrum.precursor_charge)
     allowed_gap = math.ceil(predicted_len * .25)
 
     # Limit our search to things that match our precursor mass
@@ -455,9 +455,11 @@ def attempt_alignment(
             o.write(f'Turning matches into objects time: {OBJECTIFY_TIME} \t seconds/op: {OBJECTIFY_TIME/OBJECTIFY_COUNT}\n')
 
     # get only the top n alignments
+    # if all scores are equal, float the non hybrids to the top
+    # non hybrid alignment objects have 6 entries, hybrids have 8, so doing 1/len(x) puts non hybrids before hybrids
     sorted_alignments = sorted(
         alignments, 
-        key=lambda x: (x.total_score, x.b_score, x.y_score, 1/x.precursor_distance), 
+        key=lambda x: (x.total_score, 1/len(x), x.b_score, x.y_score, 1/x.precursor_distance), 
         reverse=True
     )
     top_n_alignments = sorted_alignments[:n]

@@ -56,6 +56,39 @@ def get_proteins_with_subsequence(db: Database, sequence: str) -> list:
     '''
     return list(set(db.kmers[sequence]))
 
+def get_proteins_with_subsequence_ion(db: Database, sequence: str, ion: str) -> list:
+    '''
+    Find all protein names that have the subsequence. Recursivley search
+    if the full sequence is not found immediately
+
+    Inputs:
+        db:         (Database) holder of the sequences
+        sequence:   (str) the subsequence to look for
+        ion:        (str) the ion type. {'b', 'y'}
+    Outputs:
+        (list) string names of the source proteins
+    '''
+
+    hits = []
+    subseq = sequence
+
+    while len(hits) == 0 and len(subseq) > 0:
+
+        # get some hits
+        hs = get_proteins_with_subsequence(db, subseq)
+
+        # make sure that these hits HAVE the full sequence
+        for h in hs:
+            for entry in get_entry_by_name(db, h):
+                if sequence in entry.sequence:
+                    hits.append(h)
+
+        # if no hits, reduce the subseq according to the ion
+        if len(hits) == 0:
+            subseq = subseq[1:] if ion == 'y' else subseq[:-1]
+
+    return hits
+
 def get_entry_by_name(db: Database, name: str) -> namedtuple:
     '''
     Get a namedtuple of the protein entry from the database. 

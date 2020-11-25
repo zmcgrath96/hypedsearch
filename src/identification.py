@@ -269,7 +269,7 @@ File will be of the form
         ps = [
             mp.Process(
                 target=mp_id_spectrum, 
-                args=(q, copy.deepcopy(db)._replace(b_hits={}, y_hits={}), results, fall_off, truth)
+                args=(q, db._replace(b_hits={}, y_hits={}), results, fall_off, truth)
             ) for _ in range(num_processes) 
         ]
 

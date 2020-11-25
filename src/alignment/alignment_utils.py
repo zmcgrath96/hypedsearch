@@ -73,7 +73,8 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
     filled_in  = []
 
     # get the parents of the sequence(s) and add or subtract amino acids
-    parents = get_parents(sequence, db)
+    parents = get_parents(sequence, db, 'b')
+    parents += get_parents(sequence, db, 'y')
 
     # if its hybrid, we should fill it in in all possible ways
     if HYBRID_ALIGNMENT_PATTERN.findall(sequence):
@@ -128,6 +129,7 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
         
     # if its nonhybrid, try left and right side
     else:
+
         for p in parents[0]:
 
             # get the parent sequence
@@ -314,11 +316,9 @@ def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
     Outputs:
         (list) sequence(s) that may have filled in the gap
     '''
-    # the max mass for an amino acid (doubly charged)
-    max_mass = 93.04
 
-    # the min mass for an amino acid (doubly charged)
-    min_mass = 28.5108
+    # get the min mass (G) for the charge and too see if we can't add any amino acid
+    min_mass = gen_spectra.get_precursor('G', spectrum.precursor_charge)
 
     # remove special characters for generating sequences
     clean_seq = sequence.replace('-', '').replace('(', '').replace(')', '')
@@ -326,11 +326,14 @@ def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
     # get the theoretical precursor mass
     theory_precrusor = gen_spectra.get_precursor(clean_seq, spectrum.precursor_charge)
 
-    # get the precursor distance 
+    # determine the number of amino acids we could be off
+    estimated_off = abs(utils.predicted_len_precursor(spectrum, clean_seq) - len(clean_seq))
+
+    # get the precorsor distance
     p_d = scoring.precursor_distance(spectrum.precursor_mass, theory_precrusor)
 
     # if there are too many to add or subtract, return None
-    if gap * max_mass < p_d:
+    if gap < estimated_off:
         return [None]
 
     # if we can't add or subtract because our mass is too close, check to see if it
@@ -344,20 +347,17 @@ def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
         # otherwise return none
         return [None]
 
-    # determine HOW many amino acids we could be off
-    num_off = min(math.ceil(p_d / max_mass) + 1, gap)
-
     # add amino acids
     if spectrum.precursor_mass > theory_precrusor:
 
-        return __add_amino_acids(spectrum, sequence, db, num_off, tolerance)
+        return __add_amino_acids(spectrum, sequence, db, estimated_off, tolerance)
 
     # subtract amino acids:
     else:
 
-        return __remove_amino_acids(spectrum, sequence, num_off, tolerance)
+        return __remove_amino_acids(spectrum, sequence, estimated_off, tolerance)
 
-def get_parents(seq: str, db: Database) -> (list, list):
+def get_parents(seq: str, db: Database, ion=None) -> (list, list):
     '''
     Get the parents of a sequence. If the sequence is a hybrid sequence, 
     then the second entry of the tuple holds a list of proteins for the right contributor.
@@ -374,10 +374,12 @@ def get_parents(seq: str, db: Database) -> (list, list):
     Inputs:
         seq:    (str) sequence to find parents for
         db:     (Database) holds source information
+        ion:    (str) if left none, go for full string, otherwise search recursivley
     Outputs:
         (list, list) lists of parents
     '''
     get_sources = lambda s: database.get_proteins_with_subsequence(db, s)
+    get_sources_ion = lambda s, i: database.get_proteins_with_subsequence_ion(db, s, i)
 
     # If the sequence is hybrid, split it to find each parent
     if HYBRID_ALIGNMENT_PATTERN.findall(seq):
@@ -385,9 +387,12 @@ def get_parents(seq: str, db: Database) -> (list, list):
         # get the left and right sequnces
         left_seq, right_seq = __split_hybrid(seq)
         
-        return (get_sources(left_seq), get_sources(right_seq))
+        return (get_sources_ion(left_seq, 'b'), get_sources_ion(right_seq, 'y'))
 
     # otherwise just look up the one for the full sequence
+    if ion is not None and ion in 'by':
+        return (get_sources_ion(seq, ion), None)
+
     return (get_sources(seq), None)
 
 def extend_non_hybrid(seq: str, spectrum: Spectrum, ion: str, db: Database) -> list:

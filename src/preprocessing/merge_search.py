@@ -158,7 +158,8 @@ def match_masses(spectra_boundaries: list, db: Database, max_pep_len=30) -> (dic
     matched_masses_b, matched_masses_y, kmer_set = defaultdict(list), defaultdict(list), defaultdict(list)
 
     # estimate the max len
-    max_len = min(predicted_len(spectra_boundaries[-1][1]), max_pep_len)
+    estimated_max_len = ceil(spectra_boundaries[-1][1] / 57.021464)
+    max_len = min(estimated_max_len, max_pep_len)
 
     # calc the number of batches needed
     num_batches = ceil(len(db.proteins) / BATCH_SIZE)

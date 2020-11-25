@@ -375,16 +375,17 @@ def overlap_intervals(intervals: list) -> list:
 def to_percent(index, total):
     return int(100 * (index + 1)/total)
 
-def predicted_len(max_mass: float) -> int:
+def predicted_len(precursor_mass: float, precursor_charge: int) -> int:
     '''
     The predicted length of a spectrum based on its maximum mass
 
     Inputs:
-        max_mass:   float   the maximum mass of the sequence
+        precursor_mass:   float   the maximum mass of the sequence
+        precursor_charge: int     the charge of the precursor
     Outputs:
         (int) predicted length
     '''
-    return math.ceil(max_mass / (57.021464))
+    return math.ceil(precursor_mass / gen_spectra.get_precursor('G', precursor_charge))
 
 def predicted_len_precursor(spectrum: Spectrum, sequence: str) -> int:
     '''
@@ -401,7 +402,7 @@ def predicted_len_precursor(spectrum: Spectrum, sequence: str) -> int:
     theoretical_prec = gen_spectra.get_precursor(sequence, spectrum.precursor_charge)
 
     # now we can estimate length   spec/seq = real/theory
-    estimated_len = int(len(sequence) * (spectrum.precursor_mass / theoretical_prec))
+    estimated_len = math.ceil(len(sequence) * (spectrum.precursor_mass / theoretical_prec))
 
     return estimated_len
 
