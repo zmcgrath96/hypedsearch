@@ -463,10 +463,14 @@ def DEV_contains_truth_parts(truth_seq: str, hybrid: bool, b_seqs: list, y_seqs:
     # see if any of the b seqs match the first bit of the sequence
     has_left = any(
         [x == truth_seq[:len(x)] for x in b_seqs if len(x) > 1]
+    ) or any(
+        [truth_seq == x[:len(truth_seq)] for x in b_seqs if len(x) > 1]
     )
 
     has_right = any(
         [x == truth_seq[-len(x):] for x in y_seqs if len(x) > 1]
+    ) or any(
+        [truth_seq == x[-len(truth_seq):] for x in y_seqs if len(x) > 1]
     )
 
     # if its a hybrid, both left and right must be true, otherwise just one will do 
