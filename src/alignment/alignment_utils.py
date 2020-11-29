@@ -441,7 +441,7 @@ def extend_non_hybrid(seq: str, spectrum: Spectrum, ion: str, db: Database) -> l
 
                 # extend to the right
                 else:
-                    max_idx = min(len(seq), seq_idx + len(seq) + extension_len)
+                    max_idx = min(len(entry.sequence), seq_idx + len(seq) + extension_len)
                     extensions.append(entry.sequence[seq_idx:max_idx])
 
     return extensions
