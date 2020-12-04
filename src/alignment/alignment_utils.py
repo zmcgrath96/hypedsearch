@@ -207,7 +207,7 @@ def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3, tolerance=1) 
 
     # otherwise, just take up to gap off from the left and the right
     else:
-        for i in range(1, gap):
+        for i in range(gap + 1):
             new_seq1 = sequence[i:]
             new_seq2 = sequence[:-i]
             
@@ -317,9 +317,6 @@ def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
         (list) sequence(s) that may have filled in the gap
     '''
 
-    # get the min mass (G) for the charge and too see if we can't add any amino acid
-    min_mass = gen_spectra.get_precursor('G', spectrum.precursor_charge)
-
     # remove special characters for generating sequences
     clean_seq = sequence.replace('-', '').replace('(', '').replace(')', '')
 
@@ -329,33 +326,19 @@ def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
     # determine the number of amino acids we could be off
     estimated_off = abs(utils.predicted_len_precursor(spectrum, clean_seq) - len(clean_seq))
 
-    # get the precorsor distance
-    p_d = scoring.precursor_distance(spectrum.precursor_mass, theory_precrusor)
-
     # if there are too many to add or subtract, return None
     if gap < estimated_off:
-        return [None]
-
-    # if we can't add or subtract because our mass is too close, check to see if it
-    # falls within our tolerance
-    if p_d < min_mass:
-
-        # if we are within the tolerance, return the sequence
-        if p_d <= tolerance:
-            return [sequence]
-
-        # otherwise return none
         return [None]
 
     # add amino acids
     if spectrum.precursor_mass > theory_precrusor:
 
-        return __add_amino_acids(spectrum, sequence, db, estimated_off, tolerance)
+        return __add_amino_acids(spectrum, sequence, db, gap, tolerance)
 
     # subtract amino acids:
     else:
 
-        return __remove_amino_acids(spectrum, sequence, estimated_off, tolerance)
+        return __remove_amino_acids(spectrum, sequence, gap, tolerance)
 
 def get_parents(seq: str, db: Database, ion=None) -> (list, list):
     '''
