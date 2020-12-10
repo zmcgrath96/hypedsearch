@@ -35,6 +35,7 @@ def set_args(args) -> dict:
     digest = args.digest if not use_params else params.DIGEST
     missed_cleavages = args.missed_cleavages if not use_params else params.MISSED_CLEAVAGES
     cores = args.cores if not use_params else params.CORES
+    n = args.n if not use_params else params.N
     debug = params.DEBUG
     truth_set = params.TRUTH_SET
 
@@ -93,5 +94,6 @@ if __name__ == '__main__':
     parser.add_argument('--missed-cleavages', dest='missed_cleavages', type=int, default=0, help='Number of missed cleavages allowed. Default=0')
     parser.add_argument('--verbose', dest='verbose', type=bool, default=True, help='Extra printing to console during run. Default=True')
     parser.add_argument('--cores', dest='cores', type=int, default=1, help='The number of cores allowed to use when searching. Uses at least 1 and at most the number of available cores. Default=1')
+    parser.add_argument('--n', dest='n', type=int, default=5, help='The number of alignments to keep per spectrum. Default=5')
     args = parser.parse_args()
     main(args)

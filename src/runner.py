@@ -9,7 +9,7 @@ In charge of the flow of the program
 '''
 from os import walk
 from src import identification
-from src import summary
+from src.postprocessing import summary
 
 import multiprocessing as mp
 
@@ -33,6 +33,7 @@ def run(args: dict) -> None:
             missed_cleavages:           (int) the number of missed cleavages allowed in digest
             verbose:                    (bool) extra printing
             cores:                      (int) the number of cores allowed to use
+            n:                          (int) the number of alignments to keep per spectrum
             DEBUG:                      (bool) debuging print messages. Default=False
     Outputs:
         None
@@ -60,6 +61,7 @@ def run(args: dict) -> None:
         relative_abundance_filter=args['relative_abundance_filter'],
         digest=args['digest'], 
         missed_cleavages=args['missed_cleavages'],
+        n=args['n'],
         verbose=True, 
         DEBUG=args['DEBUG'], 
         cores=cores,

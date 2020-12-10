@@ -23,6 +23,7 @@ def id_spectrum(
     y_hits: dict,
     ppm_tolerance: int, 
     precursor_tolerance: int, 
+    n: int,
     truth=None, 
     fall_off=None
     ) -> Alignments:
@@ -38,6 +39,7 @@ def id_spectrum(
         matched_masses_y:   (dict) the mapping from boundaries -> kmers for y ions
         ppm_tolerance:      (int) the tolerance to allow for scoring algs
         precursor_tolerance:(int) the toleraence to allow when matching precursor
+        n:                  (int) the number of results to keep for ever spectrum
     Outputs:
         (Alignments) the created alignments for this spectrum
     '''
@@ -122,7 +124,7 @@ def id_spectrum(
         filtered_y, 
         ppm_tolerance=ppm_tolerance, 
         precursor_tolerance=precursor_tolerance,
-        n=5, 
+        n=n, 
         truth=truth, 
         fall_off=fall_off
     )
@@ -142,6 +144,7 @@ def id_spectra(
     digest='',
     missed_cleavages=0,
     cores=1,
+    n=5,
     DEBUG=False, 
     truth_set='', 
     output_dir=''
@@ -160,10 +163,11 @@ def id_spectra(
         ppm_tolerance:          (int) tolerance for ppm to include in search. Default=20
         precursor_tolerance:    (int) the tolerance to allow when matching precusor masses. Default=10
         cores:                  (int) the number of cores allowed to use
+        n:                      (int) the number of alignments to keep per spectrum. Default=5
     Outputs:
         dict containing the results. 
         All information is keyed by the spectrum file name with scan number appended 
-        and the values are list of boundariesequenceAligment objects
+        and the values are list of SequenceAligment objects
     '''
     DEV = False
     truth = None
@@ -250,8 +254,9 @@ File will be of the form
                 y_hits, 
                 ppm_tolerance, 
                 precursor_tolerance,
+                n,
                 truth, 
-                fall_off
+                fall_off, 
             )
 
     else:
@@ -296,7 +301,7 @@ File will be of the form
                     y_hits += matched_masses_y[b]
 
             # create a named tuple to put in the database
-            o = MPSpectrumID(b_hits, y_hits, spectrum, i, ppm_tolerance, precursor_tolerance, 5)
+            o = MPSpectrumID(b_hits, y_hits, spectrum, i, ppm_tolerance, precursor_tolerance, n)
             q.put(o)
 
         while len(results) < len(spectra):
@@ -389,6 +394,7 @@ def mp_id_spectrum(
             next_entry.y_hits, 
             next_entry.ppm_tolerance, 
             next_entry.precursor_tolerance,
+            next_entry.n,
             truth, 
             fall_off
         )

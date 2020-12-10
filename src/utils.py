@@ -418,6 +418,25 @@ def hashable_boundaries(boundaries: list) -> str:
     '''
     return '-'.join([str(x) for x in boundaries])
 
+def cosine_similarity(a: list, b: list) -> float:
+    '''
+    Calculate the cosine similarity of two vectors
+    
+    Inputs:
+        a:   (list)
+        b:   (list)
+    Outputs:
+        (float) cosine similarity (a dot b)/(norm(a) * norm(b))
+    '''
+    # pad with zeros if not the same size
+    if len(a) > len(b):
+        b = list(b) + [0 for _ in range(len(a) - len(b))]
+        
+    if len(b) > len(a):
+        a = list(a) + [0 for _ in range(len(b) - len(a))]
+
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
 def DEV_contains_truth_parts(truth_seq: str, hybrid: bool, b_seqs: list, y_seqs: list) -> bool:
     '''
     DEV FUNCTION ONLY
