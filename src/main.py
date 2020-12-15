@@ -66,6 +66,7 @@ def set_args(args) -> dict:
         'missed_cleavages': missed_cleavages,
         'DEBUG': debug, 
         'cores': cores,
+        'n': n,
         'truth_set': truth_set
     }
 

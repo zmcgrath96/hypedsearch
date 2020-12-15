@@ -1,10 +1,13 @@
 ########################## PROGRAM IO ##########################
 # full path to the spectra folder containing all spectra files
-SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/nod2 data/filteredSpec/'
+#SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/nod2 data/filteredSpec/'
+SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/raw inputs/BALB3_E3/'
 # full path to the .fasta database file
-DATABASE_FILE = '/Users/zacharymcgrath/Desktop/nod2 data/filteredNOD2.fasta'
+#DATABASE_FILE = '/Users/zacharymcgrath/Desktop/nod2 data/filteredNOD2.fasta'
+DATABASE_FILE = '/Users/zacharymcgrath/Desktop/raw inputs/mouse_database.fasta'
 # full path to the output directory
-OUTPUT_DIRECTORY = '/Users/zacharymcgrath/Desktop/Experiment output/filtered_NOD2_E3_SEP_22/'
+#OUTPUT_DIRECTORY = '/Users/zacharymcgrath/Desktop/Experiment output/filtered_NOD2_E3_SEP_22/'
+OUTPUT_DIRECTORY = '/Users/zacharymcgrath/Desktop/raw inputs/BALB3_E3/output/'
 
 ########################## SEARCH PARAMETERS ##########################
 # minimum length peptide to look for
@@ -51,4 +54,4 @@ N = 5
 # to check where the correct value falls off at. Format of the json is simple:
 # {spectrum_id: {'sequence': str, 'hybrid': bool, 'parent': str}}
 # if the param is left blank or the file cannot be found, it is not used
-TRUTH_SET = '/Users/zacharymcgrath/Desktop/Experiment output/fall_off/specmil_truth_set.json'
+TRUTH_SET = '' #'/Users/zacharymcgrath/Desktop/Experiment output/fall_off/specmil_truth_set.json'

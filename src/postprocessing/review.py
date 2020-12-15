@@ -1,4 +1,4 @@
-from src.objects import SequenceAlignment
+from src.objects import SequenceAlignment, Alignments
 
 def __is_swap_up_to_dist(a: str, b: str, i: int, j: int, dist: int, d: list) -> list:
     '''
@@ -97,3 +97,46 @@ def __edit_distance_long_swaps(a: str, b: str, dist: int = 0) -> int:
 #     for _id, sas in results.itesm():
 
 #         # sas is a list of sequence alignments
+
+def __digest_score(sequence: str, digest_type: str) -> int:
+    '''
+    The additional points a sequence gets if it follows the digest rule. 
+
+
+    '''
+    pass
+
+def tie_breaker(results: dict, digest_type: str, n: int) -> dict:
+    '''
+    Look through all the results and try to break as many ties as possible
+
+    Inputs:
+        results:        (dict) values are Alignments
+        digest_type:    (str) the digest type used
+        n:              (int) return only the top n results
+    Outputs:
+        (dict) updated results
+    '''
+
+    for _id, alignments in results.items():
+
+        # go through every sequence and see if they follow the digest rule
+        # hard code for test rn 
+
+        new_sas = []
+        for sa in alignments.alignments:
+            
+            if sa.sequence[0] == 'D':
+                new_sas.append(sa._replace(total_score=sa.total_score + 1))
+
+            else:
+                new_sas.append(sa)
+
+        a = Alignments(
+            alignments.spectrum, 
+            sorted(new_sas, key=lambda x: (x.total_score, 1/x.precursor_distance), reverse=True)[:n]
+        )
+
+        results[_id] = a
+
+    return results

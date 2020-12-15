@@ -9,7 +9,7 @@ In charge of the flow of the program
 '''
 from os import walk
 from src import identification
-from src.postprocessing import summary
+from src.postprocessing import summary, review
 
 import multiprocessing as mp
 
@@ -61,7 +61,7 @@ def run(args: dict) -> None:
         relative_abundance_filter=args['relative_abundance_filter'],
         digest=args['digest'], 
         missed_cleavages=args['missed_cleavages'],
-        n=args['n'],
+        n=args['n'] * 10,
         verbose=True, 
         DEBUG=args['DEBUG'], 
         cores=cores,
@@ -69,6 +69,9 @@ def run(args: dict) -> None:
         output_dir=args['output_dir']
     )
     print('\nFinished search. Writting results to {}...'.format(args['output_dir']))
+
+    # matched_spectra = review.tie_breaker(matched_spectra, '', args['n'])
+
     summary.generate(matched_spectra, args['output_dir'])
     
     
