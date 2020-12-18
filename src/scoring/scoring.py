@@ -460,3 +460,52 @@ def overlap_score(l: list, ion: str) -> float:
             score += 1 if e2[:len(e)] == e else -.5
             
     return score
+
+def total_mass_error(observed: Spectrum, alignment: str, tolerance: int) -> float:
+    '''
+    Find the total mass error of an alignment sequence compared to the 
+    observed. 
+
+    Inputs:
+        observed:   (Spectrum)
+        alignment:  (str) string alignment
+        tolerance:  (int) ppm tolerance allowed in matching masses
+    Outputs:
+        (float) sum of all mass errors
+    '''
+
+    # clean the input alignment
+    sequence = alignment.replace('-', '').replace(')', '').replace('(', '')
+
+    # generate the spectrum
+    alignment_spectrum = gen_spectra.gen_spectrum(sequence)['spectrum']
+
+    # sort them both
+    sorted_observed = sorted(observed.spectrum)
+    sorted_alignment = sorted(alignment_spectrum)
+
+    i, j = 0, 0
+
+    # keep track of total error
+    total_error = 0
+
+    while i < len(sorted_observed) and j < len(sorted_alignment):
+
+        # see if the mass at j is +- the mass at i
+        da_tol = ppm_to_da(sorted_observed[i], tolerance)
+
+        # if alignment < observed - tolerance, increment alignment
+        if sorted_alignment[j] < sorted_observed[i] - da_tol:
+            j += 1
+
+        # if alignment > observed + tolerance, increment observed
+        elif sorted_alignment[j] > sorted_observed[i] + da_tol:
+            i += 1
+
+        # finally ad tot total error and increment both
+        else:
+            total_error += abs(sorted_alignment[j] - sorted_observed[i])
+            i+= 1
+            j += 1
+
+    return total_error

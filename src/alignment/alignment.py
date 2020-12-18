@@ -401,6 +401,9 @@ def attempt_alignment(
             ppm_tolerance
         )
 
+        # get the total error
+        total_error = scoring.total_mass_error(spectrum, aligned_pair[0], ppm_tolerance)
+
         # the total score for non hybrids will be the sum of the b and y, but hybrids will use 
         # the hybrid score
         t_score = None
@@ -423,7 +426,8 @@ def attempt_alignment(
                     b_score, 
                     y_score, 
                     t_score, 
-                    p_d
+                    p_d, 
+                    total_error
                 )
             )
 
@@ -438,7 +442,8 @@ def attempt_alignment(
                     b_score, 
                     y_score, 
                     t_score, 
-                    p_d
+                    p_d, 
+                    total_error
                 )
             )
     OBJECTIFY_COUNT += len(nonhyba + updated_hybrids)
@@ -459,7 +464,7 @@ def attempt_alignment(
     # non hybrid alignment objects have 6 entries, hybrids have 8, so doing 1/len(x) puts non hybrids before hybrids
     sorted_alignments = sorted(
         alignments, 
-        key=lambda x: (x.total_score, 1/len(x), x.b_score, x.y_score, 1/x.precursor_distance), 
+        key=lambda x: (x.total_score, x.total_mass_error, 1/len(x), x.b_score, x.y_score, 1/x.precursor_distance), 
         reverse=True
     )
     top_n_alignments = sorted_alignments[:n]
