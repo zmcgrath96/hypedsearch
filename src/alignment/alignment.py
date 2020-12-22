@@ -464,7 +464,14 @@ def attempt_alignment(
     # non hybrid alignment objects have 6 entries, hybrids have 8, so doing 1/len(x) puts non hybrids before hybrids
     sorted_alignments = sorted(
         alignments, 
-        key=lambda x: (x.total_score, x.total_mass_error, 1/len(x), x.b_score, x.y_score, 1/x.precursor_distance), 
+        key=lambda x: (
+            x.total_score, 
+            math.inf if x.total_mass_error <= 0 else 1/x.total_mass_error, 
+            math.inf if x.precursor_distance <= 0 else 1/x.precursor_distance, 
+            1/len(x), 
+            x.b_score, 
+            x.y_score
+        ), 
         reverse=True
     )
     top_n_alignments = sorted_alignments[:n]

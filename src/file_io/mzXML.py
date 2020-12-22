@@ -1,7 +1,7 @@
 from src.utils import file_exists
 from src.objects import Spectrum
 from src.preprocessing import spectra_filtering
-from pyteomics import mzml
+from pyteomics import mzxml
 
 def read(filename: str, peak_filter=0, relative_abundance_filter=0) -> list:
     '''
@@ -25,7 +25,7 @@ def read(filename: str, peak_filter=0, relative_abundance_filter=0) -> list:
 
     spectra = []
     
-    filecontents = mzml.read(filename)
+    filecontents = mzxml.read(filename)
 
     content: dict
     for content in filecontents:
@@ -54,27 +54,29 @@ def read(filename: str, peak_filter=0, relative_abundance_filter=0) -> list:
         precursor = None
         precursor_charge = 0
 
-        if not len(content['precursorList']['precursor']) or not len(content['precursorList']['precursor'][0]['selectedIonList']['selectedIon']):
-            precursor = max(masses)
-            precursor_charge = 1
-
-        else:
-            precursor = float(content['precursorList']['precursor'][0]['selectedIonList']['selectedIon'][0]['selected ion m/z'])
-            precursor_charge = int(content['precursorList']['precursor'][0]['selectedIonList']['selectedIon'][0]['charge state'])
+        precursor = content['precursorMz'][0]['precursorMz']
+        precursor_charge = content['precursorMz'][0]['precursorCharge']
 
         # get the id
-        id_ = content.get('id', '')
+        _id = content.get('id', '')
+
+        ms_level = content['msLevel']
+        scan_number = content['num']
+
+        # finally some other metadata
+        other_metadata = content['scanOrigin']
 
         spectra.append(Spectrum(
             masses,
             abundances,
             ti,
-            int(content['ms level']),
-            int(content['index']),
+            ms_level,
+            scan_number,
             precursor,
             precursor_charge,
             filename, 
-            id_
+            _id, 
+            other_metadata
         ))
 
     return spectra

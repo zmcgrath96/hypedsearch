@@ -1,4 +1,4 @@
-from src.file_io import mzML
+from src.file_io import spectra
 from src.utils import ppm_to_da, overlap_intervals
 
 def load_spectra(spectra_files: list, ppm_tol: int, peak_filter=0, relative_abundance_filter=0) -> (list, list, dict):
@@ -23,7 +23,7 @@ def load_spectra(spectra_files: list, ppm_tol: int, peak_filter=0, relative_abun
 
     # go through each spectra file and load them into memory
     for spectra_file in spectra_files:
-        these_spectra = mzML.read(
+        these_spectra = spectra.load(
             spectra_file, 
             peak_filter=peak_filter, 
             relative_abundance_filter=relative_abundance_filter

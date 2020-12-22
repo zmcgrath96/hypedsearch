@@ -42,8 +42,6 @@ def run(args: dict) -> None:
     spectra_files = []
     for (_, _, filenames) in walk(args['spectra_folder']):
         for fname in filenames:
-            if '.mzml' not in fname.lower():
-                continue
             spectra_files.append(args['spectra_folder'] + fname)
         break
 

@@ -1,7 +1,7 @@
 ########################## PROGRAM IO ##########################
 # full path to the spectra folder containing all spectra files
 #SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/nod2 data/filteredSpec/'
-SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/raw inputs/BALB3_E3/'
+SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/raw inputs/BALB3_E3/mzxml/'
 # full path to the .fasta database file
 #DATABASE_FILE = '/Users/zacharymcgrath/Desktop/nod2 data/filteredNOD2.fasta'
 DATABASE_FILE = '/Users/zacharymcgrath/Desktop/raw inputs/mouse_database.fasta'

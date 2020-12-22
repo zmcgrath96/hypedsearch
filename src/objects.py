@@ -33,11 +33,22 @@ Spectrum:
         precursor_mass: (float) precursor mass of the spectrum 
         precurosr_charge:(int) the charge of the observed precursor
         file_name:      (string) name of the file that the spectrum was taken from
+        other_metadata: (dict) other metadata not filled in
 '''
 Spectrum = namedtuple(
-    'Spectrum', 
-    ['spectrum', 'abundance', 'total_intensity', 'ms_level', 'scan_number', 'precursor_mass', 'precursor_charge', 'file_name', 'id'],
-    defaults=[[], [], 0, 0, -1, 0, '', '']
+    'Spectrum', [
+        'spectrum',
+        'abundance',
+        'total_intensity',
+        'ms_level',
+        'scan_number',
+        'precursor_mass',
+        'precursor_charge',
+        'file_name',
+        'id', 
+        'other_metadata'
+    ],
+    defaults=[[], [], 0, 0, -1, 0, '', '', '', {}]
 )
 
 '''
