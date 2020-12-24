@@ -376,14 +376,14 @@ def to_percent(index, total):
     return int(100 * (index + 1)/total)
 
 def predicted_len(precursor_mass: float, precursor_charge: int) -> int:
-    '''
-    The predicted length of a spectrum based on its maximum mass
+    '''The predicted length of a spectrum based on its maximum mass
 
-    Inputs:
-        precursor_mass:   float   the maximum mass of the sequence
-        precursor_charge: int     the charge of the precursor
-    Outputs:
-        (int) predicted length
+    :param precursor_mass: The maximum mass of the sequence
+    :type precursor_mass: float
+    :param precursor_charge: The charge of the observed precusor mass
+    :type precursor_charge: int
+    :returns: Predicted sequence length
+    :rtype: int
     '''
     return math.ceil(precursor_mass / gen_spectra.get_precursor('G', precursor_charge))
 
