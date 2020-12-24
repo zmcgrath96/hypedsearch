@@ -1,10 +1,10 @@
 ########################## PROGRAM IO ##########################
 # full path to the spectra folder containing all spectra files
 #SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/nod2 data/filteredSpec/'
-SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/raw inputs/BALB3_E3/mzxml/'
+SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/nod2 data/single/'
 # full path to the .fasta database file
 #DATABASE_FILE = '/Users/zacharymcgrath/Desktop/nod2 data/filteredNOD2.fasta'
-DATABASE_FILE = '/Users/zacharymcgrath/Desktop/raw inputs/mouse_database.fasta'
+DATABASE_FILE = '/Users/zacharymcgrath/Desktop/raw inputs/NOD2_E3/filtered_mouse_database.fasta'
 # full path to the output directory
 #OUTPUT_DIRECTORY = '/Users/zacharymcgrath/Desktop/Experiment output/filtered_NOD2_E3_SEP_22/'
 OUTPUT_DIRECTORY = '/Users/zacharymcgrath/Desktop/raw inputs/BALB3_E3/output/'
@@ -42,7 +42,7 @@ DIGEST = 'trypsin'
 # printing to the console during the run
 VERBOSE = True
 # Extra extra printing options for debugging the application
-DEBUG = False
+DEBUG = True
 # the number of cores to allow in the search. Should be a number 
 CORES = 1
 # the number of alignments to keep per spectrum

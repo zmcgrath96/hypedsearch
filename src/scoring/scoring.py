@@ -484,6 +484,7 @@ def total_mass_error(observed: Spectrum, alignment: str, tolerance: int) -> floa
     sorted_observed = sorted(observed.spectrum)
     sorted_alignment = sorted(alignment_spectrum)
 
+    # i is for observed, j for the str alignment
     i, j = 0, 0
 
     # keep track of total error
@@ -492,7 +493,7 @@ def total_mass_error(observed: Spectrum, alignment: str, tolerance: int) -> floa
     while i < len(sorted_observed) and j < len(sorted_alignment):
 
         # see if the mass at j is +- the mass at i
-        da_tol = ppm_to_da(sorted_observed[i], tolerance)
+        da_tol = ppm_to_da(sorted_alignment[j], tolerance)
 
         # if alignment < observed - tolerance, increment alignment
         if sorted_alignment[j] < sorted_observed[i] - da_tol:

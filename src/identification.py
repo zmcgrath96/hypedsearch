@@ -25,7 +25,8 @@ def id_spectrum(
     precursor_tolerance: int, 
     n: int,
     truth=None, 
-    fall_off=None
+    fall_off=None, 
+    is_last=False
     ) -> Alignments:
     '''
     Create an alignment for a spectrum
@@ -126,7 +127,8 @@ def id_spectrum(
         precursor_tolerance=precursor_tolerance,
         n=n, 
         truth=truth, 
-        fall_off=fall_off
+        fall_off=fall_off, 
+        is_last=is_last
     )
 
 
@@ -246,6 +248,8 @@ File will be of the form
                 if b in matched_masses_y:
                     y_hits += matched_masses_y[b]
 
+            is_last = DEBUG and i == len(spectra) - 1
+
             # pass it into id_spectrum
             results[spectrum.id] = id_spectrum(
                 spectrum, 
@@ -257,6 +261,7 @@ File will be of the form
                 n,
                 truth, 
                 fall_off, 
+                is_last=is_last
             )
 
     else:

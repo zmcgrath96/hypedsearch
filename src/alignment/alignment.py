@@ -15,19 +15,18 @@ import time
 TIME_LOG_FILE = './timelog.txt'
 
 # to keep track of the time each step takes
-FILTER_TIME = 0
 FIRST_ALIGN_TIME = 0
 AMBIGUOUS_REMOVAL_TIME = 0
 PRECURSOR_MASS_TIME = 0
 OBJECTIFY_TIME = 0
 
 # keep track of frequency
-FILTER_COUNT = 0
 FIRST_ALIGN_COUNT = 0
 AMBIGUOUS_REMOVAL_COUNT = 0
 PRECURSOR_MASS_COUNT = 0
 OBJECTIFY_COUNT = 0
 
+TOTAL_ITERATIONS = 0
 ####################### Public functions #######################
 
 def same_protein_alignment(seq1: str, seq2: str, parent_sequence: str) -> (str, str):
@@ -222,8 +221,9 @@ def attempt_alignment(
     Outputs:
         (Alignments) attempted alignemnts. Contains both or either of SequenceAlignment and HybridSequenceAlignment
     '''
-    global FIRST_ALIGN_TIME, AMBIGUOUS_REMOVAL_TIME, FILTER_TIME, PRECURSOR_MASS_TIME, OBJECTIFY_TIME
-    global FIRST_ALIGN_COUNT, AMBIGUOUS_REMOVAL_COUNT, FILTER_COUNT, PRECURSOR_MASS_COUNT, OBJECTIFY_COUNT
+    global FIRST_ALIGN_TIME, AMBIGUOUS_REMOVAL_TIME, PRECURSOR_MASS_TIME, OBJECTIFY_TIME
+    global FIRST_ALIGN_COUNT, AMBIGUOUS_REMOVAL_COUNT, PRECURSOR_MASS_COUNT, OBJECTIFY_COUNT
+    global TOTAL_ITERATIONS
 
     # if we are in dev mode this removes the need for extra long ifs
     DEV = truth is not None and fall_off is not None
@@ -263,9 +263,8 @@ def attempt_alignment(
             # exit the alignment
             return Alignments(spectrum, [])
 
-    FIRST_ALIGN_COUNT += len(a)
+    FIRST_ALIGN_COUNT += len(b_hits) + len(y_hits)
     FIRST_ALIGN_TIME += time.time() - st
-    DEBUG and print(f'First alignment round took {time.time() - st} time resulting in {len(a)} alignments')
 
     # get the predicted length of the sequence and allow for a 25% gap to be filled in
     predicted_len = utils.predicted_len(spectrum.precursor_mass, spectrum.precursor_charge)
@@ -290,9 +289,8 @@ def attempt_alignment(
 
         precursor_matches += p_ms
 
-    PRECURSOR_MASS_COUNT += len(precursor_matches)
+    PRECURSOR_MASS_COUNT += len(a)
     PRECURSOR_MASS_TIME += time.time() - st
-    DEBUG and print(f'Filling in precursor took {time.time() - st} for {len(a)} sequences')
 
     # check to see if we no longer have the match. At this point we should
     if DEV:
@@ -366,9 +364,8 @@ def attempt_alignment(
             # exit the alignment
             return Alignments(spectrum, [])
 
-    AMBIGUOUS_REMOVAL_COUNT += len(updated_hybrids)
+    AMBIGUOUS_REMOVAL_COUNT += len(hyba)
     AMBIGUOUS_REMOVAL_TIME += time.time() - st
-    DEBUG and print(f'Getting rid of ambiguous time took {time.time() - st}')
  
     # Make alignments into the namedtuple types SpectrumAlignments
     # and HybridSequenceAlignments
@@ -448,16 +445,17 @@ def attempt_alignment(
             )
     OBJECTIFY_COUNT += len(nonhyba + updated_hybrids)
     OBJECTIFY_TIME += time.time() - st
-    DEBUG and print(f'Time to make into objects took {time.time() - st}')
+
+    TOTAL_ITERATIONS += 1
 
     # write the time log to file
     if is_last:
+
         with open(TIME_LOG_FILE, 'w') as o:
-            o.write(f'Total result filtering time: {FILTER_TIME}s \t seconds/op: {FILTER_TIME/FILTER_COUNT}s\n')
-            o.write(f'B and Y alignment time: {FIRST_ALIGN_TIME}s \t seconds/op: {FIRST_ALIGN_TIME/FIRST_ALIGN_COUNT}s\n')
-            o.write(f'Removing ambiguous hybrids time: {AMBIGUOUS_REMOVAL_TIME}s \t seconds/op: {AMBIGUOUS_REMOVAL_TIME/AMBIGUOUS_REMOVAL_COUNT}s\n')
-            o.write(f'Matching precursor matches time: {PRECURSOR_MASS_TIME}s \t seconds/op: {PRECURSOR_MASS_TIME/PRECURSOR_MASS_COUNT}s\n')
-            o.write(f'Turning matches into objects time: {OBJECTIFY_TIME} \t seconds/op: {OBJECTIFY_TIME/OBJECTIFY_COUNT}\n')
+            o.write(f'B and Y full bipartite alignment time: {FIRST_ALIGN_TIME}s \t average dataset size{FIRST_ALIGN_COUNT/TOTAL_ITERATIONS} \t seconds/op: {FIRST_ALIGN_TIME/FIRST_ALIGN_COUNT}s\n')
+            o.write(f'Removing ambiguous hybrids time: {AMBIGUOUS_REMOVAL_TIME}s \t average dataset size{AMBIGUOUS_REMOVAL_COUNT/TOTAL_ITERATIONS} \t seconds/op: {AMBIGUOUS_REMOVAL_TIME/AMBIGUOUS_REMOVAL_COUNT}s\n')
+            o.write(f'Matching precursor masses time: {PRECURSOR_MASS_TIME}s \t average dataset size{PRECURSOR_MASS_COUNT/TOTAL_ITERATIONS} \t seconds/op: {PRECURSOR_MASS_TIME/PRECURSOR_MASS_COUNT}s\n')
+            o.write(f'Turning matches into objects time: {OBJECTIFY_TIME} \t average dataset size{OBJECTIFY_COUNT/TOTAL_ITERATIONS} \t seconds/op: {OBJECTIFY_TIME/OBJECTIFY_COUNT}\n')
 
     # get only the top n alignments
     # if all scores are equal, float the non hybrids to the top
