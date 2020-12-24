@@ -8,7 +8,10 @@ Docs are built with sphinx and hosted via read the docs.
    :maxdepth: 2
    :caption: Contents:
 
+   docs
    utils
+   objects
+
 
 
 
@@ -16,5 +19,6 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
+
+.. * :ref:`modindex`

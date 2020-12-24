@@ -1,25 +1,21 @@
 from collections import namedtuple
 
-from src.tree import Tree
-
-'''
-Database:
-    Holds proteins, fasta file, protein tree, and kmer masses 
-
-    Properties:
-        fasta_file:     (str) the name of the input fasta file
-        proteins:       (dict) the key: value pairs of proteins where keys are the 
-                                entry number and the value is a named tuple of 
-                                ('description', 'sequence')
-        tree:           (Tree) the tree the contains sequences keyed by the source proteins
-        b_hits:         (list) string sequences of the b ion hits
-        y_hits:         (list) string sequences of the y ion hits
-'''
 Database = namedtuple(
     'Database', 
-    ['fasta_file', 'proteins', 'kmers', 'b_hits', 'y_hits'], 
-    defaults=['', {}, {}, [], []]
+    ['fasta_file', 'proteins', 'kmers'], 
+    defaults=['', {}, {}]
 )
+'''Holds proteins, fasta file, protein tree, and kmer masses 
+
+:ivar fasta_file: The name of the input fasta file
+:type fasta_file: str
+:ivar proteins: A dictionary of proteins where keys are the entry
+    name and the value is a list of DatabaseEntry objects
+:type proteins: dict
+:ivar kmers: A dictionary mapping kmers to a list of source protein names
+:type kmers: dict
+'''
+
 
 '''
 Spectrum:
