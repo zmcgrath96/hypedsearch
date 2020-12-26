@@ -306,7 +306,7 @@ File will be of the form
                     y_hits += matched_masses_y[b]
 
             # create a named tuple to put in the database
-            o = MPSpectrumID(b_hits, y_hits, spectrum, i, ppm_tolerance, precursor_tolerance, n)
+            o = MPSpectrumID(b_hits, y_hits, spectrum, ppm_tolerance, precursor_tolerance, n)
             q.put(o)
 
         while len(results) < len(spectra):
@@ -392,7 +392,7 @@ def mp_id_spectrum(
                 continue
 
         # otherwise run id spectrum 
-        results[next_entry.spectrum_id] = id_spectrum(
+        results[next_entry.spectrum.id] = id_spectrum(
             next_entry.spectrum, 
             reduced_db_cp, 
             next_entry.b_hits, 

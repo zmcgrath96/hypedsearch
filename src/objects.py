@@ -16,21 +16,19 @@ Database = namedtuple(
 :type kmers: dict
 '''
 
+DatabaseEntry = namedtuple(
+    'DatabaseEntry', 
+    ['sequence', 'description'],
+    defaults=['', '']
+)
+'''Contains protein information
 
+:ivar sequence: the full protein sequence
+:type sequence: str
+:ivar description: the name of the protein
+:type description: str
 '''
-Spectrum:
-    Holds information regarding an MS or MS/MS spectrum
 
-    Properties:
-        spectrum:       (list) m/z float values from an MS run
-        abundance:      (list) floats that describe abundance of each peak value
-        ms_level:       (int) MS experiment level
-        scan_number:    (int) scan number of the spectrum
-        precursor_mass: (float) precursor mass of the spectrum 
-        precurosr_charge:(int) the charge of the observed precursor
-        file_name:      (string) name of the file that the spectrum was taken from
-        other_metadata: (dict) other metadata not filled in
-'''
 Spectrum = namedtuple(
     'Spectrum', [
         'spectrum',
@@ -46,120 +44,136 @@ Spectrum = namedtuple(
     ],
     defaults=[[], [], 0, 0, -1, 0, '', '', '', {}]
 )
+'''Holds information regarding an MS or MS/MS spectrum
 
+:ivar spectrum: m/z float values of an MS run
+:type spectrum: list
+:ivar abundance: floats describing the abundance of each peak value. Index *i*
+    is the abundance of the m/z value at index *i* of the spectrum
+:type abundance: list
+:ivar ms_level: MS experiment level
+:type ms_level: int
+:ivar scan_number: scan number of spectrum in the MS run
+:type scan_number: int
+:ivar precursor_mass: precursor mass of the MS run (i.e. the mass of the whole sequence)
+:type precursor_mass: float
+:ivar precursor_charge: charge of the precursor mass
+:type precursor_charge: int
+:ivar file_name: name of the source file of the spectrum
+:type file_name: str
+:ivar other_metadata: other metadata associated with the spectrum not in the above
+:type other_metadata: dict
 '''
-MassSequence:
-    Basic container for holding some mass associated with a sequence
 
-    Properties: 
-        mass:       (float) some mass associated with a sequence
-        sequence:   (str) the sequence associated with the mass
-'''
-MassSequence = namedtuple(
-    'MassSequence', 
-    ['mass', 'sequence'], 
-    defaults=[0.0, '']
-)
-
-'''
-SequenceAlignment:
-    Information on a nonhybrid peptide alignment. 
-
-    Properties:
-        proteins:       (list) proteins that this sequence is found in
-        sequence:       (str) Amino acid sequence tagged
-        b_score:        (float) b ion score of the sequence
-        y_score:        (float) y ion score of the sequence
-        total_score:    (float) score given to the sequence
-'''
 SequenceAlignment = namedtuple(
     'SequenceAlignment', 
     ['proteins', 'sequence', 'b_score', 'y_score', 'total_score', 'precursor_distance', 'total_mass_error'],
     defaults=[[], '', 0.0, 0.0, 0.0, 100, 100]
 )
+'''Alignment information for a non-hybrid sequence alignment
 
+:ivar proteins: proteins where the aligned sequence is found
+:type proteins: list
+:ivar sequence: the string of amino acids that were found as the alignment
+:type sequence: str
+:ivar b_score: b ion score of the sequence
+:type b_score: float
+:ivar y_score: y ion score of the sequence
+:type y_score: float
+:ivar total_score: the score given to the sequence
+:type total_score: float
+:ivar precursor_distance: the absolute value of the difference between the observed precursor
+    mass and the calculated precursor mass of the aligned sequence
+:type precursor_distance: float
+:ivar total_mass_error: the sum of the absolute values of the error between an aligned
+    amino acid mass and the matched observed mass
+:type total_mass_error: float
 '''
-HybridSequenceAlignment
-    Information on a hybrid sequence alignment
 
-    Properties:
-        left_proteins:      (list) proteins that contain the sequence of amino acids that contribute
-                                   to the left side of the hybrid peptide
-        right_proteins:     (list) proteins that contain the sequence of amino acids that contribute 
-                                   to the right side of the hybrid peptide
-        sequence:           (str) Amino acid sequence tagged
-        hybrid_sequence:    (str) Amino acid sequence tagged with indicators for the junction area
-        b_score:            (float) b ion score of the sequence
-        y_score:            (float) y ion score of the sequence
-        total_score:        (float) the score given to the sequence
-'''
 HybridSequenceAlignment = namedtuple(
     'HybridSequenceAlignment', 
     ['left_proteins', 'right_proteins', 'sequence', 'hybrid_sequence', 
         'b_score', 'y_score', 'total_score', 'precursor_distance', 'total_mass_error'],
     defaults=[[], [], '', '', 0.0, 0.0, 0.0, 100, 100]
 )
+'''Alignment information for a non-hybrid sequence alignment
 
+:ivar left_proteins: proteins that contain the sequence of amino acids that contribute
+    to the left side of the hybrid peptide
+:type left_proteins: list
+:ivar right_proteins: proteins that contain the sequence of amino acids that contribute 
+    to the right side of the hybrid peptide
+:type right_proteins: list
+:ivar sequence: the string of amino acids that were found as the alignment
+:type sequence: str
+:ivar hybrid_sequence: the string of amino acids that were found as the alignment
+    with special characters [(), -] where - denotes a hybrid sequence with no 
+    overlap (left-right) and () denotes a hybrid with an overlap (left(overlap)right)
+:type hybrid_sequence: str
+:ivar b_score: b ion score of the sequence
+:type b_score: float
+:ivar y_score: y ion score of the sequence
+:type y_score: float
+:ivar total_score: the score given to the sequence
+:type total_score: float
+:ivar precursor_distance: the absolute value of the difference between the observed precursor
+    mass and the calculated precursor mass of the aligned sequence
+:type precursor_distance: float
+:ivar total_mass_error: the sum of the absolute values of the error between an aligned
+    amino acid mass and the matched observed mass
+:type total_mass_error: float
 '''
-Alignments
-    Contains the spectrum with SequenceAlignments and HybridSequenceAlignments
 
-    Properties:
-        spectrum:       (Spectrum) The spectrum being aligned
-        alignments:     (list) contains both HybridSequenceAlignment and SequenceAlignment 
-'''
 Alignments = namedtuple(
     'Alignments', 
     ['spectrum', 'alignments'], 
     defaults=[Spectrum([], [], 0, 0, 0.0, ''), []]
 )
+'''Contains the spectrum with SequenceAlignments and HybridSequenceAlignments
 
+:ivar spectrum: the observed spectrum
+:type spectrum: Spectrum
+:ivar alignments: SequenceAlignment and HybridSequenceAlignment objects
+:type alignments: list
 '''
-DatabaseEntry
-    Tuple that mimics pyteomics input
 
-    Properties:
-        sequence:       (str) the protein sequence
-        description:    (str) the name
-'''
-DatabaseEntry = namedtuple(
-    'DatabaseEntry', 
-    ['sequence', 'description'],
-    defaults=['', '']
-)
-
-'''
-MPSpectrumID
-    Tuple for passing params to the processes during identification
-
-    Properties:
-        b_hits:                 (list)  kmers
-        y_hits:                 (list)  kmers
-        spectrum:               (Spectrum)
-        spectrum_id:            (int)
-        ppm_tolerance:          (int)
-        precursor_tolerance:    (int)
-        n:                      (int)
-'''
 MPSpectrumID = namedtuple(
     'MPSpectrumID', 
-    ['b_hits', 'y_hits', 'spectrum', 'spectrum_id', 'ppm_tolerance', 'precursor_tolerance', 'n'],
+    ['b_hits', 'y_hits', 'spectrum', 'ppm_tolerance', 'precursor_tolerance', 'n'],
     defaults=[[], [], None, -1, 0, 0]
 )
+'''Holds information to pass to processes during multiprocessing (MP)
 
+:ivar b_hits: k-mers found from the b ion search
+:type b_hits: list
+:ivar y_hits: k-mers found from the y ion search
+:type y_hits: list
+:ivar spectrum: observed spectrum
+:type spectrum: Spectrum
+:ivar ppm_tolerance: parts per million error allowed when matching masses
+:type ppm_tolerance: int
+:ivar precursor_tolerance: parts per million error allowed when matching precursor mass
+:type precursor_tolerance: int
+:ivar n: the number of aligments to keep 
+:type n: int
 '''
-DEVFallOffEntry
-    Tuple for holding data about when an alignments drops off the components that 
-    could make it equal to the truth sequence. 
 
-    Properties:
-        hybrid:             (bool)
-        truth_sequence:     (str)
-        fall_off_operation: (str)
-        meta_data:          (dict) any extra info for the operation
-'''
 DEVFallOffEntry = namedtuple(
     'DEVFallOffEntry', 
     ['hybrid', 'truth_sequence', 'fall_off_operation', 'meta_data'], 
     defaults=[False, '', '', {}]
 )
+'''DEVELOPMENT USE ONLY
+
+Holds data about when the components that make up the desired overlapping sequence
+falls off and can no longer make the correct alignment
+
+:ivar hybrid: whether or not the desired alignment is a hybrid
+:type hybrid: bool
+:ivar truth_sequence: the desired string alignment
+:type truth_sequence: str
+:ivar fall_off_operation: which operation the sequence was no longer attainable
+:type fall_off_operation: str
+:ivar meta_data: any extra information pertaining to the operation
+:type meta_data: dict
+'''

@@ -6,8 +6,7 @@ utils
 Utils module is used throughout the project for various things. 
 If you don't know where to put something, it probably belongs here.
 
-Functions
-^^^^^^^^^
+
 
 .. autofunction:: src.utils.file_exists
 

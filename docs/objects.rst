@@ -11,3 +11,32 @@ organized.
 .. _namedtuples: https://docs.python.org/3/library/collections.html#collections.namedtuple
 
 .. autofunction:: src.objects.Database
+
+--------------------
+
+.. autofunction:: src.objects.DatabaseEntry
+
+--------------------
+
+.. autofunction:: src.objects.Spectrum
+
+--------------------
+
+.. autofunction:: src.objects.SequenceAlignment
+
+--------------------
+
+.. autofunction:: src.objects.HybridSequenceAlignment
+
+--------------------
+
+.. autofunction:: src.objects.Alignments
+
+--------------------
+
+.. autofunction:: src.objects.MPSpectrumID
+
+--------------------
+
+.. autofunction:: src.objects.DEVFallOffEntry
+

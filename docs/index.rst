@@ -9,10 +9,13 @@ Docs are built with sphinx and hosted via read the docs.
    :caption: Contents:
 
    docs
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Modules:
+
    utils
    objects
-
-
 
 
 Indices and tables
