@@ -4,30 +4,31 @@ from collections import namedtuple, defaultdict
 from src.objects import Database
 
 def extract_protein_name(prot_entry: namedtuple) -> str:
-    '''
-    Extract the protein name from a protein entry namedtuple from pyteomics 
+    '''Extract the protein name from a protein entry namedtuple from pyteomics 
     fasta read. 
     
-    Inputs:
-        prot_entry:     (namedtuple) the namedtuple with the entry 'description'
-    Outputs:
-        (str) the name of the protein to extract
+    :param prot_entry: a namedtuple with a value of 'description'
+    :type prot_entry: namedtuple
+
+    :returns: the name of the protein
+    :rtype: str
     '''
+
     if '|' in prot_entry.description:
         return prot_entry.description.split('|')[-1].split(' ')[0]
 
     return prot_entry.description.split(' ')[0]
 
 def build(fasta_file: str) -> Database:
-    '''
-    Create a Database namedtuple from a fasta file
+    '''Create a Database namedtuple from a fasta file
 
-    Inputs:
-        fasta_file:     (str) the full path to a source database
-    Outputs:
-        (Database) a Database namedtuple with the fasta_file and proteins
-                    feilds filled and an initialized tree
+    :param fasta_file: the full path to a fasta database file 
+    :type fasta_file: str
+
+    :returns: a Database object with the fasta file and protein fields filled in
+    :rtype: Database
     '''
+
     db = Database(fasta_file)
 
     prots = defaultdict(list)
@@ -44,29 +45,33 @@ def build(fasta_file: str) -> Database:
 
 
 def get_proteins_with_subsequence(db: Database, sequence: str) -> list:
-    '''
-    Find the name of all proteins that have the subsequence provided. A 
+    '''Find the name of all proteins that have the subsequence provided. A 
     list of these names are returned
 
-    Inputs:
-        db:         (Database) holder of the sequences
-        sequence:   (str) the subsequence to look for
-    Outputs:
-        (list) string names of the source proteins
+    :param db: source of the proteins
+    :type db: Database
+    :param sequence: the subsequence to look for
+    :type sequence: str
+
+    :returns: all protein names of source proteins
+    :rtype: list
     '''
+
     return list(set(db.kmers[sequence]))
 
 def get_proteins_with_subsequence_ion(db: Database, sequence: str, ion: str) -> list:
-    '''
-    Find all protein names that have the subsequence. Recursivley search
+    '''Find all protein names that have the subsequence. Recursivley search
     if the full sequence is not found immediately
 
-    Inputs:
-        db:         (Database) holder of the sequences
-        sequence:   (str) the subsequence to look for
-        ion:        (str) the ion type. {'b', 'y'}
-    Outputs:
-        (list) string names of the source proteins
+    :param db: source of the proteins
+    :type db: Database
+    :param sequence: subsequence to look for 
+    :type sequence: str
+    :param ion: the ion type. Either 'b' or 'y'
+    :type ion: str
+
+    :returns: names of the source protein(s)
+    :rtype: list
     '''
 
     hits = []
@@ -90,13 +95,14 @@ def get_proteins_with_subsequence_ion(db: Database, sequence: str, ion: str) -> 
     return hits
 
 def get_entry_by_name(db: Database, name: str) -> namedtuple:
-    '''
-    Get a namedtuple of the protein entry from the database. 
+    '''Get a namedtuple of the protein entry from the database. 
 
-    Inputs:
-        db:     (Database) the database with the proteins
-        name:   (str) the name of the protein to find
-    Ouputs:
-        (namedtuple) has entries 'description' and 'sequence'
+    :param db: source of proteins
+    :type db: Database
+    :param name: the name of the protein to look for 
+    :type name: str
+
+    :returns: namedtuple with fields 'description' and 'sequence'
+    :rtype: namedtuple
     '''
     return db.proteins[name]

@@ -14,11 +14,11 @@ Docs are built with sphinx and hosted via read the docs.
    :maxdepth: 2
    :caption: Modules:
 
+   database
    gen_spectra
    identification
-   utils
    objects
-
+   utils
 
 Indices and tables
 ==================
