@@ -8,3 +8,4 @@
 *databases*
 *.o
 *.so
+docs/_build/

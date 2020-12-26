@@ -24,26 +24,45 @@ def id_spectrum(
     ppm_tolerance: int, 
     precursor_tolerance: int, 
     n: int,
-    truth=None, 
-    fall_off=None, 
-    is_last=False
+    truth: dict = None, 
+    fall_off: dict = None, 
+    is_last: bool = False
     ) -> Alignments:
-    '''
-    Create an alignment for a spectrum
+    '''Given the spectrum and initial hits, start the alignment process for 
+    the input spectrum
 
-    Inputs:
-        spectrum:           (Spectrum) the spectrum to create an alignment for
-        boundaries:         (list) the list of boundaries for all observed spectra
-        db:                 (Database) holding all the records
-        mz_mapping:         (dict) the mapping from mass -> boundaries needed to retrieve kmers for a mass (boundary)
-        matched_masses_b:   (dict) the mapping from boundaries -> kmers for b ions
-        matched_masses_y:   (dict) the mapping from boundaries -> kmers for y ions
-        ppm_tolerance:      (int) the tolerance to allow for scoring algs
-        precursor_tolerance:(int) the toleraence to allow when matching precursor
-        n:                  (int) the number of results to keep for ever spectrum
-    Outputs:
-        (Alignments) the created alignments for this spectrum
+    :param spectrum: observed spectrum in question
+    :type spectrum: Spectrum
+    :param db: Holds all the source sequences
+    :type db: Database
+    :param b_hits: all k-mers found from the b-ion search
+    :type b_hits: list
+    :param y_hits: all k-mers found from the y-ion search
+    :type y_hits: list
+    :param ppm_tolerance: the parts per million error allowed when trying to match masses
+    :type ppm_tolerance: int
+    :param precursor_tolerance: the parts per million error allowed when trying to match
+        precursor masses
+    :type percursor_tolerance: int
+    :param n: the number of alignments to save
+    :type n: int
+    :param truth: a set of id keyed spectra with the desired spectra. A better description of what this looks like can be 
+        seen in the param.py file. If left None, the program will continue normally
+        (default is None)
+    :type truth: dict
+    :param fall_off: only works if the truth param is set to a dictionary. This is a dictionary (if using multiprocessing, 
+        needs to be process safe) where, if a sequence loses the desired sequence, a key value pair of spectrum id, 
+        DevFallOffEntry object are added to it. 
+        (default is None)
+    :type fall_off: dict
+    :param is_last: Only works if DEV is set to true in params. If set to true, timing evaluations are done. 
+        (default is False)
+    :type is_last: bool
+
+    :returns: Alignments for the spectrum. If no alignment can be created, and empty Alignments object is inserted
+    :rtype: Alignments
     '''
+
     # convert the ppm tolerance of the precursor to an int for the rest of the time
     precursor_tolerance = utils.ppm_to_da(spectrum.precursor_mass, precursor_tolerance)
 
@@ -135,42 +154,80 @@ def id_spectrum(
 def id_spectra(
     spectra_files: list, 
     database_file: str, 
-    verbose=True, 
-    min_peptide_len=5, 
-    max_peptide_len=20, 
-    result_count=3, 
-    peak_filter=0, 
-    relative_abundance_filter=0.0,
-    ppm_tolerance=20, 
-    precursor_tolerance=10, 
-    digest='',
-    missed_cleavages=0,
-    cores=1,
-    n=5,
-    DEBUG=False, 
-    truth_set='', 
-    output_dir=''
+    verbose: bool = True, 
+    min_peptide_len: int = 5, 
+    max_peptide_len: int = 20, 
+    peak_filter: int = 0, 
+    relative_abundance_filter: float = 0.0,
+    ppm_tolerance: int = 20, 
+    precursor_tolerance: int = 10, 
+    digest: str = '',
+    cores: int = 1,
+    n: int = 5,
+    DEBUG: bool = False, 
+    truth_set: str = '', 
+    output_dir: str = ''
 ) -> dict:
-    '''
-    Run a scoring and alignment on each spectra passed in and give spectra a sequence of 
-    Amino Acids that best describes the spectrum
+    '''Load in all the spectra and try to create an alignment for every spectrum
 
-    Inputs:
-        spectra_files:          (list of strings) of file names of spectra
-        database_file:          (string) full path to a .fasta database
-    kwargs: 
-        verbose:                (bool) whether or not to print messages. Default=True
-        min_peptide_len:        (int) minimum length sequence to consider for alignment. Default=5
-        max_peptide_len:        (int) maximum length sequence to consider for alignemtn. Default=20
-        ppm_tolerance:          (int) tolerance for ppm to include in search. Default=20
-        precursor_tolerance:    (int) the tolerance to allow when matching precusor masses. Default=10
-        cores:                  (int) the number of cores allowed to use
-        n:                      (int) the number of alignments to keep per spectrum. Default=5
-    Outputs:
-        dict containing the results. 
-        All information is keyed by the spectrum file name with scan number appended 
-        and the values are list of SequenceAligment objects
+    :param spectra_files: file names of input spectra
+    :type spectra_files: list
+    :param database_file: file name of the fasta database
+    :type database_file: str
+    :param verbose: print progress to the console. 
+        (default is True)
+    :type verbose: bool
+    :param min_peptide_len: the minimum length alignment to create
+        (default is 5)
+    :type min_peptide_len: int
+    :param max_peptide_len: the maximum length alignment to create
+        (default is 20)
+    :type max_peptide_len: int
+    :param peak_filter: If set to a number, this metric is used over the relative abundance filter. 
+        The most abundanct X peaks to use in the alignment. 
+        (default is 0)
+    :type peak_filter: int
+    :param relative_abundance_filter: If peak_filter is set, this parameter is ignored. The 
+        relative abundance threshold (in percent as a decimal) a peak must be of the total 
+        intensity to be used in the alignment. 
+        (default is 0.0)
+    :type relative_abundance_filter: float
+    :param ppm_tolerance: the parts per million error allowed when trying to match masses
+        (default is 20)
+    :type ppm_tolerance: int
+    :param precursor_tolerance: the parts per million error allowed when trying to match
+        a calculated precursor mass to the observed precursor mass
+        (default is 10)
+    :type precurosor_tolerance: int
+    :param digest: the type of digest used in the sample preparation. If left blank, 
+        a digest-free search is performed. 
+        (default is '')
+    :type digest: str
+    :param cores: the number of cores allowed to use in running the program. If a number 
+        provided is greater than the number of cores available, the maximum number of 
+        cores is used. 
+        (default is 1)
+    :type cores: int
+    :param n: the number of aligments to keep per spectrum. 
+        (default is 5)
+    :type n: int
+    :param DEBUG: DEVELOPMENT USE ONLY. Used only for timing of modules. 
+        (default is False)
+    :type DEBUG: bool
+    :param truth_set: the path to a json file of the desired alignments to make for each spectrum. 
+        The format of the file is {spectrum_id: {'sequence': str, 'hybrid': bool, 'parent': str}}. 
+        If left an empty string, the program proceeds as normal. Otherwise results of the analysis
+        will be saved in the file 'fall_off.json' saved in the output directory specified.
+        (default is '')
+    :type truth_set: str
+    :param output_dir: the full path to the output directory to save all output files.
+        (default is '')
+    :type output_dir: str
+
+    :returns: alignments for all spectra save in the form {spectrum.id: Alignments}
+    :rtype: dict
     '''
+
     DEV = False
     truth = None
 
@@ -336,23 +393,31 @@ File will be of the form
 
 def mp_id_spectrum(
     input_q: mp.Queue, 
-    reduced_db_cp: Database, 
+    db_copy: Database, 
     results: dict, 
-    fall_off=None, 
-    truth=None
+    fall_off: dict = None, 
+    truth: dict = None
     ) -> None:
-    '''
-    Multiprocessing function for id a spectrum. Each entry in the 
-    input_q must be an object of some type with values
-        b_hits: list of kmers
-        y_hits: list of kmers
-        spectrum: Spectrum
-        spectrum_id: int
-        db: Database
-        ppm_tolerance: int
-        n: int
+    '''Multiprocessing function for to identify a spectrum. Each entry in the 
+    input_q must be a MPSpectrumID object
 
-    Stores all results in the results dict
+    :param input_q: a queue to pull MPSpectrumID objects from for analysis
+    :type input_q: mp.Queue
+    :param db_copy: a copy of the original database for alignments
+    :type db_copy: Database
+    :param results: a multiprocesses safe dictionary to save the alignments in
+    :type results: dict
+    :param truth_set: dictionary containing all the desired alignments to make. 
+        The format of the file is {spectrum_id: {'sequence': str, 'hybrid': bool, 'parent': str}}. 
+        If left as None, the program will continue as normal
+        (default is None)
+    :type truth_set: dict
+    :param fall_off: only used if the truth_set param is set to a valid json. Must be a multiprocess
+        safe dictionary to store the fall off information to
+    :type fall_off: dict
+
+    :returns: None
+    :rtype: None
     '''
     while True:
 
@@ -394,7 +459,7 @@ def mp_id_spectrum(
         # otherwise run id spectrum 
         results[next_entry.spectrum.id] = id_spectrum(
             next_entry.spectrum, 
-            reduced_db_cp, 
+            db_copy, 
             next_entry.b_hits, 
             next_entry.y_hits, 
             next_entry.ppm_tolerance, 
