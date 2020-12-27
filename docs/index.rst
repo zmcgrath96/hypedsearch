@@ -18,6 +18,7 @@ Docs are built with sphinx and hosted via read the docs.
    gen_spectra
    identification
    objects
+   scoring
    utils
 
 Indices and tables
