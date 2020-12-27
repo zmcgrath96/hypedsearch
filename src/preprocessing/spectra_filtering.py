@@ -1,16 +1,26 @@
-def relative_abundance_filtering(masses: list, abundances: list, percentage: float) -> (list, list):
-    '''
-    Take all peaks from the spectrum who's abundance is at least percentage of the total abundances. 
-    It is assumed that the masses and abundances lists share ordering
+def relative_abundance_filtering(
+    masses: list, 
+    abundances: list, 
+    percentage: float
+    ) -> (list, list):
+    '''Take all peaks from the spectrum who's abundance is at least *percentage* 
+    of the total abundances. It is assumed that the masses and abundances lists 
+    share ordering
 
-    Inputs:
-        masses:     (list) floats of masses
-        abundances: (list) floats of the abundances of the corresponding masses
-        percentage: (float) the minimum percentage of abundance a peak must have. Must be in range (0, 1)
-    Outputs:
-        (list, list) (masses, abundances) pair (pairing is the same as the input) that
-                    pass the filter
+    :param masses: m/z values 
+    :type masses: list
+    :param abundances: abundance value for the m/z values. Abundance at entry 
+        *i* corresponds to m/z valuat entry *i*
+    :type abundances: list
+    :param percentage: the minimum percentage of the total abundance a peak must
+        have to pass the filter. Values are in the range [0, 1). A relatively 
+        realistic value is .005 (.5%)
+    :type percentage: float
+
+    :returns: filtered masses, filtered abundaces
+    :rtype: (list, list)
     '''
+
     # total intensity
     ti = sum(abundances)
 
@@ -28,18 +38,22 @@ def relative_abundance_filtering(masses: list, abundances: list, percentage: flo
 
 
 def peak_filtering(masses: list, abundances: list, num_peaks: int) -> (list, list):
-    '''
-    Take the most abundant peaks and return the sorted masses with the abundances.
+    '''Take the most abundant peaks and return the sorted masses with the abundances.
     It is assumed that the masses and abundances lists share ordering
 
-    Inputs:
-        masses:     (list) floats of masses
-        abundances: (list) floats of the abundances of the corresponding masses
-        num_peaks:  (int) the number of peaks to retain
-    Outputs:
-        (list, list) (masses, abundances) pair (pairing is the same as the input) that
-                    pass the filter
+
+    :param masses: m/z values 
+    :type masses: list
+    :param abundances: abundance value for the m/z values. Abundance at entry 
+        *i* corresponds to m/z valuat entry *i*
+    :type abundances: list
+    :param num_peaks: the top X most abundant peaks 
+    :type num_peask: int
+
+    :returns: filtered masses, filtered abundaces
+    :rtype: (list, list)
     '''
+
     # zip the abundance and the m/z values together
     mass_abundances = zip(masses, abundances)
     

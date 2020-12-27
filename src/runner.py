@@ -58,7 +58,6 @@ def run(args: dict) -> None:
         peak_filter=args['peak_filter'],
         relative_abundance_filter=args['relative_abundance_filter'],
         digest=args['digest'], 
-        missed_cleavages=args['missed_cleavages'],
         n=args['n'] * 10,
         verbose=True, 
         DEBUG=args['DEBUG'], 

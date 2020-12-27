@@ -10,48 +10,76 @@ import array as arr
 
 BATCH_SIZE = 300
 
-def merge(P: Iterable, indices: Iterable, kmers: Iterable, boundaries: Iterable):
-    b_i, p_i = 0, 0
+def merge(
+    mz_s: Iterable, 
+    indices: Iterable, 
+    kmers: Iterable, 
+    boundaries: Iterable
+    ) -> defaultdict:
+    '''Perform a linear search of observed mz values that fit into mappings 
+    to get a mapping from mz boundaries [*lower_bound*, *upper_bound*] to a set 
+    of k-mers
+
+    :param mz_s: mz values to look through
+    :type mz_s: Iterable
+    :param indices: index mappings from mz values to kmers. The steps to get 
+        from an *m/z* value to a set of k-mers is as follows: if we have a m/z
+        value at index *i*, we will get the values in range of *indices*[*i*-1] 
+        to *indices*[*i*], call it j in J. Then, the k-mers we want are all kmers
+        at *kmers*[*j*] for each j in J.
+    :type indices: Iterable
+    :param kmers: the k-mers associated with the mz_s in the range of indices
+        as described in the *indices* param
+    :type kmers: Iterable
+    :param boundaries: lower upper bounds for a mass in a list like 
+        [*lower_bound*, *upper_bound*]
+    :type boundaries: Iterable
+
+    :returns: mapping from a string (using src.utils.hashable_boundaries) 
+        of <lower_bound>-<upper_bound> to a list of k-mers
+    :rtype: defaultdict
+    '''
+
+    b_i, mz_i = 0, 0
 
     matched_masses = defaultdict(list)
 
-    while b_i < len(boundaries) and p_i < len(P):
+    while b_i < len(boundaries) and mz_i < len(mz_s):
 
-        # if P[p_i] is in the boundary, keep track of it increment p_i
-        if boundaries[b_i][0] <= P[p_i] <= boundaries[b_i][1]:
-            matched_masses[hashable_boundaries(boundaries[b_i])] += kmers[indices[p_i - 1]:indices[p_i]]
-            p_i += 1
+        # if mz_s[mz_i] is in the boundary, keep track of it increment mz_i
+        if boundaries[b_i][0] <= mz_s[mz_i] <= boundaries[b_i][1]:
+            matched_masses[hashable_boundaries(boundaries[b_i])] += kmers[indices[mz_i - 1]:indices[mz_i]]
+            mz_i += 1
 
-        # if the upper boundary is less than the p_i, increment b_i
-        elif P[p_i] > boundaries[b_i][1]:
+        # if the upper boundary is less than the mz_i, increment b_i
+        elif mz_s[mz_i] > boundaries[b_i][1]:
             b_i += 1
 
-        # if the lower boundary is greater than the p_i, increment p_i
-        elif P[p_i] < boundaries[b_i][0]:
-            p_i += 1
+        # if the lower boundary is greater than the mz_i, increment mz_i
+        elif mz_s[mz_i] < boundaries[b_i][0]:
+            mz_i += 1
 
     return matched_masses
 
-def make_database_set(proteins: list, max_len: int) -> (list, list, list):
-    '''
-    Create parallel lists of (masses, index_maps, kmers) for the merge sort operation
+def make_database_set(
+    proteins: list, 
+    max_len: int
+    ) -> (arr.array, arr.array, list, arr.array, arr.array, list, dict):
+    '''Create parallel lists of (masses, index_maps, kmers) for the merge sort operation
+    where index_maps map the massses to a range of positions in the kmers list 
 
-    Inputs:
-        proteins:   (list) protein entries of shape (name, entry) where entry has a .sequence attribute
-        max_len:    (int) the max length kmer to generate
-    Ouputs:
-        db_list_b:      (array) all b ion masses created in iteration through the proteins
-        index_list_b:   (array) the index mapping. Equal size to db_list_b where each entry maps 
-                                idx(db_list_b) -> range of indices in kmer_list_b of kmers corresponding to masses
-        kmer_list_b:    (list) the list of kmers associated to db_list_b through index_list_b
-
-        db_list_y:      (array) all y ion masses created in iteration through the proteins
-        index_list_y:   (array) he index mapping. Equal size to db_list_y where each entry maps 
-                                idx(db_list_y) -> range of indices in kmer_list_y of kmers corresponding to masses
-        kmer_list_y:    (list) the list of kmers associated to db_list_b through index_list_y
-
-        kmer_set:       (dict) mappings of kmers -> source proteins
-
+    :param proteins: protein entries of shape (name, entry) where entry has a 
+        *.sequence* attribute
+    :type proteins: list
+    :param max_len: max k-mer length
+    :type max_len: int
+    
+    :returns: b ion masses created from the protein set, mapping from b ion masses 
+        to the kmers associated (same length as b ion masses), kmers associated with 
+        b ion masses, y ion masses created from the protein set, mapping from y ion masses 
+        to the kmers associated (same length as y ion masses), kmers associated with 
+        y ion masses, mapping of k-mers to source proteins
+    :rtype: (array, array, list, array, array, list, dict)
     '''
     db_dict_b = defaultdict(set)
     db_dict_y = defaultdict(set)
@@ -123,37 +151,26 @@ def make_database_set(proteins: list, max_len: int) -> (list, list, list):
     return db_list_b, index_list_b, kmer_list_b, db_list_y, index_list_y, kmer_list_y, kmer_set
 
 
-def match_masses(spectra_boundaries: list, db: Database, max_pep_len=30) -> (dict, dict, Database):
-    '''
-    Take in a list of boundaries from observed spectra and return a b and y
+def match_masses(
+    spectra_boundaries: list, 
+    db: Database, 
+    max_pep_len: int = 30
+    ) -> (dict, dict, Database):
+    '''Take in a list of boundaries from observed spectra and return a b and y
     dictionary that maps boundaries -> kmers
 
-    Inputs:
-        spectra_boundaries: (list) lists with [lower_bound, upper_bound]
-        db:                 (Database) entries to look for kmers in
-    kwargs:
-        max_pep_len:        (int) maximum peptide length. Default=30
-    Outputs:
-        (dict, dict) mappings from boundaries -> kmers for (b, y) ions
+    :param spectra_boundaries: boundaries as lists as [lower_bound, upper_bound]
+    :type spectra_boundaries: list
+    :param db: source proteins
+    :type db: Database
+    :param max_pep_len: maximum peptide length in k-mer prefetching
+    :type max_pep_len: int
+
+    :returns: mapping of b ion masses to k-mers, mapping of y ion masses to 
+        k-mers, updated database
+    :rtype: (dict, dict, Database)
     '''
 
-    '''
-    We need to create mappings from boundaries -> kmers for both b and y ions
-    Emprically we found that ~300 proteins worth of kmers and floats takes ~4GB RAM
-    So in order to keep in down we need to batch it. Heres what we'll do
-    
-      1. Define a constant above for the number of proteins to have per batch
-      2. For the number of proteins in a batch
-        1. Pass those proteins to make_database_set (returns a list of b, y kmers with masses and indices)
-        2. Pass those lists ot merge
-        3. The results of that are mappings of boundaries -> kmers, add those to some constant mapping we have
-        4. Delete those old lists to clear memory
-        5. Repeat
-    
-    Adding each batch's results to our mapping will create a large mapping. We will return
-    that mapping and the updated database
-
-    '''
     # keep track of all of the good mass matches and kmers
     matched_masses_b, matched_masses_y, kmer_set = defaultdict(list), defaultdict(list), defaultdict(list)
 

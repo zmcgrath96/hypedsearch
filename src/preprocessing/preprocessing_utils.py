@@ -1,20 +1,36 @@
 from src.file_io import spectra
 from src.utils import ppm_to_da, overlap_intervals
 
-def load_spectra(spectra_files: list, ppm_tol: int, peak_filter=0, relative_abundance_filter=0) -> (list, list, dict):
-    '''
-    Load all the spectra files into memory and merge all 
-    spectra into one massive list for reduction of the search space
+def load_spectra(
+    spectra_files: list, 
+    ppm_tol: int, 
+    peak_filter: int = 0, 
+    relative_abundance_filter: float = 0.0
+    ) -> (list, list, dict):
+    '''Load all the spectra files into memory and merge all spectra into one 
+    massive list for reduction of the search space
 
-    indicesnputs:
-        spectra_files:  (list) full paths to all spectra files
-    kwargs:
-        peak_filter:    (int) the top X most abundant spectra to keep. Default=0
-        relative_abundance_filter:  (float) the percentage (0, 1) of the total abundance 
-                                    a peak must have to be considered significant. Default=0
-    Outputs:
-        (list, dict, list) all spectra in memory of boundaries namedtuples, a list of floats of all masses
+    :param spectra_files: full string paths the the spectra files
+    :type spectra_files: list
+    :param ppm_tol: parts per million mass error allowed for making boundaries 
+    :type ppm_tol: int
+    :param peak_filter: the top X most abundant spectra to keep. If left as 0, 
+        *relative_abundance_filter* is used instead. 
+        (default is 0)
+    :type peak_filter: int
+    :param relative_abundance_filter: the percentage of the total abundance a 
+        peak must make up in order to pass the filter. Value should be between 
+        [0, 1). A realistic value is .005 (.5%). If *peak_filter* is non-zero, 
+        that value is used instead. 
+        (default is 0.0)
+    :type relative_abundance_filter: float
+  
+
+    :returns: Spectra objects from file, overlapped boundaries of [lower_bound, upper_bound], 
+        mapping from a m/z value to the index of the boundaries that the m/z fits in
+    :rtype: (list, list, dict)
     '''
+    
     # the single dimension of all the rounded spectra to use for reducing the search space
     linear_spectra = []
 
