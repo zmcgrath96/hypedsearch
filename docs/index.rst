@@ -6,8 +6,10 @@ Docs are built with sphinx and hosted via read the docs.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Getting Started:
 
+   Background
+   Motivation
    docs
 
 .. toctree::
