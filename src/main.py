@@ -33,7 +33,6 @@ def set_args(args) -> dict:
     peak_filter = args.peak_filter if not use_params else params.PEAK_FILTER
     relative_abundance_filter = args.rel_abund_filter if not use_params else params.RELATIVE_ABUNDANCE_FILTER
     digest = args.digest if not use_params else params.DIGEST
-    missed_cleavages = args.missed_cleavages if not use_params else params.MISSED_CLEAVAGES
     cores = args.cores if not use_params else params.CORES
     n = args.n if not use_params else params.N
     debug = params.DEBUG
@@ -63,7 +62,6 @@ def set_args(args) -> dict:
         'peak_filter': peak_filter, 
         'relative_abundance_filter': relative_abundance_filter,
         'digest': digest, 
-        'missed_cleavages': missed_cleavages,
         'DEBUG': debug, 
         'cores': cores,
         'n': n,
@@ -92,7 +90,6 @@ if __name__ == '__main__':
     parser.add_argument('--peak-filter', dest='peak_filter', type=int, default=0, help='The number of peaks to take from a spectrum. The most abundant peaks will be taken. Leave blank if you want no filter or to use relative abundance filter. Defualt=0')
     parser.add_argument('--abundance-filter', dest='rel_abund_filter', type=float, default=0.0, help='Take only peaks from a spectrum where the abundance of the peak is >= the percentage give. Leave blank if you want no filter or to use peak filter. Default=0.0')
     parser.add_argument('--digest', dest='digest', type=str, default='', help='The digest performed. Default=None')
-    parser.add_argument('--missed-cleavages', dest='missed_cleavages', type=int, default=0, help='Number of missed cleavages allowed. Default=0')
     parser.add_argument('--verbose', dest='verbose', type=bool, default=True, help='Extra printing to console during run. Default=True')
     parser.add_argument('--cores', dest='cores', type=int, default=1, help='The number of cores allowed to use when searching. Uses at least 1 and at most the number of available cores. Default=1')
     parser.add_argument('--n', dest='n', type=int, default=5, help='The number of alignments to keep per spectrum. Default=5')

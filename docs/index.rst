@@ -10,6 +10,7 @@ Docs are built with sphinx and hosted via read the docs.
 
    Background
    Motivation
+   Installation and Usage
    docs
 
 .. toctree::
