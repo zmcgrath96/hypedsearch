@@ -14,13 +14,13 @@ HYBRID_ALIGNMENT_PATTERN = re.compile(r'[-\(\)]')
 
 #################### Private functions ####################
 def __split_hybrid(sequence: str) -> (str, str):
-    '''
-    Split a hybrid sequence into it's left and right components
+    '''Split a hybrid sequence into it's left and right components
     
-    Inputs:
-        sequence:    (str) the hybrid string sequnce
-    Outputs: 
-        (str, str) the left and right sequences respectively
+    :param sequence: hybrid sequence with special characters [() -]
+    :type sequence: str
+    
+    :returns: left subsequence, right subsequence
+    :rtype: (str, str)
     '''
     if '-' in sequence:
         return (sequence.split('-')[0], sequence.split('-')[1])
@@ -31,16 +31,24 @@ def __split_hybrid(sequence: str) -> (str, str):
         return (left, right)
 
 
-def __get_surrounding_amino_acids(parent_sequence: str, sequence: str, count: int) -> list:
-    '''
-    Get the amino acids that surround a sequence. Return the (left, right) count number of amino acids
+def __get_surrounding_amino_acids(
+    parent_sequence: str, 
+    sequence: str, 
+    count: int
+    ) -> list:
+    '''Get the amino acids that surround a sequence. Return the (left, right) 
+    *count* number of amino acids
 
-    Inputs:
-        parent_sequence:    (str) the protein sequence to pull from
-        sequence:           (str) the subsequence we are looking for
-        count:              (int) the number of amino acids to get on each side
-    Outputs:
-        (list) pairs (tuples) of flanking amino acids for each occurance of sequence in parent_sequence
+    :param parent_sequence: protein sequence to pull from 
+    :type parent_sequence: str
+    :param sequence: subsequence we are looking for
+    :type sequence: str
+    :param count: the number of surrounding amino acids to get per side
+    :type count: int
+
+    :returns: tuples of (left amino acids, right amino acids) from all occurances
+        in the parent sequence
+    :rtype: list
     '''
     # keep track of the pairs
     flanking_pairs = []
@@ -56,20 +64,35 @@ def __get_surrounding_amino_acids(parent_sequence: str, sequence: str, count: in
 
     return flanking_pairs
 
-def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, tolerance=1) -> list:
-    '''
-    Try and add amino acids to get the closest precursor mass
+def __add_amino_acids(
+    spectrum: Spectrum, 
+    sequence: str, 
+    db: Database, 
+    gap: int = 3, 
+    tolerance: float = 1.0
+    ) -> list:
+    '''Try and add amino acids to get the closest calculated precursor mass to 
+    the observed precursor mass
 
-    Inputs:
-        spectrum:   (Spectrum) the observed precursor mass
-        seqeunce:   (str) the attempted alignment
-        db:         (Database) holds the protein sequences
-    kwargs:
-        gap:        (int) the number of additions allowed. Default=3
-        tolerance:  (float) the mass (in Da) tolerance to accept in a precursor distance. Default=1
-    Outputs:
-        (list) the sequence(s) with the closest precursor mass
+    :param spectrum: observed spectrum
+    :type spectrum: Spectrum
+    :param sequence: the alignment to add amino acids to
+    :type sequence: str
+    :param db: holds to source proteins
+    :type db: Database
+    :param gap: number of allowed amino acids try and add to each side
+        (default is 3)
+    :type gap: int
+    :param tolerance: the tolerance (in Daltons) to allow when comparing 
+        precursor masses. 
+        (default is 1)
+    :type tolerance: float
+
+    :returns: all perturbed str sequences with a calculated precursor mass that 
+        is within the tolerance of the observed precursor mass
+    :rtype: list
     '''
+
     filled_in  = []
 
     # get the parents of the sequence(s) and add or subtract amino acids
@@ -158,20 +181,31 @@ def __add_amino_acids(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
                                 filled_in.append(new_seq)
     return filled_in
 
-def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3, tolerance=1) -> list:
-    '''
-    Remove up to gap number of amino acids to try and match precursor mass
+def __remove_amino_acids(
+    spectrum: Spectrum, 
+    sequence: str, 
+    gap: int = 3, 
+    tolerance: float = 1
+    ) -> list:
+    '''Remove up to gap number of amino acids to try and match precursor mass
 
-    Inputs:
-        spectrum:   (Spectrum) the aligned spectrum
-        sequence:   (str) the attempted string alignment
-    kwargs:
-        gap:        (int) the total number of free amino acids to try. Default=3
-        tolerance:  (float) the number (in Da) to allow as the tolerance for acceptable 
-                            precursor masses. Default=1
-    Outputs:
-        (list) the sequence(s) with the closest precursor mass
+    :param spectrum: observed spectrum
+    :type spectrum: Spectrum
+    :param sequence: the alignment to add amino acids to
+    :type sequence: str
+    :param gap: number of allowed amino acids try and add to each side
+        (default is 3)
+    :type gap: int
+    :param tolerance: the tolerance (in Daltons) to allow when comparing 
+        precursor masses. 
+        (default is 1)
+    :type tolerance: float
+
+    :returns: all perturbed str sequences with a calculated precursor mass that 
+        is within the tolerance of the observed precursor mass
+    :rtype: list
     '''
+
     attempted = []
     
     # treat hybrids different than non-hybrids
@@ -230,30 +264,29 @@ def __remove_amino_acids(spectrum: Spectrum, sequence: str, gap=3, tolerance=1) 
 #################### Public functions ####################
 
 def align_overlaps(seq1: str, seq2: str) -> str:
-    '''
-    Attempt to align two string sequences. It will look at the right side of seq1 and left side of seq2
-    to overlap the two strings. If no overlap is found, seq2 is appended to seq1
-
-    Example 1: strings with overlap
-
-        seq1: ABCD
-        seq2: CDEF
-
-        returns: ABCDEF
-
-    Example 2: strings with no overlap
-
-        seq1: ABCD
-        seq2: EFGH
-
-        return: ABCD-EFGH
+    '''Attempt to align two string sequences. It will look at the right side of 
+    seq1 and left side of seq2 to overlap the two strings. If no overlap is 
+    found, seq2 is appended to seq1
     
-    Inputs:
-        seq1:    (str) the left side sequence 
-        seq2:    (str) the right side sequence
-    Outputs:
-        str the attempted alignments
+    :param seq1: the left sequence
+    :type seq1: str
+    :param seq2: the right sequence
+    :type seq2: str
+
+    :returns:
+    :rtype: str
+
+    :Example: 
+
+    >>> align_overlaps('ABCD', 'CDEF')
+    >>> 'ABCDEF'
+
+    :Example:
+
+    >>> align_overlaps('ABCD', 'EFGH')
+    >>> 'ABCD-EFGH'
     '''
+
     alignment = None
     # if we have a perfect overlap, return it
     if seq1 == seq2:
@@ -300,21 +333,35 @@ def align_overlaps(seq1: str, seq2: str) -> str:
 
     return alignment
 
-def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3, tolerance=1) -> list:
-    '''
-    Try and fill in the gaps of an alignment. This is primarily focused on 
+def match_precursor(
+    spectrum: Spectrum, 
+    sequence: str, 
+    db: Database, 
+    gap: int = 3, 
+    tolerance: float = 1
+    ) -> list:
+    '''Try and fill in the gaps of an alignment. This is primarily focused on 
     filling in the gaps left by the difference in precursor mass. If we find that
-    the difference is more than GAP amino acids, then return the broken one
+    the difference is more than GAP amino acids, then an empty list is returned
 
-    Inputs:
-        spectrum:   (Spectrum) sequence to align 
-        sequence:   (str) the aligned sequence
-        db:         (Database) the database with string sequences
-    kwargs:
-        gap:        (int) the number of amino acids to accept. Default=3
-        tolerance:  (float) the mass (in Da) to accept as error in matching precursors. Default=1
-    Outputs:
-        (list) sequence(s) that may have filled in the gap
+    :param spectrum: observed spectrum
+    :type spectrum: Spectrum
+    :param sequence: the attempted alignment
+    :type sequence: str
+    :param db: source of proteins
+    :type db: Database
+    :param gap: the maximum number of allowed number of amino acids to 
+        add/subtract to/from the original sequence. 
+        (default is 3)
+    :type gap: int
+    :param tolerance: the error (in Daltons) allowed when trying to match
+        a calculated precursor to the observed precursor mass. 
+        (default is 1)
+    :type tolerance: float
+
+    :returns: sequences with a precursor within the tolerance of the observed
+        precursor
+    :rtype: list
     '''
 
     # remove special characters for generating sequences
@@ -328,7 +375,7 @@ def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
 
     # if there are too many to add or subtract, return None
     if gap < estimated_off:
-        return [None]
+        return []
 
     # add amino acids
     if spectrum.precursor_mass > theory_precrusor:
@@ -340,26 +387,40 @@ def fill_in_precursor(spectrum: Spectrum, sequence: str, db: Database, gap=3, to
 
         return __remove_amino_acids(spectrum, sequence, gap, tolerance)
 
-def get_parents(seq: str, db: Database, ion=None) -> (list, list):
-    '''
-    Get the parents of a sequence. If the sequence is a hybrid sequence, 
-    then the second entry of the tuple holds a list of proteins for the right contributor.
-    Otherwise the right entry is empty.
+def get_parents(
+    seq: str, 
+    db: Database, 
+    ion: str = None
+    ) -> (list, list):
+    ''' Get the parents of a sequence. If the sequence is a hybrid sequence, 
+    then the second entry of the tuple holds a list of proteins for the right 
+    contributor, otherwise the right entry is empty.
 
-    Example 1: non hybrid peptide
-        sequence: ABCDE
-        Output: ([protein1, protein2], None)
+    :param seq: the sequence to look for the parents of
+    :type seq: str
+    :param db: the source proteins
+    :type db: Database
+    :param ion: if left as None, look for the full string. Otherwise try 
+        to recursivley look by taking off sides of the kmer depending on the ion 
+        type. 
+        (default is None)
+    :type ion: str
 
-    Example 2: hybridpeptide
-        sequence: ABC(DE)FGH
-        output: ([protein1], [protein2])
+    :returns: if hybrid, (left source proteins, right source proteins)
+        else, (source proteins, None)
+    :rtype: (list, list)
 
-    Inputs:
-        seq:    (str) sequence to find parents for
-        db:     (Database) holds source information
-        ion:    (str) if left none, go for full string, otherwise search recursivley
-    Outputs:
-        (list, list) lists of parents
+    :Example:
+
+    >>> # non hybrid peptide
+    >>> get_parents('ABCDE', db, None)
+    >>> ([protein1, protein2], None)
+
+    :Example:
+
+    >>> # hybrid peptide
+    >>> get_parents('ABC(DE)FGH', db, None)
+    >>> ([protein1, protein2], [protein3])
     '''
     get_sources = lambda s: database.get_proteins_with_subsequence(db, s)
     get_sources_ion = lambda s, i: database.get_proteins_with_subsequence_ion(db, s, i)
@@ -379,17 +440,20 @@ def get_parents(seq: str, db: Database, ion=None) -> (list, list):
     return (get_sources(seq), None)
 
 def extend_non_hybrid(seq: str, spectrum: Spectrum, ion: str, db: Database) -> list:
-    '''
-    Extend a non hybrid sequence to try and match the correct length. 
-    b ions will be extended to the right, and y ions to the left
+    '''Extend a non hybrid sequence to try and match the predicted length. 
+    b ion kmers will be extended to the right, and y ion kmers to the left
 
-    Inputs:
-        seq:        (str) sequence to be extended
-        spectrum:   (Spectrum) the observed spectrum
-        ion:        (str) the ion type of the sequence to extend. Either 'b' or 'y'
-        db:         (Database)
-    Outputs:
-        (list) all possible extensions of the sequence
+    :param seq: sequence to be extended
+    :type seq: str
+    :param spectrum: observed spectrum
+    :type spectrum: Spectrum
+    :param ion: ion type. Either 'b' or 'y'
+    :type ion: str
+    :param db: source of proteins
+    :type db: Database
+
+    :returns: all possible extensions of the initial sequence
+    :rtype: list
     '''
     extensions = []
 

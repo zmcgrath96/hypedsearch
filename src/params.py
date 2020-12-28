@@ -30,9 +30,6 @@ PEAK_FILTER = 0
 # is allowed to have to pass the filter. Values should be 
 # in the range (0, 1) 
 RELATIVE_ABUNDANCE_FILTER = .005
-# number of missed cleavages to allow. If no digest was performed, this will
-# be ignored
-MISSED_CLEAVAGES = 2
 
 ########################## EXPERIMENT PARAMETERS ##########################
 # in vitro digest performed on the sample. Leave '' if none

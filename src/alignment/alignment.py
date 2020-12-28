@@ -29,51 +29,40 @@ OBJECTIFY_COUNT = 0
 TOTAL_ITERATIONS = 0
 ####################### Public functions #######################
 
-def same_protein_alignment(seq1: str, seq2: str, parent_sequence: str) -> (str, str):
-    '''
-    Attempt to create a non-hybrid alignment from two sequences from the same protein. If the 
-    two sequences do not directly overlap but have <= 1% (or 1 if very short) of the total number 
-    of amino acids, make the alignment. If not, create a hybrid alignment from that. If one 
-    compeletely overlaps the other, use that as the alignment. 
+def same_protein_alignment(
+    seq1: str, 
+    seq2: str, 
+    parent_sequence: str
+    ) -> (str, str):
+    '''Attempt to create a non-hybrid alignment from two sequences from the same 
+    protein. If the two sequences do not directly overlap but are close enough 
+    and from the same protein, make the alignment. If not, create a hybrid 
+    alignment from the two input halves. If one compeletely overlaps the other, 
+    use the larger sequence as the alignment.
     
-    Example 1: Overlapped sequences
-        seq1: CDE        starting position: 2
-        seq2: ABCDEFG    starting position: 0
-        
-        Output: (ABCDEFG, None)
-        
-    Example 2: Partial overlaping sequences
-        seq1: ABCDE      starting position: 0
-        seq2: DEFGH      starting position: 3
-        
-        Outputs: (ABCDEFGH, None)
-        
-    Example 3: Non overlapping within the 1% (or 1)
-        seq1: ABCDE      starting position: 0
-        seq2: GHIJK      starting position: 6
-        
-        protein length: 52
-        grace length = max(1, 1% of 52) = 1
-        
-        Outputs: (ABCDEFGHIJK, None)
-        
-    Example 4: Theoretical overlap but outside of range
-        seq1: ABCDE      starting position: 0
-        seq2: EFGHI      starting position: 30
-        
-        outside of allowed range, make hybrid
-        
-        Outputs: (ABCDEFGHI, ABCD(E)FGHI)
-        
+    :param seq1: left sequence
+    :type seq1: str
+    :param seq2: right sequence
+    :type seq2: str
+    :param parent_sequence: parent sequence of seq1 and seq2
+    :type parent_sequence: str
+
+    :returns: if hybrid sequence (sequence without special charcters, sequence
+        with hybrid sequence)
+        else (sequence, None)
+    :rtype: (str, str or None)
+
+    :Example:
     
-    Inputs:
-        seq1:            (str) left sequence to align
-        seq2:            (str) right sequence to align
-        parent_sequence: (str) sequence of the shared parent protein
-    Outputs:
-        tuple:   first entry is the seqence, second entry is 
-                 the second entry is the hybrid sequence, if not hybrid, then its None
+    >>> same_protein_alignment('ABC', 'CDE', 'ABCDEFG')
+    >>> ('ABCDE', None)
+
+    :Example:
+    
+    >>> same_protein_alignment('ABC', 'FGH', 'ABCDEFHI')
+    >>> ('ABCFGH', 'ABC-FGH')
     ''' 
+
     # check to see if they are equal or one covers the entirety of the other
     if seq1 == seq2:
         return (seq1, None)
@@ -122,37 +111,43 @@ def same_protein_alignment(seq1: str, seq2: str, parent_sequence: str) -> (str, 
     nonhybrid_alignments.sort(key=lambda x: len(x))
     return (nonhybrid_alignments[0], None)
 
-def align_b_y(b_results: list, y_results: list, spectrum: Spectrum, db: Database) -> list:
-    '''
-    Take 2 lists of sequences: one from the N terminus side (b_results) and 
-    one from the C terminus side (y_results). Lookup the sequences in the database.
-    If the two sequences are from the same protein, try and overlap the two strings.
-    If there is an overlap, return it. In all other situations, a hybrid alignment is
-    returned instead.
+def align_b_y(
+    b_kmers: list, 
+    y_kmers: list, 
+    spectrum: Spectrum, 
+    db: Database
+    ) -> list:
+    '''Try and connect all b and y k-mers and try and make either hybrid 
+    or non hybrid string alignments from them.
 
-    Inputs:
-        b_results:  (list of str) sequences found from b hits
-        y_results:  (list of str) sequences fround from y hits
-        spectrum:   (Spectrum) observed
-        db:         (Database) source of the sequences
-    Outputs:
-        (list) tuples of aligned sequences. First entry is the nonhybrid, second (if hybrid)
-                has the hybrid characters -(). If not hybrid, it is None
+    :param b_kmers: kmers from b ion masses
+    :type b_kmers: list
+    :param y_kmers: kmers from y ion masses
+    :type y_kmers: list
+    :param spectrum: observed spectrum
+    :type spectrum: Spectrum
+    :param db: source proteins
+    :type db: Database
+
+    :results: tuples of alignments. If hybrid, (sequence, sequence with 
+        special hybrid characters), otherwise (sequence, None)
+    :rtype: list
     '''
+
     # try and create an alignment from each extended b and y ion sequence
     spec_alignments = []
     #[item for sublist in t for item in sublist]
-    for seq in b_results:
+    for seq in b_kmers:
         spec_alignments += [(x, None) for x in alignment_utils.extend_non_hybrid(seq, spectrum, 'b', db)]
-    for seq in y_results:
+    for seq in y_kmers:
         spec_alignments += [(x, None) for x in alignment_utils.extend_non_hybrid(seq, spectrum, 'y', db)]
 
-    for b_seq in b_results:
+    for b_seq in b_kmers:
 
         # get all the b proteins
         b_proteins = database.get_proteins_with_subsequence(db, b_seq)
 
-        for y_seq in y_results:
+        for y_seq in y_kmers:
 
             # ge the y proteins
             y_proteins = database.get_proteins_with_subsequence(db, y_seq)
@@ -191,35 +186,55 @@ def attempt_alignment(
     db: Database, 
     b_hits: list,
     y_hits: list, 
-    n=3, 
-    ppm_tolerance=20, 
-    precursor_tolerance=1,
-    DEBUG=False, 
-    is_last=False, 
-    truth=None, 
-    fall_off=None
+    n: int = 3, 
+    ppm_tolerance: int = 20, 
+    precursor_tolerance: int = 10,
+    DEBUG: bool = False, 
+    is_last: bool = False, 
+    truth: bool = None, 
+    fall_off: bool = None
 ) -> Alignments:
     '''
-    Given a set of left and right (b and y ion) hits, try and overlap or extend one side to 
-    explain the input spectrum
+    Create an alignment for the input spectrum given an initial set of b and y 
+    ion based kmers
 
-    Example:
-        b_hits = [ABCD, LMNOP]
-        y_hits = [ABCDEF]
-        if the true value of the spectrum is ABCDEF, then we filter out LMNOP,
-        overlap ABCD and ABCDEF and return ABCDEF
+    :param spectrum: observed spectrum in question
+    :type spectrum: Spectrum
+    :param db: Holds all the source sequences
+    :type db: Database
+    :param b_hits: all k-mers found from the b-ion search
+    :type b_hits: list
+    :param y_hits: all k-mers found from the y-ion search
+    :type y_hits: list
+    :param ppm_tolerance: the parts per million error allowed when trying to 
+        match masses. 
+        (default is 20)
+    :type ppm_tolerance: int
+    :param precursor_tolerance: the parts per million error allowed when trying 
+        to match precursor masses. 
+        (default is 10)
+    :type percursor_tolerance: int
+    :param n: the number of alignments to save. 
+        (default is 3)
+    :type n: int
+    :param truth: a set of id keyed spectra with the desired spectra. A better 
+        description of what this looks like can be 
+        seen in the param.py file. If left None, the program will continue normally
+        (default is None)
+    :type truth: dict
+    :param fall_off: only works if the truth param is set to a dictionary. This 
+        is a dictionary (if using multiprocessing, needs to be process safe) 
+        where, if a sequence loses the desired sequence, a key value pair of 
+        spectrum id, DevFallOffEntry object are added to it. 
+        (default is None)
+    :type fall_off: dict
+    :param is_last: Only works if DEV is set to true in params. If set to true, 
+        timing evaluations are done. 
+        (default is False)
+    :type is_last: bool
 
-    Inputs:
-        spectrum:               (Spectrum) spectrum to align
-        db:                     (Database) Holds protein entries
-        hits:                   (KmerMassesResults) hits from the hashing on a KmerMasses object
-        base_kmer_len:          (int) minimum length kmer length used for filtering results
-    kwargs:
-        n:                      (int) number of results to return. Default=3
-        ppm_tolerance:          (int) ppm tolerance to allow when scoring. Default=20
-        precursor_tolerance:    (float) tolerance in Da to allow for a match. Default = 1
-    Outputs:
-        (Alignments) attempted alignemnts. Contains both or either of SequenceAlignment and HybridSequenceAlignment
+    :returns: attempted alignments
+    :rtype: Alignments
     '''
     global FIRST_ALIGN_TIME, AMBIGUOUS_REMOVAL_TIME, PRECURSOR_MASS_TIME, OBJECTIFY_TIME
     global FIRST_ALIGN_COUNT, AMBIGUOUS_REMOVAL_COUNT, PRECURSOR_MASS_COUNT, OBJECTIFY_COUNT
@@ -283,7 +298,7 @@ def attempt_alignment(
         # add the closer precursors to the list
         p_ms = [
             x for x in \
-            alignment_utils.fill_in_precursor(spectrum, sequence, db, gap=allowed_gap, tolerance=precursor_tolerance) \
+            alignment_utils.match_precursor(spectrum, sequence, db, gap=allowed_gap, tolerance=precursor_tolerance) \
             if x is not None
         ]
 
