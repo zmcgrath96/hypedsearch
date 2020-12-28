@@ -1,6 +1,11 @@
 # hypedsearch
 ## **hy**brid **pe**pti**d**e **search**ing tool
 
+For more information about hypedsearch, installation and usage instructions, 
+please see the documentation [found here](https://hypedsearch.readthedocs.io/en/latest/). 
+
+---
+
 `hypedsearch` is a tool for identifying both hybrid and non-hybrid protein sequences from mass spectrometry data. `hypedsearch` takes MS/MS files (`mzML` only currently) and `fasta` files as inputs and identifies peptides, both hybrid and nonhybrid.  
 
 `hypedsearch` identifies sequences by using a method called "k-mer extension". If you're not familiar, a "k-mer" is a k long string, or in this case, k long sequence of amino acids. The process, at a high level, works like this:
@@ -22,70 +27,6 @@ First clone the repository
 ```bash
 $> git clone https://github.com/zmcgrath96/hypedsearch.git
 ```
-### Install dependencies
-```bash
-$> cd hypedsearch
-$hypedsearch> pip3 install -r requirements.txt
-```
-### Run tests
-### Testing
-To run all unit tests run the following:
-```bash
-$> cd hypedsearch
-$hypedsearch> python3 -m unittest -v
-```
-
-## Usage
-`hypedsearch` is fairly strightforward. The only necessary inputs are 
-1. A directory where all of your spectra are saved in `mzML` file formats
-2. A `fasta` file protein database
-
-Other optional parameters are available, however these are the only two needed to get started. If you run with the default options, output is saved in the `~/` directory. If you would like to see all of the available parameters, simply run `python3 -m src.main --help` from the `hypedsearch` directory. You will then see the following help menu
-
-```
-hypedsearch> python3 -m src.main --help
-usage: main.py [-h] [--output-dir SAVE_DIR]
-               [--min-peptide-len MIN_PEPTIDE_LEN]
-               [--max-peptide-len MAX_PEPTIDE_LEN] [--tolerance TOLERANCE]
-               [--verbose VERBOSE] [--score SCORING_ALG]
-               SF DB
-
-Tool for identifying proteins, both hybrid and non hybrid from MS/MS data
-
-positional arguments:
-  SF                    Path to folder containing spectra files.
-  DB                    Path to .fasta file containing proteins
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --output-dir SAVE_DIR
-                        Directory to save all figures. Default=~/
-  --min-peptide-len MIN_PEPTIDE_LEN
-                        Minimum peptide length to consider. Default=5
-  --max-peptide-len MAX_PEPTIDE_LEN
-                        Maximum peptide length to consider. Default=20
-  --tolerance TOLERANCE
-                        ppm tolerance to allow in search. Deafult=20
-  --score SCORING_ALG   Scoring algorithm to use. Options are [bb, ion, ibb]
-                        for backbone, ion, and ion backbone respectively.
-                        Default=bb
-  --verbose VERBOSE     Extra printing to console during run. Default=True
-
-```
-
-
-### Parameters
-* __output-dir__: The directory to save all output data in. Default is the home directory `~/`.
-* __min-peptide-len__: This is the minimum peptide length to consider. This is also the minimum length to consider for half of a hybrid peptide. For example, if you want to search for hybrid peptides that may only have 3 amino acids on a side, this parameter should be set to 3. 
-* __max-peptide-len__: The maximum peptide length to consider. This value is used for pre-processing on the protein database. Longer peptide lengths, especially on larger databases, increases both the time and memory needed to run. 
-* __tolerance__: The parts per million (ppm) tolerance to allow when trying to match an experimental mass to a theoretical mass. This value is converted to Da. The resulting range allowed is a theoretical mass +/- the mass. For example, a 20 ppm tolerance would be a 40 ppm range (both + and - 20 ppm).
-* __score__: The scoring algorithm to use when creating an alignment. Three options exists:
-    1. Backbone score (bb): Score is a function not of number of ions matched, but what they describe. For example, 4 ions that describe 4 bond sites scores better than 4 matched ions that describe 2 bonds. 
-    2. Ion backbone score (ibb)(Default): Same as the backbone score, but only matches to `b` or `y` ions when coming building a kmer from the `N` (left) or `C` (right) terminus.
-    3. Ion matching (ion): Score is blind to where the ions are, but rather looks for the number of ions being matched. 
-* __verbose__: Printing to the console for constant updates. Recommended to leave as True (the default)
-
-
 ## References
 ### pyteomics
 *Goloborodko, A.A.; Levitsky, L.I.; Ivanov, M.V.; and Gorshkov, M.V. (2013) “Pyteomics - a Python Framework for Exploratory Data Analysis and Rapid Software Prototyping in Proteomics”, Journal of The American Society for Mass Spectrometry, 24(2), 301–304. DOI: 10.1007/s13361-012-0516-6
