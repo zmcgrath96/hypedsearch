@@ -84,6 +84,10 @@ If you don't know where to put something, it probably belongs here.
 
 --------------------
 
+.. autofunction:: src.utils.__split_hybrid
+
+--------------------
+
 .. autofunction:: src.utils.DEV_contains_truth_parts
 
 --------------------

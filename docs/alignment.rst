@@ -9,10 +9,6 @@ here. The input is a spectrum, and the output is a set of alignments.
 alignment_utils
 ^^^^^^^^^^^^^^^
 
-.. autofunction:: src.alignment.alignment_utils.__split_hybrid
-
---------------------
-
 .. autofunction:: src.alignment.alignment_utils.__get_surrounding_amino_acids
 
 --------------------
@@ -44,6 +40,14 @@ alignment
 ^^^^^^^^^
 
 .. autofunction:: src.alignment.alignment.same_protein_alignment
+
+--------------------
+
+.. autofunction:: src.alignment.alignment.extend_base_kmers
+
+--------------------
+
+.. autofunction:: src.alignment.alignment.refine_alignments
 
 --------------------
 

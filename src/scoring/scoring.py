@@ -1,8 +1,22 @@
 from src.scoring import mass_comparisons
-from src.objects import Spectrum
+from src.objects import Spectrum, Database
 from src.utils import ppm_to_da
 
 from src import gen_spectra
+from src import utils
+from src import database
+
+import re
+
+# load digests json for digest scoring
+import json 
+import os
+
+script_dir = os.path.dirname(__file__)
+json_dir = '/'.join(script_dir.split('/')[:-1])
+digest_file = os.path.join(json_dir, 'digests.json')
+
+digests = json.load(open(digest_file, 'r'))
 
 # def score_subsequence(pepspec: list, subseq: str, ppm_tolerance=20) -> (float, float):
 #     '''
@@ -555,3 +569,174 @@ def total_mass_error(observed: Spectrum, alignment: str, tolerance: int) -> floa
             j += 1
 
     return total_error
+
+
+def digest_score(sequence: str, db: Database, digest_type: str) -> int:
+    '''The additional points *sequence* gets if it follows the digest rules of 
+    the specified digest type
+
+    :param sequence: hybrid or non hybrid sequence to analyze
+    :type sequence: str
+    :param db: source proteins
+    :type db: Database
+    :param digest_type: what kind of digest was performed
+    :type digest_type: str
+
+    :returns: additional points the sequence gets by following the digest
+    :rtype: int
+    '''
+
+    # if the digest type is not in digests, return 0
+    if digest_type not in digests:
+        return 0
+
+    digest = digests[digest_type]
+
+    # if left digest cuts left and sequence [0] matches, give it a point
+    left_point = 1 \
+        if any(
+            [x['amino_acid'] == sequence[0] for x in digest['start'] \
+            and x['cut_position'] == 'left']
+        ) else 0
+
+    # if right digest cuts right and sequence[-1] matches, give it a point
+    right_point = 1 \
+        if any(
+            [x['amino_acid'] == sequence[-1] for x in digest['end'] \
+            and x['cut_position'] == 'right']
+        ) else 0
+
+    if left_point + right_point == 2:
+        return 2
+
+    # check to see if its a hybrid sequence
+    if utils.HYBRID_ALIGNMENT_PATTERN.findall(sequence):
+
+        # get the left and right halves
+        left, right = utils.__split_hybrid(sequence)
+
+        # well first check to see if we can assign a point to left
+        # before even looking at the source proteins. If we just look 
+        # at the first amino acid and it follows the digest rule, bam we 
+        # golden
+        left_point = 1 \
+            if left_point == 1 or any(
+                [x['amino_acid'] == left[0] for x in digest['start'] \
+                and x['cut_position'] == 'left']
+            ) else 0
+
+        # do the same for the right
+        right_point = 1 \
+            if right_point == 1 or any(
+                [x['amino_acid'] == sequence[-1] for x in digest['end'] \
+                and x['cut_position'] == 'right']  
+            ) else 0
+
+        if left_point == 0:
+
+            # find source proteins
+            left_source_proteins = database.get_proteins_with_subsequence_ion(
+                db, left, 'b'
+            )
+
+            # look to see if there is any source protein where the amino acid
+            # to the left of our amino acid follows the digest rule
+            for lsp in left_source_proteins:
+
+                for entry in database.get_entry_by_name(db, lsp):
+
+                    # if entry.sequence at index of left has amino acid 
+                    # to left, add point
+                    indices = [m.start() for m in re.finditer(left, entry.sequence)]
+
+                    for i in indices:
+
+                        # see if any of the right cut start match sequence[i-1]
+                        if i == 0:
+                            continue
+
+                        left_point = 1 if any(
+                            [x['amino_acid'] == entry.sequence[i-1] for x in \
+                            digest['start'] and x['cut_position'] == 'right']
+                        ) else 0 
+
+                        if left_point == 1:
+                            break 
+
+                    if left_point == 1:
+                        break 
+
+                if left_point == 1: 
+                    break 
+
+        if right_point == 0:
+
+            # get source proteins
+            right_source_proteins = database.get_proteins_with_subsequence_ion(
+                db, right, 'y'
+            )
+
+            for rsp in right_source_proteins:
+
+                for entry in database.get_entry_by_name(db, rsp):
+
+                    indices = [m.start() + len(right) for \
+                        m in re.finditer(right, entry.sequence)]
+
+                    for i in indices:
+                        
+                        if i == len(entry.sequence) - 1:
+                            continue
+
+                        right_point = 1 if any(
+                            [x['amino_acid'] == entry.sequence[i] for x in \
+                            digest['end'] and x['cut_position'] == 'left']
+                        ) else 0
+
+                        if right_point == 1:
+                            break 
+
+                    if right_point == 1:
+                        break 
+
+                if right_point == 1:
+                    break 
+
+        return right_point + left_point
+
+    else:
+        # find source proteins
+        source_proteins = database.get_proteins_with_subsequence(
+            db, sequence
+        )
+
+        for sp in source_proteins:
+
+            for entry in database.get_entry_by_name(db, sp):
+
+                # if entry.sequence at index of left has amino acid 
+                # to left, add point
+                indices = [m.start() for m in re.finditer(sequence, entry.sequence)]
+
+                for i in indices:
+
+                    if i == 0:
+                        continue
+                    
+                    # make left point 1 if already 1 or if the amino acid 
+                    # to the left of our sequence follows a right cut in the 
+                    # digest
+                    left_point = 1 if left_point == 1 or any(
+                        [x['amino_acid'] == entry.sequence[i-1] for x in \
+                        digest['start'] and x['cut_position'] == 'right']
+                    ) else 0 
+
+                    # make right point 1 if already 1 or if the amino acid
+                    # to the right of our sequence follows a left cut in 
+                    # the digest
+                    right_point = 1 if right_point == 1 or any(
+                        [x['amino_acid'] == entry.sequence[i+len(sequence)] \
+                        for x in digest['end'] and x['cut_position'] == 'left']
+                    ) else 0
+
+        return left_point + right_point

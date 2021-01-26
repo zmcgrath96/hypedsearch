@@ -8,6 +8,9 @@ from src.objects import Spectrum
 from src import gen_spectra
 
 import math
+import re
+
+HYBRID_ALIGNMENT_PATTERN = re.compile(r'[-\(\)]')
 
 def file_exists(file_name: str) -> bool:
     '''Determine if a file exists
@@ -324,6 +327,23 @@ def cosine_similarity(a: list, b: list) -> float:
         a = list(a) + [0 for _ in range(len(b) - len(a))]
 
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+def __split_hybrid(sequence: str) -> (str, str):
+    '''Split a hybrid sequence into it's left and right components
+    
+    :param sequence: hybrid sequence with special characters [() -]
+    :type sequence: str
+    
+    :returns: left subsequence, right subsequence
+    :rtype: (str, str)
+    '''
+    if '-' in sequence:
+        return (sequence.split('-')[0], sequence.split('-')[1])
+    
+    else:
+        left = sequence.split(')')[0].replace('(', '')
+        right = sequence.split('(')[1].replace(')', '')
+        return (left, right)
 
 def DEV_contains_truth_parts(truth_seq: str, hybrid: bool, b_seqs: list, y_seqs: list) -> bool:
     '''DEVELOPMENT FUNCTION ONLY

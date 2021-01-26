@@ -8,28 +8,7 @@ from src import utils
 import re
 import math
 
-#################### Constants ####################
-
-HYBRID_ALIGNMENT_PATTERN = re.compile(r'[-\(\)]')
-
 #################### Private functions ####################
-def __split_hybrid(sequence: str) -> (str, str):
-    '''Split a hybrid sequence into it's left and right components
-    
-    :param sequence: hybrid sequence with special characters [() -]
-    :type sequence: str
-    
-    :returns: left subsequence, right subsequence
-    :rtype: (str, str)
-    '''
-    if '-' in sequence:
-        return (sequence.split('-')[0], sequence.split('-')[1])
-    
-    else:
-        left = sequence.split(')')[0].replace('(', '')
-        right = sequence.split('(')[1].replace(')', '')
-        return (left, right)
-
 
 def __get_surrounding_amino_acids(
     parent_sequence: str, 
@@ -100,7 +79,7 @@ def __add_amino_acids(
     parents += get_parents(sequence, db, 'y')
 
     # if its hybrid, we should fill it in in all possible ways
-    if HYBRID_ALIGNMENT_PATTERN.findall(sequence):
+    if utils.HYBRID_ALIGNMENT_PATTERN.findall(sequence):
 
         # go through each set of parents
         for l_p in parents[0]:
@@ -110,7 +89,7 @@ def __add_amino_acids(
                 # the most left and most right SHOULD be the best scoring bits, so adding 
                 # to the left of the left will only hurt, and adding to the right of the right
                 # will only hurt
-                left_seq, right_seq = __split_hybrid(sequence)
+                left_seq, right_seq = utils.__split_hybrid(sequence)
                 
                 # get the left and right protein sequences
                 left_seqs = database.get_entry_by_name(db, l_p)
@@ -130,7 +109,7 @@ def __add_amino_acids(
                             for to_prepend in right_prepend:
                                 
                                 # slowly add each
-                                for i in range(len(to_append) + 1):
+                                for i in range(len(q) + 1):
                                     for j in range(len(to_prepend) + 1):
                                         
                                         new_left = left_seq + to_append[:i]
@@ -212,7 +191,7 @@ def __remove_amino_acids(
     if '-' in sequence or '(' in sequence or ')' in sequence:
         
         # get the left and right seperately
-        left_seq, right_seq = __split_hybrid(sequence)
+        left_seq, right_seq = utils.__split_hybrid(sequence)
         
         # since this is a hybrid, we assume that the left is ~correct and the right is ~correct
         # so we only want to remove amino acids from the middle section
@@ -375,7 +354,7 @@ def match_precursor(
 
     # if there are too many to add or subtract, return None
     if gap < estimated_off:
-        return []
+        return [None]
 
     # add amino acids
     if spectrum.precursor_mass > theory_precrusor:
@@ -426,10 +405,10 @@ def get_parents(
     get_sources_ion = lambda s, i: database.get_proteins_with_subsequence_ion(db, s, i)
 
     # If the sequence is hybrid, split it to find each parent
-    if HYBRID_ALIGNMENT_PATTERN.findall(seq):
+    if utils.HYBRID_ALIGNMENT_PATTERN.findall(seq):
 
         # get the left and right sequnces
-        left_seq, right_seq = __split_hybrid(seq)
+        left_seq, right_seq = utils.__split_hybrid(seq)
         
         return (get_sources_ion(left_seq, 'b'), get_sources_ion(right_seq, 'y'))
 

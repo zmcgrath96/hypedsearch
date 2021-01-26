@@ -24,6 +24,7 @@ def id_spectrum(
     ppm_tolerance: int, 
     precursor_tolerance: int, 
     n: int,
+    digest_type: str = '',
     truth: dict = None, 
     fall_off: dict = None, 
     is_last: bool = False
@@ -46,6 +47,9 @@ def id_spectrum(
     :type percursor_tolerance: int
     :param n: the number of alignments to save
     :type n: int
+    :param digest_type: the digest performed on the sample
+        (default is '')
+    :type digest_type: str
     :param truth: a set of id keyed spectra with the desired spectra. A better description of what this looks like can be 
         seen in the param.py file. If left None, the program will continue normally
         (default is None)
@@ -316,8 +320,9 @@ File will be of the form
                 ppm_tolerance, 
                 precursor_tolerance,
                 n,
-                truth, 
-                fall_off, 
+                digest_type=digest,
+                truth=truth, 
+                fall_off=fall_off, 
                 is_last=is_last
             )
 
@@ -363,7 +368,16 @@ File will be of the form
                     y_hits += matched_masses_y[b]
 
             # create a named tuple to put in the database
-            o = MPSpectrumID(b_hits, y_hits, spectrum, ppm_tolerance, precursor_tolerance, n)
+            o = MPSpectrumID(
+                b_hits, 
+                y_hits, 
+                spectrum, 
+                ppm_tolerance, 
+                precursor_tolerance, 
+                n, 
+                digest
+            )
+            
             q.put(o)
 
         while len(results) < len(spectra):

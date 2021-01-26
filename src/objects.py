@@ -139,8 +139,9 @@ Alignments = namedtuple(
 
 MPSpectrumID = namedtuple(
     'MPSpectrumID', 
-    ['b_hits', 'y_hits', 'spectrum', 'ppm_tolerance', 'precursor_tolerance', 'n'],
-    defaults=[[], [], None, -1, 0, 0]
+    ['b_hits', 'y_hits', 'spectrum', 'ppm_tolerance', 'precursor_tolerance', 
+        'n', 'digest_type'],
+    defaults=[[], [], None, -1, 0, 0, '']
 )
 '''Holds information to pass to processes during multiprocessing (MP)
 
@@ -156,6 +157,8 @@ MPSpectrumID = namedtuple(
 :type precursor_tolerance: int
 :ivar n: the number of aligments to keep 
 :type n: int
+:ivar digest_type: the digest performed on the sample
+:type digest_type: str
 '''
 
 DEVFallOffEntry = namedtuple(

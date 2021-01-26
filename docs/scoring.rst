@@ -34,3 +34,7 @@ scoring
 --------------------
 
 .. autofunction:: src.scoring.scoring.total_mass_error
+
+--------------------
+
+.. autofunction:: src.scoring.scoring.digest_score
