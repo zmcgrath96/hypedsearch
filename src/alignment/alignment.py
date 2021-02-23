@@ -19,12 +19,18 @@ FIRST_ALIGN_TIME = 0
 AMBIGUOUS_REMOVAL_TIME = 0
 PRECURSOR_MASS_TIME = 0
 OBJECTIFY_TIME = 0
+ADD_AA_TIME = 0
+REMOVE_AA_TIME = 0
+EXTENDING_TIME = 0
 
 # keep track of frequency
 FIRST_ALIGN_COUNT = 0
 AMBIGUOUS_REMOVAL_COUNT = 0
 PRECURSOR_MASS_COUNT = 0
 OBJECTIFY_COUNT = 0
+ADD_AA_COUNT = 0
+REMOVE_AA_COUNT = 0
+EXTNEDING_COUNT = 0
 
 OUT_OF_RANGE_SEQS = 0
 TOTAL_ITERATIONS = 0
@@ -178,18 +184,18 @@ def align_b_y(
     return list(set([x for x in spec_alignments if x is not None]))
 
 def extend_base_kmers(
-    b_kmers: list, 
-    y_kmers: list, 
+    kmers: list,
+    ion: str,
     spectrum: Spectrum, 
     db: Database
     ) -> list:
     '''Extend all the base b and y ion matched k-mers to the predicted length
     to try and find a non-hybrid alignment
 
-    :param b_kmers: kmers from b ion masses
-    :type b_kmers: list
-    :param y_kmers: kmers from y ion masses
-    :type y_kmers: list
+    :param kmers: kmers to extend
+    :type kmers: list
+    :param ion: which ion type these kmers match to
+    :type ion: str
     :param spectrum: observed spectrum
     :type spectrum: Spectrum
     :param db: source proteins
@@ -200,11 +206,9 @@ def extend_base_kmers(
     '''
     # try and create an alignment from each extended b and y ion sequence
     spec_alignments = []
-    #[item for sublist in t for item in sublist]
-    for seq in b_kmers:
-        spec_alignments += [x for x in alignment_utils.extend_non_hybrid(seq, spectrum, 'b', db)]
-    for seq in y_kmers:
-        spec_alignments += [x for x in alignment_utils.extend_non_hybrid(seq, spectrum, 'y', db)]
+    
+    for seq in kmers:
+        spec_alignments += [x for x in alignment_utils.extend_non_hybrid(seq, spectrum, ion, db)]
 
     return spec_alignments
 
@@ -215,7 +219,7 @@ def refine_alignments(
     precursor_tolerance: int = 10,
     DEV: bool = False, 
     truth: dict = None, 
-    fall_off: dict = None
+    fall_off: dict = None, 
 ) -> list:
     '''Regine the rough alignmnets made. This includes precursor matching and 
     ambiguous hybrid removals/replacements
@@ -250,12 +254,12 @@ def refine_alignments(
     :rtype: list
     '''
 
-    global PRECURSOR_MASS_COUNT, AMBIGUOUS_REMOVAL_COUNT, OUT_OF_RANGE_SEQS
-    global PRECURSOR_MASS_TIME, AMBIGUOUS_REMOVAL_TIME
+    global PRECURSOR_MASS_COUNT, AMBIGUOUS_REMOVAL_COUNT, OUT_OF_RANGE_SEQS, ADD_AA_COUNT, REMOVE_AA_COUNT
+    global PRECURSOR_MASS_TIME, AMBIGUOUS_REMOVAL_TIME, ADD_AA_TIME, REMOVE_AA_TIME
 
     # get the predicted length of the sequence and allow for a 25% gap to be filled in
     predicted_len = utils.predicted_len(spectrum.precursor_mass, spectrum.precursor_charge)
-    allowed_gap = math.ceil(predicted_len * .25)
+    allowed_gap = math.ceil(predicted_len * .50)
 
     # Limit our search to things that match our precursor mass
     # try and fill in the gaps that are in any alignments
@@ -268,10 +272,22 @@ def refine_alignments(
         sequence = sequence_pairs[0] if sequence_pairs[1] is None else sequence_pairs[1]
 
         # add the closer precursors to the list
-        p_ms = [
-            x for x in \
-            alignment_utils.match_precursor(spectrum, sequence, db, gap=allowed_gap, tolerance=precursor_tolerance)
-        ]
+        p_ms, aat, aac, rat, rac = alignment_utils.match_precursor(
+            spectrum, 
+            sequence, 
+            db, 
+            gap=allowed_gap, 
+            tolerance=precursor_tolerance,
+            ADD_AA_COUNT=ADD_AA_COUNT, 
+            ADD_AA_TIME=ADD_AA_TIME,
+            REMOVE_AA_COUNT=REMOVE_AA_COUNT, 
+            REMOVE_AA_TIME=REMOVE_AA_TIME
+        )
+
+        ADD_AA_TIME = aat 
+        ADD_AA_COUNT = aac 
+        REMOVE_AA_TIME = rat 
+        REMOVE_AA_COUNT = rac
 
         if len(p_ms) and p_ms[0] is None:
             OUT_OF_RANGE_SEQS += 1
@@ -419,8 +435,8 @@ def attempt_alignment(
     :returns: attempted alignments
     :rtype: Alignments
     '''
-    global FIRST_ALIGN_TIME, AMBIGUOUS_REMOVAL_TIME, PRECURSOR_MASS_TIME, OBJECTIFY_TIME
-    global FIRST_ALIGN_COUNT, AMBIGUOUS_REMOVAL_COUNT, PRECURSOR_MASS_COUNT, OBJECTIFY_COUNT
+    global FIRST_ALIGN_TIME, AMBIGUOUS_REMOVAL_TIME, PRECURSOR_MASS_TIME, OBJECTIFY_TIME, ADD_AA_TIME, REMOVE_AA_TIME, EXTENDING_TIME
+    global FIRST_ALIGN_COUNT, AMBIGUOUS_REMOVAL_COUNT, PRECURSOR_MASS_COUNT, OBJECTIFY_COUNT, ADD_AA_COUNT, REMOVE_AA_COUNT, EXTNEDING_COUNT
     global TOTAL_ITERATIONS
 
     TOTAL_ITERATIONS += 1
@@ -428,15 +444,21 @@ def attempt_alignment(
     # if we are in dev mode this removes the need for extra long ifs
     DEV = truth is not None and fall_off is not None
 
+    st = time.time()
+
     # what we want to do first is try just extending the base k-mers to 
     # see if we can find a quality non hybrid alignment
-    non_hybrids = extend_base_kmers(b_hits, y_hits, spectrum, db)
+    extended_bs = extend_base_kmers(b_hits, 'b', spectrum, db)
+    extended_ys = extend_base_kmers(y_hits, 'y', spectrum, db)
+    EXTENDING_TIME += time.time() - st 
+    EXTNEDING_COUNT += len(b_hits) + len(y_hits)
 
     # run the first round of alignments
     st = time.time()
-    a = align_b_y(b_hits, y_hits, spectrum, db) + [(kmer, None) for kmer in non_hybrids]
+    a = align_b_y(extended_bs, extended_ys, spectrum, db) \
+        + [(kmer, None) for kmer in extended_bs + extended_ys]
 
-    FIRST_ALIGN_COUNT += len(b_hits) + len(y_hits)
+    FIRST_ALIGN_COUNT += len(extended_bs) + len(extended_ys)
     FIRST_ALIGN_TIME += time.time() - st
 
     # if we have truth and fall_off, check for them
@@ -560,12 +582,18 @@ def attempt_alignment(
         # write the time log to file
         if is_last:
 
+            ADD_AA_COUNT = max(1, ADD_AA_COUNT)
+            REMOVE_AA_COUNT = max(1, REMOVE_AA_COUNT)
+
             with open(TIME_LOG_FILE, 'w') as o:
                 o.write(f'B and Y full bipartite alignment time: {FIRST_ALIGN_TIME}s \t average dataset size{FIRST_ALIGN_COUNT/TOTAL_ITERATIONS} \t seconds/op: {FIRST_ALIGN_TIME/FIRST_ALIGN_COUNT}s\n')
                 o.write(f'Removing ambiguous hybrids time: {AMBIGUOUS_REMOVAL_TIME}s \t average dataset size{AMBIGUOUS_REMOVAL_COUNT/TOTAL_ITERATIONS} \t seconds/op: {AMBIGUOUS_REMOVAL_TIME/AMBIGUOUS_REMOVAL_COUNT}s\n')
                 o.write(f'Matching precursor masses time: {PRECURSOR_MASS_TIME}s \t average dataset size{PRECURSOR_MASS_COUNT/TOTAL_ITERATIONS} \t seconds/op: {PRECURSOR_MASS_TIME/PRECURSOR_MASS_COUNT}s\n')
                 o.write(f'Turning matches into objects time: {OBJECTIFY_TIME} \t average dataset size{OBJECTIFY_COUNT/TOTAL_ITERATIONS} \t seconds/op: {OBJECTIFY_TIME/OBJECTIFY_COUNT}\n')
-                o.write(f'Initial sequences with too many or few amino acids to try to precursor match: {OUT_OF_RANGE_SEQS}/{PRECURSOR_MASS_COUNT}')
+                o.write(f'Initial sequences with too many or few amino acids to try to precursor match: {OUT_OF_RANGE_SEQS}/{PRECURSOR_MASS_COUNT}\n')
+                o.write(f'Adding amino acids in precursor matching: {ADD_AA_TIME} \t average times __add_amino_acids called per spectrum: {ADD_AA_COUNT/TOTAL_ITERATIONS} \t average time to add amino acids per input sequence: {ADD_AA_TIME/ADD_AA_COUNT}\n')
+                o.write(f'Removing amino acids in precursor matching: {REMOVE_AA_TIME} \t average times __remove_amino_acids called per spectrum: {REMOVE_AA_COUNT/TOTAL_ITERATIONS} \t average time to add amino acids per input sequence: {REMOVE_AA_TIME/REMOVE_AA_COUNT}\n')
+                o.write(f'Extending base kmers: {EXTENDING_TIME} \t average number of b and y kmers per spectrum: {EXTNEDING_COUNT/TOTAL_ITERATIONS} \t average time to extend per kmer: {EXTENDING_TIME/EXTNEDING_COUNT}')
 
         return Alignments(spectrum, top_n_alignments)
 
@@ -683,12 +711,18 @@ def attempt_alignment(
     # write the time log to file
     if is_last:
 
+        ADD_AA_COUNT = max(1, ADD_AA_COUNT)
+        REMOVE_AA_COUNT = max(1, REMOVE_AA_COUNT)
+
         with open(TIME_LOG_FILE, 'w') as o:
             o.write(f'B and Y full bipartite alignment time: {FIRST_ALIGN_TIME}s \t average dataset size{FIRST_ALIGN_COUNT/TOTAL_ITERATIONS} \t seconds/op: {FIRST_ALIGN_TIME/FIRST_ALIGN_COUNT}s\n')
             o.write(f'Removing ambiguous hybrids time: {AMBIGUOUS_REMOVAL_TIME}s \t average dataset size{AMBIGUOUS_REMOVAL_COUNT/TOTAL_ITERATIONS} \t seconds/op: {AMBIGUOUS_REMOVAL_TIME/AMBIGUOUS_REMOVAL_COUNT}s\n')
             o.write(f'Matching precursor masses time: {PRECURSOR_MASS_TIME}s \t average dataset size{PRECURSOR_MASS_COUNT/TOTAL_ITERATIONS} \t seconds/op: {PRECURSOR_MASS_TIME/PRECURSOR_MASS_COUNT}s\n')
             o.write(f'Turning matches into objects time: {OBJECTIFY_TIME} \t average dataset size{OBJECTIFY_COUNT/TOTAL_ITERATIONS} \t seconds/op: {OBJECTIFY_TIME/OBJECTIFY_COUNT}\n')
-            o.write(f'Initial sequences with too many or few amino acids to try to precursor match: {OUT_OF_RANGE_SEQS}/{PRECURSOR_MASS_COUNT}')
+            o.write(f'Initial sequences with too many or few amino acids to try to precursor match: {OUT_OF_RANGE_SEQS}/{PRECURSOR_MASS_COUNT}\n')
+            o.write(f'Adding amino acids in precursor matching: {ADD_AA_TIME} \t average times __add_amino_acids called per spectrum: {ADD_AA_COUNT/TOTAL_ITERATIONS} \t average time to add amino acids per input sequence: {ADD_AA_TIME/ADD_AA_COUNT}\n')
+            o.write(f'Adding amino acids in precursor matching: {REMOVE_AA_TIME} \t average times __add_amino_acids called per spectrum: {REMOVE_AA_COUNT/TOTAL_ITERATIONS} \t average time to add amino acids per input sequence: {REMOVE_AA_TIME/REMOVE_AA_COUNT}\n')
+            o.write(f'Extending base kmers: {EXTENDING_TIME} \t average number of b and y kmers per spectrum: {EXTNEDING_COUNT/TOTAL_ITERATIONS} \t average time to extend per kmer: {EXTENDING_TIME/EXTNEDING_COUNT}')
 
     return Alignments(spectrum, top_n_alignments)
    

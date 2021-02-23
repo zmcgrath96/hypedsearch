@@ -7,6 +7,7 @@ from src import utils
 
 import re
 import math
+import time
 
 #################### Private functions ####################
 
@@ -109,7 +110,7 @@ def __add_amino_acids(
                             for to_prepend in right_prepend:
                                 
                                 # slowly add each
-                                for i in range(len(q) + 1):
+                                for i in range(len(to_append) + 1):
                                     for j in range(len(to_prepend) + 1):
                                         
                                         new_left = left_seq + to_append[:i]
@@ -317,7 +318,11 @@ def match_precursor(
     sequence: str, 
     db: Database, 
     gap: int = 3, 
-    tolerance: float = 1
+    tolerance: float = 1, 
+    ADD_AA_COUNT = 0, 
+    ADD_AA_TIME = 0,
+    REMOVE_AA_COUNT = 0, 
+    REMOVE_AA_TIME = 0
     ) -> list:
     '''Try and fill in the gaps of an alignment. This is primarily focused on 
     filling in the gaps left by the difference in precursor mass. If we find that
@@ -354,17 +359,28 @@ def match_precursor(
 
     # if there are too many to add or subtract, return None
     if gap < estimated_off:
-        return [None]
+        return [None], ADD_AA_TIME, ADD_AA_COUNT, REMOVE_AA_TIME, REMOVE_AA_COUNT
+
+    st = time.time()
+
+    ret =  None
 
     # add amino acids
     if spectrum.precursor_mass > theory_precrusor:
 
-        return __add_amino_acids(spectrum, sequence, db, gap, tolerance)
+        ret = __add_amino_acids(spectrum, sequence, db, gap, tolerance)
+        ADD_AA_TIME += time.time() - st 
+        ADD_AA_COUNT += 1
 
     # subtract amino acids:
     else:
 
-        return __remove_amino_acids(spectrum, sequence, gap, tolerance)
+        ret = __remove_amino_acids(spectrum, sequence, gap, tolerance)
+        REMOVE_AA_TIME += time.time() - st 
+        REMOVE_AA_COUNT += 1
+
+    return ret, ADD_AA_TIME, ADD_AA_COUNT, REMOVE_AA_TIME, REMOVE_AA_COUNT
+
 
 def get_parents(
     seq: str, 
@@ -439,7 +455,7 @@ def extend_non_hybrid(seq: str, spectrum: Spectrum, ion: str, db: Database) -> l
     # first estimate the extension length
     extension_len = utils.predicted_len_precursor(spectrum, seq) - len(seq)
 
-    # if the extension length <= 0, return the sequence 
+    # if the extension length < 0, return the sequence 
     if extension_len <= 0:
         return [seq]
 
@@ -460,14 +476,29 @@ def extend_non_hybrid(seq: str, spectrum: Spectrum, ion: str, db: Database) -> l
             # go through all of the indices and extend
             for seq_idx in seq_idxes:
                 
-                # extend to left
-                if 'y' in ion:
-                    min_idx = max(0, seq_idx - extension_len)
-                    extensions.append(entry.sequence[min_idx:len(seq) + seq_idx])
+                # add amino acids until the theoretical precursor > observerd
+                sub_seq = ''
 
-                # extend to the right
-                else:
-                    max_idx = min(len(entry.sequence), seq_idx + len(seq) + extension_len)
-                    extensions.append(entry.sequence[seq_idx:max_idx])
+                while gen_spectra.get_precursor(sub_seq, spectrum.precursor_charge) < spectrum.precursor_mass:
+
+                    # extend to left
+                    if 'y' in ion:
+                        min_idx = max(0, seq_idx - extension_len)
+                        sub_seq = entry.sequence[min_idx:len(seq) + seq_idx]
+
+                        if min_idx <= 0: 
+                            break
+
+                    # extend to the right
+                    else:
+                        max_idx = min(len(entry.sequence), seq_idx + len(seq) + extension_len)
+                        sub_seq = entry.sequence[seq_idx:max_idx]
+
+                        if max_idx >= len(entry.sequence):
+                            break 
+
+                    extension_len += 1
+
+                extensions.append(sub_seq)
 
     return extensions

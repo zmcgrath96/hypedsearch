@@ -1,5 +1,8 @@
-B and Y full bipartite alignment time: 19.099596738815308s 	 average dataset size101.01012891344384 	 seconds/op: 0.00017411229786425616s
-Removing ambiguous hybrids time: 4.854511499404907s 	 average dataset size367.2476979742173 	 seconds/op: 1.2171850983010115e-05s
-Matching precursor masses time: 3115.9947514533997s 	 average dataset size2817.818600368324 	 seconds/op: 0.001018248691470911s
-Turning matches into objects time: 13.049207925796509 	 average dataset size704.7771639042357 	 seconds/op: 1.7049140992276477e-05
-Initial sequences with too many or few amino acids to try to precursor match: 944417/3060151
+B and Y full bipartite alignment time: 1573.5229852199554s 	 average dataset size525.4742173112339 	 seconds/op: 0.0027573497327152627s
+Removing ambiguous hybrids time: 5.730538368225098s 	 average dataset size13.068139963167587 	 seconds/op: 0.0004037865253822645s
+Matching precursor masses time: 4571.806772947311s 	 average dataset size98374.6270718232 	 seconds/op: 4.279321763369724e-05s
+Turning matches into objects time: 2.1721091270446777 	 average dataset size30.403314917127073 	 seconds/op: 6.578560564070136e-05
+Initial sequences with too many or few amino acids to try to precursor match: 105172378/106834845
+Adding amino acids in precursor matching: 950.0030934810638 	 average times __add_amino_acids called per spectrum: 100.47790055248619 	 average time to add amino acids per input sequence: 0.008706119864378008
+Adding amino acids in precursor matching: 1235.9575805664062 	 average times __add_amino_acids called per spectrum: 1430.3388581952117 	 average time to add amino acids per input sequence: 0.000795673333062782
+Extending base kmers: 7.887701511383057 	 average number of b and y kmers per spectrum: 0.007263076898142777 	 average time to extend per kmer: 7.191361935197849e-05

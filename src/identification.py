@@ -1,5 +1,5 @@
 from src.objects import Database, Spectrum, Alignments, MPSpectrumID, DEVFallOffEntry
-from src.cppModules import gen_spectra
+from src import gen_spectra
 from src.alignment import alignment
 from src.utils import ppm_to_da, to_percent, overlap_intervals, hashable_boundaries, is_json, is_file
 from src import utils
@@ -74,7 +74,7 @@ def id_spectrum(
     b_results = sorted([
         (
             kmer, 
-            mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectra.gen_spectrum(kmer, ion='b'))
+            mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectra.gen_spectrum(kmer, ion='b')['spectrum'])
         ) for kmer in b_hits], 
         key=lambda x: (x[1], 1/len(x[0])), 
         reverse=True
@@ -82,7 +82,7 @@ def id_spectrum(
     y_results = sorted([
         (
             kmer, 
-            mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectra.gen_spectrum(kmer, ion='y'))
+            mass_comparisons.optimized_compare_masses(spectrum.spectrum, gen_spectra.gen_spectrum(kmer, ion='y')['spectrum'])
         ) for kmer in y_hits], 
         key=lambda x: (x[1], 1/len(x[0])), 
         reverse=True
