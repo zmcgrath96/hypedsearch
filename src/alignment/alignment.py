@@ -206,8 +206,26 @@ def extend_base_kmers(
     '''
     # try and create an alignment from each extended b and y ion sequence
     spec_alignments = []
+
+    prefixes = {}
+
+    # get all prefixes left to right for b and right to left for y
+    get_prefixes = lambda kmer: [kmer[:i] for i in range(1, len(kmer)+1)] if ion == 'b' \
+                                else [kmer[i:] for i in range(len(kmer))]
+    kmers.sort(key=lambda k: len(k), reverse=True)
+    kmers = list(set(kmers))
     
     for seq in kmers:
+
+        # check if the seq is a prefix of something else
+        if seq in prefixes: 
+            continue
+
+        # add all prefixes to the dictionary
+        seq_prefixes = get_prefixes(seq)
+        for seq_prefix in seq_prefixes:
+            prefixes[seq_prefix] = None
+        
         spec_alignments += [x for x in alignment_utils.extend_non_hybrid(seq, spectrum, ion, db)]
 
     return spec_alignments
@@ -259,7 +277,7 @@ def refine_alignments(
 
     # get the predicted length of the sequence and allow for a 25% gap to be filled in
     predicted_len = utils.predicted_len(spectrum.precursor_mass, spectrum.precursor_charge)
-    allowed_gap = math.ceil(predicted_len * .50)
+    allowed_gap = math.ceil(predicted_len * 1.1)
 
     # Limit our search to things that match our precursor mass
     # try and fill in the gaps that are in any alignments

@@ -7,7 +7,7 @@ SPECTRA_FOLDER = '/Users/zacharymcgrath/Desktop/nod2 data/single/'
 DATABASE_FILE = '/Users/zacharymcgrath/Desktop/raw inputs/NOD2_E3/filtered_mouse_database.fasta'
 # full path to the output directory
 #OUTPUT_DIRECTORY = '/Users/zacharymcgrath/Desktop/Experiment output/filtered_NOD2_E3_SEP_22/'
-OUTPUT_DIRECTORY = '/Users/zacharymcgrath/Desktop/raw inputs/BALB3_E3/output/'
+OUTPUT_DIRECTORY = '/Users/zacharymcgrath/Desktop/raw inputs/NOD2_E3/output/'
 
 ########################## SEARCH PARAMETERS ##########################
 # minimum length peptide to look for
@@ -25,11 +25,11 @@ PRECURSOR_TOLERANCE = 10
 #-----------------------------------------------------------
 # the number of most abundant (intense) peaks to allow when filtering
 # input spectra
-PEAK_FILTER = 0
+PEAK_FILTER = 25
 # the minimum allowed percentage of the total intensity a peak 
 # is allowed to have to pass the filter. Values should be 
 # in the range (0, 1) 
-RELATIVE_ABUNDANCE_FILTER = .005
+RELATIVE_ABUNDANCE_FILTER = 0
 
 ########################## EXPERIMENT PARAMETERS ##########################
 # in vitro digest performed on the sample. Leave '' if none
