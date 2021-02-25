@@ -8,8 +8,10 @@ Description:
 Main file for hypedsearch. Handles input parameters and flow of the program
 '''
 import argparse
-from src import utils, runner, params
 import sys
+
+from src import utils, runner
+from src.config_loader import Config
 
 def stringtobool(s: str) -> bool:
     s = str(s)
@@ -20,23 +22,24 @@ def stringtobool(s: str) -> bool:
 def set_args(args) -> dict:
 
     # check if we use the params file or the user arguments
-    use_params = stringtobool(args.params)
+    use_params = stringtobool(args.config)
+    config = Config()
 
-    spectra_folder = args.spectra_folder if not use_params else params.SPECTRA_FOLDER
-    database_file = args.database_file if not use_params else params.DATABASE_FILE
-    output_dir = args.output_dir if not use_params else params.OUTPUT_DIRECTORY
-    min_peptide_len = args.min_peptide_len if not use_params else params.MIN_PEPTIDE_LEN
-    max_peptide_len = args.max_peptide_len if not use_params else params.MAX_PEPTIDE_LEN
-    ppm_tolerance = args.tolerance if not use_params else params.PPM_TOLERANCE
-    precursor_tolerance = args.precursor_tolerance if not use_params else params.PRECURSOR_TOLERANCE
-    verbose = stringtobool(args.verbose) if not use_params else params.VERBOSE
-    peak_filter = args.peak_filter if not use_params else params.PEAK_FILTER
-    relative_abundance_filter = args.rel_abund_filter if not use_params else params.RELATIVE_ABUNDANCE_FILTER
-    digest = args.digest if not use_params else params.DIGEST
-    cores = args.cores if not use_params else params.CORES
-    n = args.n if not use_params else params.N
-    debug = params.DEBUG
-    truth_set = params.TRUTH_SET
+    spectra_folder = args.spectra_folder if not use_params else config['spectra_dir']
+    database_file = args.database_file if not use_params else config['database_file']
+    output_dir = args.output_dir if not use_params else config['output_dir']
+    min_peptide_len = args.min_peptide_len if not use_params else config['min_peptide_len']
+    max_peptide_len = args.max_peptide_len if not use_params else config['max_peptide_len']
+    ppm_tolerance = args.tolerance if not use_params else config['ppm_tolerance']
+    precursor_tolerance = args.precursor_tolerance if not use_params else config['precursor_tolerance']
+    verbose = stringtobool(args.verbose) if not use_params else config['verbose']
+    peak_filter = args.peak_filter if not use_params else config['num_peaks']
+    relative_abundance_filter = args.rel_abund_filter if not use_params else config['relative_abundance']
+    digest = args.digest if not use_params else config['digest']
+    cores = args.cores if not use_params else config['cores']
+    n = args.n if not use_params else config['top_results']
+    debug = config['debug']
+    truth_set = config['truth_set']
 
     ############## Argument checking ################
     if not utils.is_dir(spectra_folder):
@@ -82,7 +85,7 @@ if __name__ == '__main__':
     parser.add_argument('--spectra-folder', dest='spectra_folder', type=str, default='./', help='Path to folder containing spectra files.')
     parser.add_argument('--database-file', dest='database_file', type=str, default='./', help='Path to .fasta file containing proteins')
     parser.add_argument('--output-dir', dest='output_dir', type=str, default='~/', help='Directory to save all figures. Default=~/')
-    parser.add_argument('--params', dest='params', type=bool, default=False, help='Use the params.py file adjacent to main.py instead of using command line arguments. Default=False')
+    parser.add_argument('--config', dest='config', type=bool, default=True, help='Use the config.yaml file adjacent to main.py instead of using command line arguments. Default=True')
     parser.add_argument('--min-peptide-len', dest='min_peptide_len', type=int, default=5, help='Minimum peptide length to consider. Default=5')
     parser.add_argument('--max-peptide-len', dest='max_peptide_len', type=int, default=20, help='Maximum peptide length to consider. Default=20')
     parser.add_argument('--tolerance', dest='tolerance', type=int, default=20, help='ppm tolerance to allow in search. Deafult=20')

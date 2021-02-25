@@ -109,7 +109,7 @@ def __add_amino_acids(
                             for to_prepend in right_prepend:
                                 
                                 # slowly add each
-                                for i in range(len(q) + 1):
+                                for i in range(len(to_append) + 1):
                                     for j in range(len(to_prepend) + 1):
                                         
                                         new_left = left_seq + to_append[:i]
