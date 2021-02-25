@@ -4,23 +4,23 @@ from src.objects import Alignments
 
 import pandas as pd
 import json
+import os
 
 SUMMARY_NAME = 'summary'
 HYBRID_PREFIX = 'hybrid_'
 
-def json_file(results: dict, output_dir='./') -> None:
+def json_file(results: dict, output_dir: str) -> None:
     '''
     Generate a summary json file for the results made
 
     Inputs:
         results: (dict) containing the results made. The key of each entry is the name
                         and each entry should be an Alignments namedtuple
-    kwargs:
-        output_dir: (str) path to the output directory. Default=./
+        output_dir: (str) path to the output directory
     Outputs:
         None
     '''
-    json_file_name = output_dir + SUMMARY_NAME 
+    json_file_name = os.path.join(output_dir, f'{SUMMARY_NAME}.json')
     dictified = {}
     for name, alignment in results.items():
         dictified[name] = {
@@ -29,7 +29,7 @@ def json_file(results: dict, output_dir='./') -> None:
         }
     JSON.save_dict(json_file_name, dictified)
 
-def tsv_file(results: dict, output_dir='./') -> None:
+def tsv_file(results: dict, output_dir: str) -> None:
     '''
     Write the results of the experiment to 2 tsv files. One tsv file is for 
     non hybrid identified sequences, the other is for hybrid identified sequences.
@@ -37,8 +37,7 @@ def tsv_file(results: dict, output_dir='./') -> None:
     Inputs: 
         results:    (dict) results of the search. The key of each entry is the name
                             of each entry and the value is an Alignments namedtuple 
-    kwargs:
-        output_dir: (str) path to the directory to save the tsvs. Default = ./
+        output_dir: (str) path to the directory to save the tsvs
     Outputs:
         None
     '''
@@ -70,7 +69,9 @@ def tsv_file(results: dict, output_dir='./') -> None:
     del hybrids
 
     nonhybridresults = pd.DataFrame(nonhybrids)
-    with open(f'{output_dir + SUMMARY_NAME}.tsv', 'w') as nho:
+    output_file = os.path.join(output_dir, f'{SUMMARY_NAME}.tsv')
+    
+    with open(output_file, 'w') as nho:
         nho.write(nonhybridresults.to_csv(sep='\t'))
 
     print(f'Could not make an alignment for {mac}/{len(results)} spectra ({int(100 * mac / len(results))}%)')
@@ -91,4 +92,4 @@ def generate(alignments: dict, output_dir='./') -> None:
     make_dir(output_dir)
 
     json_file(alignments, output_dir)
-    tsv_file(alignments, output_dir=output_dir)
+    tsv_file(alignments, output_dir)

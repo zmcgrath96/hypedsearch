@@ -7,7 +7,7 @@ Date: 6 April 2020
 Executor for the program
 In charge of the flow of the program
 '''
-from os import walk
+import os
 from src import identification
 from src.postprocessing import summary, review
 
@@ -40,10 +40,9 @@ def run(args: dict) -> None:
     '''
     # get all the spectra file names
     spectra_files = []
-    for (_, _, filenames) in walk(args['spectra_folder']):
+    for (root, _, filenames) in os.walk(args['spectra_folder']):
         for fname in filenames:
-            spectra_files.append(args['spectra_folder'] + fname)
-        break
+            spectra_files.append(os.path.join(root, fname))
 
     # make sure cores is: 1 <= cores <= cpu cores
     cores = max(1, args['cores'])
