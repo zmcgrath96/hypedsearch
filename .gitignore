@@ -9,3 +9,8 @@
 *.o
 *.so
 docs/_build/
+*-checkpoint.ipynb
+*win32*
+*.obj
+*.ipynb_checkpoints*
+*ipynb
