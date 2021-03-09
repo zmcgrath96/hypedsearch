@@ -14,7 +14,7 @@ import os
 import pathlib
 
 json_dir = pathlib.Path(__file__).resolve().parent.parent
-digest_file = os.path.join(json_dir, 'config.yaml')
+digest_file = os.path.join(json_dir, 'digests.json')
 
 digests = json.load(open(digest_file, 'r'))
 
