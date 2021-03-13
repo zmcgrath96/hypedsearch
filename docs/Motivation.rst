@@ -2,8 +2,8 @@ Motivation
 ==========
 
 The motivation for this project has its roots in Type 1 Diabetes (T1D) research. 
-Delong Lab at CU Anshutz has discovered that Hybrid Insulin Peptides (HIPS_, 
-here is one of many papers) are a cause of T1D. Given the potential significance 
+Delong Lab at CU Anshutz has discovered that Hybrid Insulin Peptides (HIPS) are a cause of T1D:
+here_ is one of many papers regarding HIPS. Given the potential significance 
 in being able to quickly identify hybrid peptides for this type of research, 
 hybrid peptide identification tools are needed. As of now (December 2020), 
 one other tools exists for finding hybrid peptides, NeoFusion_.
