@@ -1,10 +1,10 @@
 paths: 
   # full path to the spectra folder containing all spectra files
-  spectra_dir: 'C:\Users\Maxim\Documents\Layer_Lab\Database\raw_inputs\NOD2_E3\mzml'
+  spectra_dir: '/mnt/c/Users/Maxim/Documents/Layer_Lab/Database/Hybrid_inputs'
   # full path to the .fasta database file
-  database_file: 'C:\Users\Maxim\Documents\Layer_Lab\Database\raw_inputs\NOD2_E3\filtered_mouse_database.fasta'
+  database_file: '/mnt/c/Users/Maxim/Documents/Layer_Lab/Database/raw_inputs/NOD2_E3/filtered_mouse_database.fasta'
   # full path to the output directory
-  output_dir: 'C:\Users\Maxim\Documents\Layer_Lab\Database\raw_inputs\NOD2_E3\output'
+  output_dir: '/mnt/c/Users/Maxim/Documents/Layer_Lab/Database/Hybrid_inputs/Output'
 
 search_params:
   # minimum length peptide to look for
@@ -15,7 +15,7 @@ search_params:
   ppm_tolerance: 20
   # tolerance (in Da) to allow when matching precursor masses
   precursor_tolerance: 10
-  
+ 
   #-----------------------------------------------------------
   # NOTE: when using the filtering options below (either the peak
   # filtering or the abundance filtering), only set 1 of the values.
@@ -38,7 +38,7 @@ run_parameters:
   # printing to the console during the run
   verbose: True
   # the number of cores to allow in the search. Should be a number 
-  cores: 1
+  cores: 4
   # the number of alignments to keep per spectrum
   top_results: 5
 
