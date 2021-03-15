@@ -215,7 +215,7 @@ def make_sparse_array(spectrum: list, width: float, value=50) -> np.ndarray:
     :param spectrum: Floating point mass values of peaks
     :type spectrum: list
     :param width: Mass tolerance for bin width
-    :type width: foat
+    :type width: float
     :param value: Value to put in a bin where a mass is found
         (default is 50)
     :type value: number

@@ -21,22 +21,22 @@ class test_utils(unittest.TestCase):
         tol = 20
         self.assertEqual(utils.ppm_to_da(mass, tol), .002, '20 ppm of 100 should be .002')
 
-    def test_file_exists(self)
+    def test_file_exists(self):
         #Run the utils.file_exists function with two sample files.
         filename = 'requirements.txt'
         filename2 = 'thisfiledoesnotexist.txt'
-        self.assertEqual(utils.file_exists(filename), True) "This file exists in the directory"
-        self.assertEqual(utils.file_exists(filename2), True) "This file does not exist in the directory"
+        self.assertTrue(utils.file_exists(filename)) # This file exists in the directory
+        self.assertFalse(utils.file_exists(filename2)) # This file does not exist in the directory
 
-    def test_make_valid_dir(self)
+    def test_make_valid_dir(self):
         #Run the utils.make_valid_dir_string function with path which includes os seperator character and
         # one path which does not include an os seperator character
-        path1 = 'C:\Users'
-        path2 = 'C:\Users\'
-        self.assertEqual(utils.make_valid_dir_string(path1), 'C:\Users\')
-        self.assertEqual(utils.make_valid_dir_string(path2), 'C\Users\')
+        path1 = 'C:\\Users'
+        path2 = "C:\\Users\\"
+        self.assertEqual(utils.make_valid_dir_string(path1), 'C:\\Users\\')
+        self.assertEqual(utils.make_valid_dir_string(path2), 'C\\Users\\')
     
-    def test_make_dir(self)
+    def test_make_dir(self):
         #Run the utils.make_dir function with a directory which exists and a directory which does not exist
         #Case1: Directory does not exist. Should make a new directory
         dir = os.path.join('foo', 'bar')
@@ -50,63 +50,63 @@ class test_utils(unittest.TestCase):
         self.assertTrue(os.path.isdir(dir))
         shutil.rmtree(dir)
     
-    def test_make_valid_text_file(self)
+    def test_make_valid_text_file(self):
         #Run the utils.make_valid_text_file function with a file which is a text file and a file which is not a text file
         filename = 'requirements.txt'
         filename2 = 'testfile.yaml'
         self.assertEqual(utils.make_valid_text_file(filename), 'requirements.txt')
         self.assertEqual(utils.make_valid_text_file(filename2), 'testfile.yaml.txt')
     
-    def test_make_valid_json_file(self)
+    def test_make_valid_json_file(self):
         #Run the utils.make_valid_text_file function with a file which is a json file and a file which is not a json file
         filename = 'test.json'
         filename2 = 'testfile.yaml'
         self.assertEqual(utils.make_valid_text_file(filename), 'test.json')
         self.assertEqual(utils.make_valid_text_file(filename2), 'testfile.yaml.json')
 
-    def test_make_valid_csv_file(self)
+    def test_make_valid_csv_file(self):
         #Run the utils.make_valid_text_file function with a file which is a json file and a file which is not a json file
         filename = 'test.csv'
         filename2 = 'testfile.yaml'
         self.assertEqual(utils.make_valid_text_file(filename), 'test.csv')
         self.assertEqual(utils.make_valid_text_file(filename2), 'testfile.yaml.csv')
 
-    def test_make_valid_fasta_file(self)
+    def test_make_valid_fasta_file(self):
         #Run the utils.make_valid_text_file function with a file which is a json file and a file which is not a json file
         filename = 'test.fasta'
         filename2 = 'testfile.yaml'
         self.assertEqual(utils.make_valid_text_file(filename), 'test.fasta')
         self.assertEqual(utils.make_valid_text_file(filename2), 'testfile.yaml.fasta')
     
-    def test_is_json(self)
+    def test_is_json(self):
         #Run the utils.is_json function with a file which is a json and a file which is not a json file
         filename = 'test.json'
         filename2 = 'test.csv'
         self.assertEqual(utils.is_json(filename), True)
         self.assertEqual(utils.is_json(filename2), False)
     
-    def test_is_fasta(self)
+    def test_is_fasta(self):
         #Run the utils.is_fasta function with a file which is a fasta and a file which is not a fasta file
         filename = 'test.fasta'
         filename2 = 'test.csv'
         self.assertEqual(utils.is_fasta(filename), True)
         self.assertEqual(utils.is_fasta(filename2), False)
     
-    def test_is_dir(self) #TODO
+    def test_is_dir(self): 
         #Run the utils.is_dir function with a path which is a valid path to a directory and a path which isn't
-        filename = ''
-        filename2 = ''
-        self.assertEqual(utils.is_dir(filename), True)
-        self.assertEqual(utils.is_dir(filename2), False)
+        filename = os.path.join('foo', 'bar')
+        self.assertFalse(utils.is_dir(filename2))
+        utils.make_dir(filename)
+        self.assertTrue(utils.is_dir(filename))
 
-    def test_is_fle(self)
+    def test_is_fle(self):
         #Run the utils.is_file function with a file and a file which does not exist
         filename = 'requirements.txt'
         filename2 = 'thisfiledoesnotexist.txt'
         self.assertEqual(utils.is_file(filename), True)
         self.assertEqual(utils.is_file(filename2), False)
 
-    def test_all_perms_of_s(self) 
+    def test_all_perms_of_s(self): 
         #Run the utils.all_perms_of_s function with two strings and varying keywords
 
         string1 = 'LMWHOMP'
@@ -116,12 +116,12 @@ class test_utils(unittest.TestCase):
         self.assertEqual(utils.all_perms_of_s(string1, keyletter1), ['LMWHOMP', 'JMWHOMP', 'IMWHOMP'])
         self.assertEqual(utils.all_perms_of_s(string2, keyletter2), ['MALWAR MZHL', 'MAHWAR MZHL', 'MALWAR MZLL', 'MALWAR MZHH', 'MAHWAR MZLL', 'MAHWAR MZHH', 'MAHWAR MZLH'])
     
-    def test_make_sparse_array(self) #TODO
+    def test_make_sparse_array(self): #TODO
         #Run the utils.make_sparse_array function with two sample spectrums and bin widthss
         spectrum1 = [1.5,3,2.3,5,2.2,35,5,16]
         spectrum2 = [3.5,62,5,6,7.8,1.1,2,4.556,34]
 
-    def test_overlap_intervals
+    def test_overlap_intervals(self):
         #Run the utils.overlap_intervals function with two different intervals. One set will overlap and one won't
         interval1 = [0,3]
         interval2 = [2,5] #Expected to return [0,5]
@@ -130,13 +130,28 @@ class test_utils(unittest.TestCase):
         self.assertEqual(Utils.overlap_intervals(interval1, interval2), [0,5])
         self.assertEqual(Utils.overlap_intervals(interval3, interval4))
     
-    def test_to_percent
+    def test_to_percent(self):
         #Run the utils.to_percent function with two different values to convert to a percent.
         value1 = 53/100 #Expected: 53%
         value2 = 234/3456 #Expected: 7%
         self.assertEqual(utils.to_percent(value1, total1), 53)
         self.assertEqual(utils.to_percent(value2, total2), 7)
     
-    def test_predicted_len
-        
-        
+    def test_predicted_len(self):
+        #Run the utils.predicted_len function with two different precursor masses.
+        precursor = 240 #Expected len would be 5
+        charge = 1
+        self.assertEqual(utils.predicted_len(precursor, charge), 5)
+        precursor = precursor * 5
+        charge = charge + 1 #Expected len would be 11
+        self.assertEqual(utils.predicted_len(precursor, charge), 11)
+    
+    def test_predicted_len_precursor(self): #Rember to test gen_spectra
+        sequence = 'MALWAR'
+        spectrum = gen_spectra.gen_spectrum(sequence)
+        expected_length(len(sequence) * (spectrum.precursor/728.379201))
+        self.assertEqual(utils.predicted_len_precursor(spectrum, sequence))
+    
+    def test_hashable_boundaries(self):
+
+    def test_cosine_similarity(self):
