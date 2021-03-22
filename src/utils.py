@@ -204,7 +204,8 @@ def ppm_to_da(mass: float, ppm_tolerance: float) -> float:
     return abs((ppm_tolerance / 1000000)*mass)
 
 def make_sparse_array(spectrum: list, width: float, value=50) -> np.ndarray:
-    '''Make a spectrum (a list of floats) into a sparsely populated array for xcorr 
+    '''DEBRICATED
+    Make a spectrum (a list of floats) into a sparsely populated array for xcorr 
     calculation. Indices are calculated by
     
     idx = int(m/w), m is mass, w is bin width
@@ -298,17 +299,18 @@ def hashable_boundaries(boundaries: list) -> str:
     '''Turn a lower and upper bound into a string in order 
     to hash
 
-    :param boundaries: A list of lists where each internal list is [lower_bound, upper_bound]
+    :param boundaries: A list of two entries where each internal list is [lower_bound, upper_bound]
     :type boundaries: list
 
     :returns: A string of the lower and upper bounds connected that looks like <lower_bound>-<upper_bound>
     :rtype: str
     '''
-
-    return '-'.join([str(x) for x in boundaries])
+    if (len(list) in range(0,2)):
+        return '-'.join([str(x) for x in boundaries])
 
 def cosine_similarity(a: list, b: list) -> float:
-    '''Calculate the cosine similarity of two vectors
+    '''DEBRICATED
+    Calculate the cosine similarity of two vectors
     
     :param a: First vector 
     :type a: list
