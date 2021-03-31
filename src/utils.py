@@ -1,14 +1,19 @@
-import os, gzip, shutil, copy, math
+import os
+import gzip
+import shutil
+import copy
+import math
+import re
+import numpy as np
+
+
 from typing import Iterable, Any
 from itertools import product
-import numpy as np
 from collections import namedtuple
 
 from src.objects import Spectrum
 from src import gen_spectra
 
-import math
-import re
 
 HYBRID_ALIGNMENT_PATTERN = re.compile(r'[-\(\)]')
 
@@ -305,7 +310,7 @@ def hashable_boundaries(boundaries: list) -> str:
     :returns: A string of the lower and upper bounds connected that looks like <lower_bound>-<upper_bound>
     :rtype: str
     '''
-    if (len(list) in range(0,2)):
+    if ((len(boundaries)) in range(0,2)):
         return '-'.join([str(x) for x in boundaries])
 
 def cosine_similarity(a: list, b: list) -> float:
@@ -330,7 +335,7 @@ def cosine_similarity(a: list, b: list) -> float:
 
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
-def __split_hybrid(sequence: str) -> (str, str):
+def split_hybrid(sequence: str) -> (str, str):
     '''Split a hybrid sequence into it's left and right components
     
     :param sequence: hybrid sequence with special characters [() -]

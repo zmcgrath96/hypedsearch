@@ -352,6 +352,7 @@ File will be of the form
 
         # go through and id all spectra
         for i, spectrum in enumerate(spectra):
+            print(f'\rStarting job for {i+1}/{len(spectra)} [{to_percent(i+1, len(spectra))}%]', end='')
             # get b and y hits
             b_hits, y_hits = [], []
             for mz in spectrum.spectrum:

@@ -179,7 +179,7 @@ from bisect import bisect
 #     Ouputs:
 #         float score of the comparison
 #     '''
-#     spectra_ions, _ = calc_masses(spectra, ion=ion)
+#     spectra_ions, _ = calc_masses(spectra, ion=ion) #REMEMBER THAT CALC_MASSES NOW ONLY RETURNS A LIST
 #     reference_ions , _= calc_masses(reference, ion=ion)
 #     return compare_masses(spectra_ions, reference_ions)
 

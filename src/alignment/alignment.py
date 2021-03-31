@@ -508,13 +508,13 @@ def attempt_alignment(
 
         b_score = scoring.score_sequence(
             spectrum.spectrum, 
-            sorted(gen_spectra.gen_spectrum(nhr, ion='b')['spectrum']), 
+            sorted(gen_spectra.gen_spectrum(nhr, ion='b')), 
             ppm_tolerance
         )
 
         y_score = scoring.score_sequence(
             spectrum.spectrum, 
-            sorted(gen_spectra.gen_spectrum(nhr, ion='y')['spectrum']), 
+            sorted(gen_spectra.gen_spectrum(nhr, ion='y')), 
             ppm_tolerance
         )
 
@@ -606,13 +606,13 @@ def attempt_alignment(
 
         b_score = scoring.score_sequence(
             spectrum.spectrum, 
-            sorted(gen_spectra.gen_spectrum(hr, ion='b')['spectrum']), 
+            sorted(gen_spectra.gen_spectrum(hr, ion='b')), 
             ppm_tolerance
         )
 
         y_score = scoring.score_sequence(
             spectrum.spectrum, 
-            sorted(gen_spectra.gen_spectrum(hr, ion='y')['spectrum']), 
+            sorted(gen_spectra.gen_spectrum(hr, ion='y')), 
             ppm_tolerance
         )
 
@@ -716,12 +716,12 @@ def attempt_alignment(
     #     # get the final score of these sequences
     #     b_score = scoring.score_sequence(
     #         spectrum.spectrum, 
-    #         sorted(gen_spectra.gen_spectrum(aligned_pair[0], ion='b')['spectrum']), 
+    #         sorted(gen_spectra.gen_spectrum(aligned_pair[0], ion='b')), 
     #         ppm_tolerance
     #     )
     #     y_score = scoring.score_sequence(
     #         spectrum.spectrum, 
-    #         sorted(gen_spectra.gen_spectrum(aligned_pair[0], ion='y')['spectrum']), 
+    #         sorted(gen_spectra.gen_spectrum(aligned_pair[0], ion='y')), 
     #         ppm_tolerance
     #     )
 
