@@ -1,14 +1,19 @@
-import os, gzip, shutil, copy, math
+import os
+import gzip
+import shutil
+import copy
+import math
+import re
+import numpy as np
+
+
 from typing import Iterable, Any
 from itertools import product
-import numpy as np
 from collections import namedtuple
 
 from src.objects import Spectrum
 from src import gen_spectra
 
-import math
-import re
 
 HYBRID_ALIGNMENT_PATTERN = re.compile(r'[-\(\)]')
 
@@ -204,7 +209,8 @@ def ppm_to_da(mass: float, ppm_tolerance: float) -> float:
     return abs((ppm_tolerance / 1000000)*mass)
 
 def make_sparse_array(spectrum: list, width: float, value=50) -> np.ndarray:
-    '''Make a spectrum (a list of floats) into a sparsely populated array for xcorr 
+    '''DEBRICATED
+    Make a spectrum (a list of floats) into a sparsely populated array for xcorr 
     calculation. Indices are calculated by
     
     idx = int(m/w), m is mass, w is bin width
@@ -215,7 +221,7 @@ def make_sparse_array(spectrum: list, width: float, value=50) -> np.ndarray:
     :param spectrum: Floating point mass values of peaks
     :type spectrum: list
     :param width: Mass tolerance for bin width
-    :type width: foat
+    :type width: float
     :param value: Value to put in a bin where a mass is found
         (default is 50)
     :type value: number
@@ -298,17 +304,18 @@ def hashable_boundaries(boundaries: list) -> str:
     '''Turn a lower and upper bound into a string in order 
     to hash
 
-    :param boundaries: A list of lists where each internal list is [lower_bound, upper_bound]
+    :param boundaries: A list of two entries where each internal list is [lower_bound, upper_bound]
     :type boundaries: list
 
     :returns: A string of the lower and upper bounds connected that looks like <lower_bound>-<upper_bound>
     :rtype: str
     '''
-
-    return '-'.join([str(x) for x in boundaries])
+    if ((len(boundaries)) in range(0,2)):
+        return '-'.join([str(x) for x in boundaries])
 
 def cosine_similarity(a: list, b: list) -> float:
-    '''Calculate the cosine similarity of two vectors
+    '''DEBRICATED
+    Calculate the cosine similarity of two vectors
     
     :param a: First vector 
     :type a: list
@@ -328,7 +335,7 @@ def cosine_similarity(a: list, b: list) -> float:
 
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
-def __split_hybrid(sequence: str) -> (str, str):
+def split_hybrid(sequence: str) -> (str, str):
     '''Split a hybrid sequence into it's left and right components
     
     :param sequence: hybrid sequence with special characters [() -]

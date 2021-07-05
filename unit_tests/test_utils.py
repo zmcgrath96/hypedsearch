@@ -1,6 +1,8 @@
 import unittest
 import os
 from src import utils
+from src import gen_spectra
+from src.objects import Spectrum
 
 class test_utils(unittest.TestCase):
     def setUp(self):
@@ -41,12 +43,12 @@ class test_utils(unittest.TestCase):
         #Case1: Directory does not exist. Should make a new directory
         dir = os.path.join('foo', 'bar')
         self.assertFalse(os.path.isdir(dir))
-        make_dir(dir)
+        utils.make_dir(dir)
         self.assertTrue(os.path.isdir(dir))
 
         #Case2: Directory already exists. Nothing should happen
         self.assertTrue(os.path.isdir(dir))
-        make_dir(dir)
+        utils.make_dir(dir)
         self.assertTrue(os.path.isdir(dir))
         shutil.rmtree(dir)
     
@@ -58,25 +60,25 @@ class test_utils(unittest.TestCase):
         self.assertEqual(utils.make_valid_text_file(filename2), 'testfile.yaml.txt')
     
     def test_make_valid_json_file(self):
-        #Run the utils.make_valid_text_file function with a file which is a json file and a file which is not a json file
+        #Run the utils.make_valid_json_file function with a file which is a json file and a file which is not a json file
         filename = 'test.json'
         filename2 = 'testfile.yaml'
-        self.assertEqual(utils.make_valid_text_file(filename), 'test.json')
-        self.assertEqual(utils.make_valid_text_file(filename2), 'testfile.yaml.json')
+        self.assertEqual(utils.make_valid_json_file(filename), 'test.json')
+        self.assertEqual(utils.make_valid_json_file(filename2), 'testfile.yaml.json')
 
     def test_make_valid_csv_file(self):
-        #Run the utils.make_valid_text_file function with a file which is a json file and a file which is not a json file
+        #Run the utils.make_valid_csv_file function with a file which is a json file and a file which is not a json file
         filename = 'test.csv'
         filename2 = 'testfile.yaml'
-        self.assertEqual(utils.make_valid_text_file(filename), 'test.csv')
-        self.assertEqual(utils.make_valid_text_file(filename2), 'testfile.yaml.csv')
+        self.assertEqual(utils.make_valid_csv_file(filename), 'test.csv')
+        self.assertEqual(utils.make_valid_csv_file(filename2), 'testfile.yaml.csv')
 
     def test_make_valid_fasta_file(self):
-        #Run the utils.make_valid_text_file function with a file which is a json file and a file which is not a json file
+        #Run the utils.make_valid_fasta_file function with a file which is a json file and a file which is not a json file
         filename = 'test.fasta'
         filename2 = 'testfile.yaml'
-        self.assertEqual(utils.make_valid_text_file(filename), 'test.fasta')
-        self.assertEqual(utils.make_valid_text_file(filename2), 'testfile.yaml.fasta')
+        self.assertEqual(utils.make_valid_fasta_file(filename), 'test.fasta')
+        self.assertEqual(utils.make_valid_fasta_file(filename2), 'testfile.yaml.fasta')
     
     def test_is_json(self):
         #Run the utils.is_json function with a file which is a json and a file which is not a json file
@@ -95,7 +97,7 @@ class test_utils(unittest.TestCase):
     def test_is_dir(self): 
         #Run the utils.is_dir function with a path which is a valid path to a directory and a path which isn't
         filename = os.path.join('foo', 'bar')
-        self.assertFalse(utils.is_dir(filename2))
+        self.assertFalse(utils.is_dir(filename))
         utils.make_dir(filename)
         self.assertTrue(utils.is_dir(filename))
 
@@ -110,30 +112,32 @@ class test_utils(unittest.TestCase):
         #Run the utils.all_perms_of_s function with two strings and varying keywords
 
         string1 = 'LMWHOMP'
-        keyletter1 = 'L,J,I' #expected result: ['LMWHOMP', 'JMWHOMP', 'IMWHOMP']
+        keyletter1 = 'LJI' #expected result: ['LMWHOMP', 'JMWHOMP', 'IMWHOMP']
         string2 = 'MALWAR MZHL'
-        keyletter2 = 'L,H' #expected result: ['MALWAR MZHL', 'MAHWAR MZHL', 'MALWAR MZLL', 'MALWAR MZHH', 'MAHWAR MZLL', 'MAHWAR MZHH', 'MAHWAR MZLH']
-        self.assertEqual(utils.all_perms_of_s(string1, keyletter1), ['LMWHOMP', 'JMWHOMP', 'IMWHOMP'])
-        self.assertEqual(utils.all_perms_of_s(string2, keyletter2), ['MALWAR MZHL', 'MAHWAR MZHL', 'MALWAR MZLL', 'MALWAR MZHH', 'MAHWAR MZLL', 'MAHWAR MZHH', 'MAHWAR MZLH'])
+        keyletter2 = 'LH' #expected result: ['MALWAR MZHL', 'MAHWAR MZHL', 'MALWAR MZLL', 'MALWAR MZHH', 'MAHWAR MZLL', 
+        #'MAHWAR MZHH', 'MAHWAR MZLH', 'MALWAR MZLH']
+        self.assertEqual(sorted(utils.all_perms_of_s(string1, keyletter1)), sorted(['LMWHOMP', 'JMWHOMP', 'IMWHOMP']))
+        self.assertEqual(sorted(utils.all_perms_of_s(string2, keyletter2)), sorted(['MALWAR MZHL', 'MAHWAR MZHL', 
+            'MALWAR MZLL', 'MALWAR MZHH', 'MAHWAR MZLL', 'MAHWAR MZHH', 'MAHWAR MZLH', 'MALWAR MZLH']))
     
     def test_make_sparse_array(self): #TODO
-        #Run the utils.make_sparse_array function with two sample spectrums and bin widthss
-        spectrum1 = [1.5,3,2.3,5,2.2,35,5,16]
-        spectrum2 = [3.5,62,5,6,7.8,1.1,2,4.556,34]
+        #Run the utils.make_sparse_array function with two sample spectrums and bin widths
+        spectrum1 = [1.5, 3, 2.3, 5, 2.2, 35, 5, 16]
+        spectrum2 = [3.5, 62, 5, 6, 7.8, 1.1, 2, 4.556, 34]
 
     def test_overlap_intervals(self):
         #Run the utils.overlap_intervals function with two different intervals. One set will overlap and one won't
-        interval1 = [0,3]
-        interval2 = [2,5] #Expected to return [0,5]
-        interval3 = [-1,4]
-        interval4 = [6,15] #Expected not to return anything
-        self.assertEqual(Utils.overlap_intervals(interval1, interval2), [0,5])
-        self.assertEqual(Utils.overlap_intervals(interval3, interval4))
+        intervals1 = [[0,3], [2,5], [3,7]] #Expected to return [0,7]
+        intervals2 = [[-1,4], [6,15]] #Expected not to return anything
+        self.assertEqual(utils.overlap_intervals(intervals1), [0,5])
+        self.assertEqual(utils.overlap_intervals(intervals2))
     
     def test_to_percent(self):
         #Run the utils.to_percent function with two different values to convert to a percent.
-        value1 = 53/100 #Expected: 53%
-        value2 = 234/3456 #Expected: 7%
+        value1 = 53
+        total1 = 100 #Expected: 53%
+        value2 = 234
+        total2 = 3456 #Expected: 7%
         self.assertEqual(utils.to_percent(value1, total1), 53)
         self.assertEqual(utils.to_percent(value2, total2), 7)
     
@@ -146,12 +150,23 @@ class test_utils(unittest.TestCase):
         charge = charge + 1 #Expected len would be 11
         self.assertEqual(utils.predicted_len(precursor, charge), 11)
     
-    def test_predicted_len_precursor(self): #Rember to test gen_spectra
+    def test_predicted_len_precursor(self): 
         sequence = 'MALWAR'
-        spectrum = gen_spectra.gen_spectrum(sequence)
-        expected_length(len(sequence) * (spectrum.precursor/728.379201))
-        self.assertEqual(utils.predicted_len_precursor(spectrum, sequence))
+        spectrum = Spectrum(gen_spectra.gen_spectrum(sequence), gen_spectra.get_precursor(sequence))
+        expected_length = (len(sequence) * (spectrum.precursor_mass / 728.379201))
+        self.assertEqual(utils.predicted_len_precursor(spectrum, sequence), expected_length)
     
     def test_hashable_boundaries(self):
+        #run the hashable_boundaries function with two lists of boundaries
+        boundaries2 = [2,10] #Expected to return 2-10
+        boundaries3 = [3,5,7] #Expected to return nothing
+        self.assertEqual(utils.hashable_boundaries(boundaries2), '2-10')
+        self.assertEqual(utils.hashable_boundaries(boundaries3), None)
 
-    def test_cosine_similarity(self):
+    def test_split_hybrid(self):  
+        #run the split_hybrid function with two samples sequence
+        Sequence1 = 'MAL-WAR' #Expected left is "MAL" and expected right is "WAR"
+        Sequence2 = 'DLTQTL-B' #Expected left is "DLTQTL" and expected right is "B"
+        self.assertEqual(utils.split_hybrid(Sequence1), ('MAL', 'WAR'))
+        self.assertEqual(utils.split_hybrid(Sequence2), ('DLTQTL', 'B'))
+

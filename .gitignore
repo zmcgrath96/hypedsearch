@@ -11,6 +11,7 @@
 docs/_build/
 *-checkpoint.ipynb
 *win32*
+*win*
 *.obj
 *.ipynb_checkpoints*
-*ipynb
+src/build*

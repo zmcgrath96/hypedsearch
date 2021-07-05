@@ -2,12 +2,11 @@ from src.objects import Database, DatabaseEntry
 from collections import defaultdict
 
 import json 
-
 import os
+import pathlib
 
-script_dir = os.path.dirname(__file__)
-json_dir = '/'.join(script_dir.split('/')[:-1])
-digest_file = os.path.join(json_dir, 'digests.json')
+json_dir = pathlib.Path(__file__).resolve().parent.parent
+digest_file = os.path.join(json_dir, 'config.yaml')
 
 digests = json.load(open(digest_file, 'r'))
 

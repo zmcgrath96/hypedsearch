@@ -11,9 +11,9 @@ import re
 # load digests json for digest scoring
 import json 
 import os
+import pathlib
 
-script_dir = os.path.dirname(__file__)
-json_dir = '/'.join(script_dir.split('/')[:-1])
+json_dir = pathlib.Path(__file__).resolve().parent.parent
 digest_file = os.path.join(json_dir, 'digests.json')
 
 digests = json.load(open(digest_file, 'r'))
@@ -30,8 +30,8 @@ digests = json.load(open(digest_file, 'r'))
 #     Outputs:
 #         (b_score, y_score): (float, float) the b and y ion scores generated from this comparison
 #     '''
-#     kmerspec_b = gen_spectra.gen_spectrum(subseq, ion='b')['spectrum']
-#     kmerspec_y = gen_spectra.gen_spectrum(subseq, ion='y')['spectrum']
+#     kmerspec_b = gen_spectra.gen_spectrum(subseq, ion='b')
+#     kmerspec_y = gen_spectra.gen_spectrum(subseq, ion='y')
 #     b_score = mass_comparisons.optimized_compare_masses(pepspec, kmerspec_b, ppm_tolerance=ppm_tolerance)
 #     y_score = mass_comparisons.optimized_compare_masses(pepspec, kmerspec_y, ppm_tolerance=ppm_tolerance)
 #     return (b_score, y_score)
@@ -104,7 +104,7 @@ def score_sequence(
 #     for ion in ['b', 'y']:
 #         for charge in [1, 2]:
 #             singled_seq = reference[:-1] if ion == 'b' else reference[1:]
-#             peaks = gen_spectra.gen_spectrum(singled_seq, charge=charge, ion=ion)['spectrum']
+#             peaks = gen_spectra.gen_spectrum(singled_seq, charge=charge, ion=ion)
 #             peaks = peaks if ion == 'b' else peaks[::-1]
 #             for i in range(len(peaks)):
 #                 da_tol = ppm_to_da(peaks[i], ppm_tolerance)
@@ -154,7 +154,7 @@ def score_sequence(
 #             singled_seq = reference[:-1] if ion == 'b' else reference[1:]
 
 #             # get the m/z peaks
-#             peaks = gen_spectra.gen_spectrum(singled_seq, charge=charge, ion=ion)['spectrum']
+#             peaks = gen_spectra.gen_spectrum(singled_seq, charge=charge, ion=ion)
             
 #             # go through each peak and try and match it to an observed one
 #             for i in range(len(peaks)):
@@ -209,7 +209,7 @@ def score_sequence(
     
 #     for charge in [1, 2]:
 #         singled_seq = reference[:-1] if ion == 'b' else reference[1:]
-#         peaks = gen_spectra.gen_spectrum(singled_seq, charge=charge, ion=ion)['spectrum']
+#         peaks = gen_spectra.gen_spectrum(singled_seq, charge=charge, ion=ion)
 #         peaks = peaks if ion == 'b' else peaks[::-1]
 #         for i in range(len(peaks)):
 #             da_tol = ppm_to_da(peaks[i], ppm_tolerance)
@@ -261,7 +261,7 @@ def score_sequence(
 #         singled_seq = reference[:-1] if ion == 'b' else reference[1:]
 
 #         # get the m/z peaks
-#         peaks = gen_spectra.gen_spectrum(singled_seq, charge=charge, ion=ion)['spectrum']
+#         peaks = gen_spectra.gen_spectrum(singled_seq, charge=charge, ion=ion)
         
 #         # go through each peak and try and match it to an observed one
 #         for i in range(len(peaks)):
@@ -306,7 +306,7 @@ def score_sequence(
 #         return 0
 
 #     # generate the spectrum for the reference sequence
-#     refspec = gen_spectra.gen_spectrum(reference, ion=ion)['spectrum']
+#     refspec = gen_spectra.gen_spectrum(reference, ion=ion)
         
 #     def boundaries(mass):
 #         tol = ppm_to_da(mass, ppm_tolerance)
@@ -385,8 +385,8 @@ def hybrid_score(
     y_split = len(hybrid_seq) - hybrid_seq.index('-') if '-' in hybrid_seq else len(hybrid_seq) - hybrid_seq.index(')') 
 
     # generate b and y separately to be sure
-    b_spec = sorted(gen_spectra.gen_spectrum(non_hyb, ion='b')['spectrum'])
-    y_spec = sorted(gen_spectra.gen_spectrum(non_hyb, ion='y')['spectrum'])
+    b_spec = sorted(gen_spectra.gen_spectrum(non_hyb, ion='b'))
+    y_spec = sorted(gen_spectra.gen_spectrum(non_hyb, ion='y'))
 
     # convert the spectra into lists of tuples
     gen_range = lambda x: (x - ppm_to_da(x, ppm_tolerance), x + ppm_to_da(x, ppm_tolerance))
@@ -537,7 +537,7 @@ def total_mass_error(observed: Spectrum, alignment: str, tolerance: int) -> floa
     sequence = alignment.replace('-', '').replace(')', '').replace('(', '')
 
     # generate the spectrum
-    alignment_spectrum = gen_spectra.gen_spectrum(sequence)['spectrum']
+    alignment_spectrum = gen_spectra.gen_spectrum(sequence)
 
     # sort them both
     sorted_observed = sorted(observed.spectrum)
@@ -613,7 +613,7 @@ def digest_score(sequence: str, db: Database, digest_type: str) -> int:
     if utils.HYBRID_ALIGNMENT_PATTERN.findall(sequence):
 
         # get the left and right halves
-        left, right = utils.__split_hybrid(sequence)
+        left, right = utils.split_hybrid(sequence)
 
         # well first check to see if we can assign a point to left
         # before even looking at the source proteins. If we just look 

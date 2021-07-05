@@ -4,7 +4,7 @@ from src.alignment import alignment
 from src.utils import ppm_to_da, to_percent, overlap_intervals, hashable_boundaries, is_json, is_file
 from src import utils
 from src.scoring import scoring, mass_comparisons
-from src.preprocessing import digestion, merge_search, preprocessing_utils
+from src.preprocessing import merge_search, preprocessing_utils
 from src import database
 from src.file_io import JSON
 
@@ -22,7 +22,7 @@ def id_spectrum(
     b_hits: dict, 
     y_hits: dict,
     ppm_tolerance: int, 
-    precursor_tolerance: int, 
+    precursor_tolerance: int,
     n: int,
     digest_type: str = '',
     truth: dict = None, 
@@ -97,7 +97,7 @@ def id_spectrum(
     max_b_score = max([x[1] for x in b_results])
     max_y_score = max([x[1] for x in y_results])
 
-    # count the number fo kmers that have the highest value
+    # count the number of kmers that have the highest value
     num_max_b = sum([1 for x in b_results if x[1] == max_b_score])
     num_max_y = sum([1 for x in y_results if x[1] == max_y_score])
 
@@ -287,7 +287,7 @@ File will be of the form
         fall_off = mp.Manager().dict()
         truth = mp.Manager().dict(truth)
 
-    # if we only get 1 core, don't do the multiporcessing bit
+    # if we only get 1 core, don't do the multiprocessing bit
     if cores == 1:
         # go through and id all spectra
         for i, spectrum in enumerate(spectra):
@@ -352,6 +352,7 @@ File will be of the form
 
         # go through and id all spectra
         for i, spectrum in enumerate(spectra):
+            print(f'\rStarting job for {i+1}/{len(spectra)} [{to_percent(i+1, len(spectra))}%]', end='')
             # get b and y hits
             b_hits, y_hits = [], []
             for mz in spectrum.spectrum:

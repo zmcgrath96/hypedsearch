@@ -69,7 +69,7 @@ def y_ions(sequence: str, charge: int = None):
             
     return masses
 
-def calc_masses(sequence: str, charge: int =None, ion: str = None) -> (list, float):
+def calc_masses(sequence: str, charge: int =None, ion: str = None) -> (list):
     '''Calculate the molecular weight (Daltons) of an Amino Acid sequence
     
     :param sequence: amino acid sequence to calculate ion masses for
@@ -96,16 +96,13 @@ def calc_masses(sequence: str, charge: int =None, ion: str = None) -> (list, flo
     for i in range(length):
         total +=  AMINO_ACIDS[sequence[i]]
 
-    pre_mz_charge = 2 if charge is None else charge
-    pre_mz = (total+pre_mz_charge*PROTON_MASS)/pre_mz_charge   
-    
     if ion is None or ion == 'b': 
         masses += b_ions(sequence, charge=charge)
         
     if ion is None or ion == 'y': 
         masses += y_ions(sequence, charge=charge)
         
-    return masses, pre_mz
+    return masses
 
 def max_mass(seqeunce: str, ion: str, charge: int) -> float:
     '''Calculate the maximum mass of a sequence of an ion type and charge
@@ -159,7 +156,7 @@ def get_precursor(sequence: str, charge: int = 1) -> float:
     return (total + charge * PROTON_MASS) / charge  
 
 
-def gen_spectrum(sequence: str, charge: int = None, ion: str = None) -> dict:
+def gen_spectrum(sequence: str, charge: int = None, ion: str = None) -> list:
     '''Generate a spectrum for a single sequence
     
     :param sequence: amino acid sequence to calculate ion masses for
@@ -177,15 +174,12 @@ def gen_spectrum(sequence: str, charge: int = None, ion: str = None) -> dict:
         {'spectrum': list, 'precursor_mass: float}
     :rtype: dict
     '''
-    
-    this_entry = {}
-    masses, pre_mz = calc_masses(sequence, charge=charge, ion=ion)
-    this_entry['spectrum'] = masses
-    this_entry['precursor_mass'] = pre_mz
-    return this_entry
+
+    return calc_masses(sequence, charge=charge, ion=ion)
 
 def gen_spectra(sequences: list, charge=None, ion=None) -> list:
-    '''Generates mass spectra for a list of sequences
+    '''DEPRECATED
+    Generates mass spectra for a list of sequences
 
     :param sequences: amino acid sequences to calculate ion masses for
     :type sequences: list
@@ -206,7 +200,8 @@ def gen_spectra(sequences: list, charge=None, ion=None) -> list:
     return [gen_spectrum(seq, charge=charge, ion=ion) for seq in sequences]
 
 def gen_min_ordering(sequence: str) -> list:
-    '''Generates an np array the length of the sequence that is the minimal representation
+    '''DEPRECATED
+    Generates an np array the length of the sequence that is the minimal representation
     of a spectrum (for ordering purposes). Each amino acid is represented as an integer
     (an 8 bit integer by NumPy). The integer is the sorted value (lowest to highest) by mass. 
     For example, G has the lowest mass, so its index is 0. W, the heaviest, has an index of 19.
